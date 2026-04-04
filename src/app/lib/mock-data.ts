@@ -1,6 +1,5 @@
 
 import { Movie, UserProfile } from "@/lib/types";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export const MOCK_MOVIES: Movie[] = [
   {
@@ -13,6 +12,7 @@ export const MOCK_MOVIES: Movie[] = [
     rating: "9.2",
     duration: "2h 15m",
     releaseYear: "2024",
+    type: "movie",
     isTrending: true
   },
   {
@@ -25,6 +25,7 @@ export const MOCK_MOVIES: Movie[] = [
     rating: "8.8",
     duration: "1h 55m",
     releaseYear: "2023",
+    type: "movie",
     isNew: true
   },
   {
@@ -36,18 +37,20 @@ export const MOCK_MOVIES: Movie[] = [
     genres: ["Mystery", "Sci-Fi"],
     rating: "8.5",
     duration: "2h 05m",
-    releaseYear: "2024"
+    releaseYear: "2024",
+    type: "movie"
   },
   {
     id: "4",
-    title: "KINETIC SHIFT",
-    description: "Gravity-defying warriors battle for the last energy source in the galaxy.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-h4/1920/1080",
+    title: "QUANTUM SHIFT",
+    description: "A seasonal anthology series exploring the ethics of time travel through the eyes of various historical figures.",
+    thumbnailUrl: "https://picsum.photos/seed/replica-s1/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    genres: ["Action", "Adventure"],
-    rating: "8.9",
-    duration: "1h 48m",
+    genres: ["Drama", "Sci-Fi"],
+    rating: "9.4",
+    duration: "Season 2",
     releaseYear: "2024",
+    type: "show",
     isTrending: true
   },
   {
@@ -59,7 +62,21 @@ export const MOCK_MOVIES: Movie[] = [
     genres: ["Space", "Adventure"],
     rating: "8.2",
     duration: "2h 10m",
-    releaseYear: "2023"
+    releaseYear: "2023",
+    type: "movie"
+  },
+  {
+    id: "6",
+    title: "NEO-TOKYO NIGHTS",
+    description: "Follow the lives of five underground hackers as they navigate the neon-lit underworld of a mega-city.",
+    thumbnailUrl: "https://picsum.photos/seed/replica-s2/1920/1080",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    genres: ["Cyberpunk", "Drama"],
+    rating: "9.1",
+    duration: "Season 1",
+    releaseYear: "2024",
+    type: "show",
+    isNew: true
   }
 ];
 

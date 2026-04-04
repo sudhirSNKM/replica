@@ -9,6 +9,7 @@ export interface Movie {
   rating: string;
   duration: string;
   releaseYear: string;
+  type: 'movie' | 'show';
   isTrending?: boolean;
   isNew?: boolean;
 }
