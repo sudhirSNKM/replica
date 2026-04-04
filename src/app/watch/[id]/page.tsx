@@ -36,9 +36,13 @@ export default function VideoPlayer() {
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const total = videoRef.current.duration;
-      setProgress((current / total) * 100);
+      
+      if (isFinite(total) && total > 0) {
+        setProgress((current / total) * 100);
+      }
       
       const formatTime = (time: number) => {
+        if (!isFinite(time)) return "0:00";
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
         return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -50,10 +54,10 @@ export default function VideoPlayer() {
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (videoRef.current) {
+    if (videoRef.current && isFinite(videoRef.current.duration)) {
       const { left, width } = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - left;
-      const percentage = clickX / width;
+      const percentage = Math.max(0, Math.min(1, clickX / width));
       videoRef.current.currentTime = percentage * videoRef.current.duration;
     }
   };
@@ -108,8 +112,6 @@ export default function VideoPlayer() {
                 <span className="text-white font-headline font-bold">HD</span>
               </div>
             </motion.div>
-
-            {/* Middle Play/Pause Overlay (Optional) */}
 
             {/* Bottom Controls */}
             <motion.div 
