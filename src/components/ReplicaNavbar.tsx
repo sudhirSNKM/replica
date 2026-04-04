@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,6 +6,8 @@ import Link from "next/link";
 import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
+import { NotificationsDropdown } from "./NotificationsDropdown";
+import { SettingsDialog } from "./SettingsDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   DropdownMenu, 
@@ -14,11 +17,14 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { useUser } from "@/firebase";
 
 export const ReplicaNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,9 +65,7 @@ export const ReplicaNavbar = () => {
             <Search className="w-5 h-5" />
           </button>
           
-          <button className="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all hidden sm:flex">
-            <Bell className="w-5 h-5" />
-          </button>
+          <NotificationsDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
@@ -78,7 +82,10 @@ export const ReplicaNavbar = () => {
               <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex gap-3">
                 <User className="w-4 h-4" /> Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex gap-3">
+              <DropdownMenuItem 
+                onClick={() => setIsSettingsOpen(true)}
+                className="hover:bg-white/10 cursor-pointer flex gap-3"
+              >
                 <Settings className="w-4 h-4" /> Settings
               </DropdownMenuItem>
               <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex gap-3 text-primary font-bold">
@@ -113,7 +120,13 @@ export const ReplicaNavbar = () => {
               <Link href="/movies" className="text-2xl font-headline font-bold" onClick={() => setMobileMenuOpen(false)}>Movies</Link>
               <Link href="/watchlist" className="text-2xl font-headline font-bold" onClick={() => setMobileMenuOpen(false)}>My List</Link>
               <DropdownMenuSeparator className="bg-white/10" />
-              <div className="flex items-center gap-4 pt-4">
+              <div 
+                className="flex items-center gap-4 pt-4 cursor-pointer"
+                onClick={() => {
+                  setIsSearchOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+              >
                 <Search className="w-6 h-6 text-white/40" />
                 <span className="text-lg">Search</span>
               </div>
@@ -123,6 +136,7 @@ export const ReplicaNavbar = () => {
       </nav>
 
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   );
 };

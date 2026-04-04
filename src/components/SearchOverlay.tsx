@@ -3,9 +3,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Sparkles, Film, Clock, Star } from "lucide-react";
+import { Search, X, Sparkles, Film, Clock, Star, Loader2 } from "lucide-react";
 import { naturalLanguageContentSearch } from "@/ai/flows/natural-language-content-search-flow";
-import { MOCK_MOVIES } from "@/app/lib/mock-data";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 import { Movie } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
@@ -19,9 +20,17 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
   const [results, setResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const contentRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "content");
+  }, [firestore]);
+
+  const { data: allContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
 
   useEffect(() => {
-    if (!query) {
+    if (!query || !allContent) {
       setResults([]);
       return;
     }
@@ -29,41 +38,51 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        // AI-powered search logic
+        // AI-powered search logic to extract parameters
         const params = await naturalLanguageContentSearch({ query });
         
-        let filtered = MOCK_MOVIES.filter(m => {
+        let filtered = allContent.filter(m => {
           const matchTitle = params.titleSearch 
             ? m.title.toLowerCase().includes(params.titleSearch.toLowerCase()) 
-            : true;
+            : false;
+          
           const matchGenre = params.genres?.length 
             ? params.genres.some(g => m.genres.some(mg => mg.toLowerCase().includes(g.toLowerCase()))) 
-            : true;
-          const matchKeyword = params.keywords?.length
-            ? params.keywords.some(k => m.description.toLowerCase().includes(k.toLowerCase()) || m.title.toLowerCase().includes(k.toLowerCase()))
-            : true;
+            : false;
           
-          return (matchTitle || matchKeyword) && (matchGenre || matchKeyword);
-        });
+          const matchKeyword = params.keywords?.length
+            ? params.keywords.some(k => 
+                m.description.toLowerCase().includes(k.toLowerCase()) || 
+                m.title.toLowerCase().includes(k.toLowerCase())
+              )
+            : false;
 
-        // Basic fallback search if AI returns nothing or too specific
-        if (filtered.length === 0) {
-          filtered = MOCK_MOVIES.filter(m => 
-            m.title.toLowerCase().includes(query.toLowerCase()) || 
-            m.genres.some(g => g.toLowerCase().includes(query.toLowerCase()))
-          );
-        }
+          // If AI found specific things, prioritize them. 
+          // Otherwise, fall back to basic text matching.
+          if (params.titleSearch || params.genres || params.keywords) {
+            return matchTitle || matchGenre || matchKeyword;
+          }
+          
+          // Fallback basic search
+          return m.title.toLowerCase().includes(query.toLowerCase()) || 
+                 m.genres.some(g => g.toLowerCase().includes(query.toLowerCase()));
+        });
 
         setResults(filtered);
       } catch (error) {
-        console.error("Search error", error);
+        console.error("AI Search logic failed, falling back to basic search", error);
+        const fallback = allContent.filter(m => 
+          m.title.toLowerCase().includes(query.toLowerCase()) || 
+          m.genres.some(g => g.toLowerCase().includes(query.toLowerCase()))
+        );
+        setResults(fallback);
       } finally {
         setIsSearching(false);
       }
-    }, 500);
+    }, 600);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, allContent]);
 
   return (
     <AnimatePresence>
@@ -92,14 +111,14 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
               />
               <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-4">
                 {isSearching ? (
-                  <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 ) : (
                   <Search className="w-8 h-8 text-white/20" />
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto scrollbar-hide pr-4">
               {results.length > 0 ? (
                 results.map((movie) => (
                   <motion.div
