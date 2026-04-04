@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles } from "lucide-react";
+import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles, Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
 import { NotificationsDropdown } from "./NotificationsDropdown";
@@ -140,8 +140,8 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="glass border-white/10 text-white w-72 mt-4 p-2 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" align="end">
                   <DropdownMenuLabel className="px-5 py-4 flex flex-col">
-                    <span className="font-headline font-bold text-xl">{profile?.name || user.email?.split('@')[0] || "Neural Node"}</span>
-                    <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Status: Online</span>
+                    <span className="font-headline font-bold text-xl uppercase tracking-tighter">My Matrix</span>
+                    <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Node: {profile?.name || "Active"}</span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <div className="p-2 space-y-1">
@@ -152,26 +152,22 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                       }}
                       className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm">Switch Identity</span>
-                        <span className="text-[10px] text-white/40">Change active profile</span>
-                      </div>
+                      <User className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                      <span className="font-bold text-sm">Neural Profile</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => setIsSettingsOpen(true)}
                       className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <Settings className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm">Core Settings</span>
-                        <span className="text-[10px] text-white/40">Protocols & security</span>
-                      </div>
+                      <Settings className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                      <span className="font-bold text-sm">Core Settings</span>
                     </DropdownMenuItem>
+                    
+                    <div className="p-2 pt-4">
+                      <button className="w-full py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
+                        <Zap className="w-3 h-3" /> Access Pro Tier
+                      </button>
+                    </div>
                   </div>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <div className="p-2">
@@ -179,7 +175,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                       onClick={handleLogout}
                       className="hover:bg-destructive/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 text-destructive font-bold transition-colors group"
                     >
-                      <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Logout Node
+                      <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Terminate Session
                     </DropdownMenuItem>
                   </div>
                 </DropdownMenuContent>
