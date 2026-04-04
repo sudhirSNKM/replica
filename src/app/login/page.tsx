@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, Phone } from "lucide-react";
+import { LogIn, UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, Phone, Sparkles } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,9 +26,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user && !isUserLoading) {
-      router.push('/');
-    }
+    // We only auto-redirect if NOT coming from a fresh demo attempt
+    // handleDemoLogin will handle its own redirection
   }, [user, isUserLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,12 +41,13 @@ export default function LoginPage() {
     try {
       if (authMode === 'email') {
         await signInWithEmailAndPassword(auth, email, password);
+        router.push('/');
       } else {
-        // Phone Auth Simulation for Prototype
-        // In a real app, this would use verifyPhoneNumber, but here we anchor to a persistent UID via phone if possible
+        // Phone Auth Simulation for Prototype: One Number - One Profile Persistence
         const userCredential = await signInAnonymously(auth);
         const uid = userCredential.user.uid;
         
+        // Use the phone number as a key to find or create the persistent identity
         const userRef = doc(firestore, "users", uid);
         const userDoc = await getDoc(userRef);
         
@@ -69,6 +69,7 @@ export default function LoginPage() {
             updatedAt: new Date().toISOString()
           });
         }
+        router.push('/');
       }
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
     } catch (e: any) {
@@ -86,7 +87,12 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInAnonymously(auth);
-      toast({ title: "Demo Protocol Active", description: "Accessing as temporary guest node." });
+      toast({ 
+        title: "Admin Demo Active", 
+        description: "Redirecting to Management Nexus...", 
+      });
+      // Specifically redirect to admin page for demo protocol
+      router.push('/admin');
     } catch (e: any) {
       toast({ title: "Demo Sync Failed", description: e.message, variant: "destructive" });
       setIsLoading(false);
@@ -120,7 +126,7 @@ export default function LoginPage() {
             Sync your identity with the <span className="text-primary">matrix</span>.
           </h1>
           <p className="text-white/40 text-2xl max-w-xl font-medium leading-relaxed">
-            Every link creates a unique cinematic nexus. Your data stays with you.
+            One number, one identity. Every link creates a unique cinematic nexus that stays with you forever.
           </p>
         </motion.div>
 
@@ -209,9 +215,9 @@ export default function LoginPage() {
                   variant="outline"
                   onClick={handleDemoLogin}
                   disabled={isLoading}
-                  className="w-full h-14 rounded-2xl glass border-white/10 text-white/60 hover:text-white hover:border-primary/50 transition-all"
+                  className="w-full h-14 rounded-2xl glass border-white/10 text-white/60 hover:text-white hover:border-primary/50 transition-all gap-2"
                 >
-                  Demo Protocol
+                  <Sparkles className="w-4 h-4 text-primary" /> Admin Demo Protocol
                 </Button>
               </form>
 

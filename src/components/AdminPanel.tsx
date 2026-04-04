@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Upload, Film, Database, Check, Loader2, Monitor, LayoutGrid, ShieldAlert, UserCheck } from "lucide-react";
+import { Upload, Film, Database, Check, Loader2, Monitor, LayoutGrid, ShieldAlert, UserCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,8 +49,8 @@ export const AdminPanel = () => {
       const adminRef = doc(firestore, "roles_admin", user.uid);
       await setDoc(adminRef, {
         uid: user.uid,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
+        email: user.email || "demo@replica.nexus",
+        phoneNumber: user.phoneNumber || "Demo Mode",
         promotedAt: new Date().toISOString()
       });
       setIsAdmin(true);
@@ -163,17 +163,17 @@ export const AdminPanel = () => {
     return (
       <div className="min-h-screen pt-36 px-6 flex items-center justify-center bg-background">
         <Card className="glass border-white/5 w-full max-w-md p-12 rounded-[4rem] text-center space-y-8">
-          <div className="w-20 h-20 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto border border-destructive/20">
-            <ShieldAlert className="w-10 h-10 text-destructive" />
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
+            <Zap className="w-10 h-10 text-primary" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Access Forbidden</h2>
-            <p className="text-white/40 font-medium">Your current neural identity does not have administrative clearance for the Replica nexus.</p>
+            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Neural Promotion</h2>
+            <p className="text-white/40 font-medium leading-relaxed">Your current identity requires administrative clearance to broadcast to the Replica matrix.</p>
           </div>
           <Button 
             onClick={handlePromote}
             disabled={isPromoting}
-            className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold"
+            className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold text-lg"
           >
             {isPromoting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Request Admin Clearance"}
           </Button>
