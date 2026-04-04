@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
 export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | null }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,7 +28,8 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pathname = usePathname();
-  const { user } = useUser();
+  const router = useRouter();
+  const { user, auth } = useUser();
   const firestore = useFirestore();
 
   // Get active profile ID from local storage if not passed
@@ -42,11 +44,19 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      localStorage.removeItem('replica_active_profile');
+      router.push('/login');
+    }
+  };
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -56,159 +66,176 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     { href: "/watchlist", label: "My List" },
   ];
 
+  if (pathname === '/login') return null;
+
   return (
     <>
-      <nav
-        className={cn(
-          "fixed top-0 left-0 right-0 z-[150] transition-all duration-700 py-8 px-6 md:px-12 flex items-center justify-between",
-          isScrolled ? "bg-background/90 backdrop-blur-3xl border-b border-white/5 py-5" : "bg-transparent"
-        )}
-      >
-        <div className="flex items-center gap-16">
-          <Link href="/" className="text-4xl font-headline font-bold tracking-tighter text-white flex items-center gap-1 group">
-            <span className="text-primary group-hover:text-glow transition-all">RE</span>
-            <span>PLICA</span>
-          </Link>
-          
-          <div className="hidden lg:flex items-center gap-10 text-xs font-black uppercase tracking-[0.25em]">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.href} 
-                href={link.href} 
-                className={cn(
-                  "relative transition-all hover:text-white",
-                  pathname === link.href ? "text-white" : "text-white/40"
-                )}
-              >
-                {link.label}
-                {pathname === link.href && (
-                  <motion.div 
-                    layoutId="nav-active"
-                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-primary neon-glow-primary rounded-full"
-                  />
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setIsSearchOpen(true)}
-              className="w-12 h-12 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-            >
-              <Search className="w-5 h-5" />
-            </button>
+      <div className="fixed top-0 left-0 right-0 z-[150] px-6 py-6 pointer-events-none">
+        <nav
+          className={cn(
+            "max-w-[1600px] mx-auto flex items-center justify-between transition-all duration-700 px-8 pointer-events-auto",
+            isScrolled 
+              ? "py-4 rounded-[2.5rem] bg-background/60 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]" 
+              : "py-6 rounded-none bg-transparent"
+          )}
+        >
+          <div className="flex items-center gap-12">
+            <Link href="/" className="text-3xl font-headline font-bold tracking-tighter text-white flex items-center gap-1 group">
+              <span className="text-primary group-hover:text-glow transition-all">RE</span>
+              <span>PLICA</span>
+            </Link>
             
-            <NotificationsDropdown />
-          </div>
-
-          <div className="h-8 w-px bg-white/10 hidden md:block" />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="outline-none">
-              <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all group-hover:neon-glow-primary bg-white/5">
-                  <img 
-                    src={profile?.avatarUrl || "https://picsum.photos/seed/avatar1/44/44"} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-                <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white transition-all group-hover:rotate-180" />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="glass border-white/10 text-white w-72 mt-4 p-2 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" align="end">
-              <DropdownMenuLabel className="px-5 py-4 flex flex-col">
-                <span className="font-headline font-bold text-xl">{profile?.name || "Guest User"}</span>
-                <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Neural ID: {profileId?.substring(0, 8)}</span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-white/10 mx-2" />
-              <div className="p-2 space-y-1">
-                <DropdownMenuItem className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-sm">Neural Profile</span>
-                    <span className="text-[10px] text-white/40">Manage your identity</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <Settings className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-sm">Core Settings</span>
-                    <span className="text-[10px] text-white/40">Protocols & security</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="mt-2 bg-primary/10 hover:bg-primary/20 rounded-2xl cursor-pointer flex items-center justify-center py-4 px-5 text-primary font-black uppercase tracking-widest text-[10px] transition-all border border-primary/20 gap-3">
-                  <Sparkles className="w-4 h-4" /> Access Pro Tier
-                </DropdownMenuItem>
-              </div>
-              <DropdownMenuSeparator className="bg-white/10 mx-2" />
-              <div className="p-2">
-                <DropdownMenuItem 
-                  onClick={() => {
-                    localStorage.removeItem('replica_active_profile');
-                    window.location.reload();
-                  }}
-                  className="hover:bg-destructive/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 text-destructive font-bold transition-colors group"
-                >
-                  <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Switch Neural Link
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <button 
-            className="lg:hidden text-white/80 w-12 h-12 glass rounded-full flex items-center justify-center"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              className="fixed inset-0 top-[88px] bg-background/95 backdrop-blur-3xl p-12 lg:hidden flex flex-col gap-10"
-            >
+            <div className="hidden lg:flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em]">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   href={link.href} 
                   className={cn(
-                    "text-4xl font-headline font-bold tracking-tight",
-                    pathname === link.href ? "text-primary" : "text-white"
+                    "relative transition-all hover:text-white py-2",
+                    pathname === link.href ? "text-white" : "text-white/40"
                   )}
-                  onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
+                  {pathname === link.href && (
+                    <motion.div 
+                      layoutId="nav-active"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.8)]"
+                    />
+                  )}
                 </Link>
               ))}
-              <div className="h-px bg-white/10" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1">
               <button 
-                className="flex items-center gap-6 text-2xl font-bold text-white/60"
-                onClick={() => {
-                  setIsSearchOpen(true);
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => setIsSearchOpen(true)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-90"
               >
-                <Search className="w-8 h-8" /> Find Content
+                <Search className="w-5 h-5" />
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+              
+              <NotificationsDropdown />
+            </div>
+
+            <div className="h-6 w-px bg-white/10 hidden md:block" />
+
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                  <div className="flex items-center gap-3 group cursor-pointer">
+                    <div className="w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all group-hover:neon-glow-primary bg-white/5 shadow-xl">
+                      <img 
+                        src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white transition-all group-hover:rotate-180" />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="glass border-white/10 text-white w-72 mt-4 p-2 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" align="end">
+                  <DropdownMenuLabel className="px-5 py-4 flex flex-col">
+                    <span className="font-headline font-bold text-xl">{profile?.name || "Initializing..."}</span>
+                    <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Neural ID: {profileId?.substring(0, 8)}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10 mx-2" />
+                  <div className="p-2 space-y-1">
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        localStorage.removeItem('replica_active_profile');
+                        window.location.reload();
+                      }}
+                      className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">Switch Identity</span>
+                        <span className="text-[10px] text-white/40">Change active profile</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setIsSettingsOpen(true)}
+                      className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Settings className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">Core Settings</span>
+                        <span className="text-[10px] text-white/40">Protocols & security</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="mt-2 bg-primary/10 hover:bg-primary/20 rounded-2xl cursor-pointer flex items-center justify-center py-4 px-5 text-primary font-black uppercase tracking-widest text-[10px] transition-all border border-primary/20 gap-3">
+                      <Sparkles className="w-4 h-4" /> Access Pro Tier
+                    </DropdownMenuItem>
+                  </div>
+                  <DropdownMenuSeparator className="bg-white/10 mx-2" />
+                  <div className="p-2">
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="hover:bg-destructive/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 text-destructive font-bold transition-colors group"
+                    >
+                      <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Logout Node
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <button className="px-6 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:neon-glow-primary transition-all active:scale-95">
+                  Establish Link
+                </button>
+              </Link>
+            )}
+
+            <button 
+              className="lg:hidden text-white/80 w-10 h-10 glass rounded-full flex items-center justify-center"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-[140] bg-background/95 backdrop-blur-3xl p-12 lg:hidden flex flex-col gap-10 pt-32"
+          >
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className={cn(
+                  "text-4xl font-headline font-bold tracking-tight",
+                  pathname === link.href ? "text-primary" : "text-white"
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="h-px bg-white/10" />
+            <button 
+              className="flex items-center gap-6 text-2xl font-bold text-white/60"
+              onClick={() => {
+                setIsSearchOpen(true);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Search className="w-8 h-8" /> Find Content
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

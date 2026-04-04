@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { ReplicaHero } from "@/components/ReplicaHero";
 import { MovieRow } from "@/components/MovieRow";
@@ -16,6 +17,7 @@ import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 
 export default function Home() {
+  const router = useRouter();
   const { user, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -34,17 +36,22 @@ export default function Home() {
   const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
 
   useEffect(() => {
-    // Persist profile selection during session
+    if (!isAuthLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isAuthLoading, router]);
+
+  useEffect(() => {
     const savedProfile = localStorage.getItem('replica_active_profile');
     if (savedProfile) setSelectedProfileId(savedProfile);
   }, []);
 
   useEffect(() => {
-    if (!isAuthLoading && !isContentLoading) {
-      const timer = setTimeout(() => setIsLoading(false), 2000);
+    if (!isAuthLoading && !isContentLoading && user) {
+      const timer = setTimeout(() => setIsLoading(false), 1500);
       return () => clearTimeout(timer);
     }
-  }, [isAuthLoading, isContentLoading]);
+  }, [isAuthLoading, isContentLoading, user]);
 
   useEffect(() => {
     if (allContent && allContent.length > 0 && !featuredMovie) {
@@ -58,7 +65,7 @@ export default function Home() {
     localStorage.setItem('replica_active_profile', id);
   };
 
-  if (isLoading || isAuthLoading) {
+  if (isAuthLoading || (user && isLoading)) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col items-center justify-center z-[500]">
         <motion.div
@@ -84,7 +91,9 @@ export default function Home() {
     );
   }
 
-  if (!selectedProfileId || !user) {
+  if (!user) return null;
+
+  if (!selectedProfileId) {
     return <ProfileSelector onSelect={handleProfileSelect} />;
   }
 
