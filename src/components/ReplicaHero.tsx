@@ -32,17 +32,12 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
     router.push(`/content/${movie.id}`);
   };
 
-  const handlePlayClick = () => {
-    router.push(`/watch/${movie.id}`);
-  };
-
   return (
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
       className="relative h-screen w-full overflow-hidden bg-background"
     >
-      {/* Dynamic Background Image with Multi-layered Ken Burns Effect */}
       <AnimatePresence mode="wait">
         <motion.div
           key={movie.id}
@@ -59,7 +54,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.1)` 
             }}
           />
-          {/* Advanced Multi-layered Overlays for depth */}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
@@ -67,7 +61,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Content Layer */}
       <div className="relative z-10 h-full flex items-center px-6 md:px-12 lg:px-24 pt-20">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 w-full items-center">
           <motion.div
@@ -123,10 +116,10 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             <div className="flex flex-wrap items-center gap-6 pt-6">
               <Button 
                 size="lg" 
-                onClick={handlePlayClick}
+                onClick={handleDetailsClick}
                 className="bg-white text-black hover:bg-primary hover:text-white rounded-full px-12 h-16 font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-2xl"
               >
-                <Play className="w-6 h-6 mr-3 fill-current" /> Watch Now
+                <Play className="w-6 h-6 mr-3 fill-current" /> Play Protocol
               </Button>
               <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10" />
               <Button 
@@ -140,7 +133,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             </div>
           </motion.div>
 
-          {/* Floating Depth Panel Preview */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0, x: 50 }}
             animate={{ scale: 1, opacity: 1, x: 0 }}
@@ -151,7 +143,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               y: mousePosition.y * 15
             }}
           >
-            {/* Background floating elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -z-10" />
             
             <div 
@@ -159,7 +150,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               className="relative w-full max-w-[400px] aspect-[2/3] glass-card rounded-[4rem] p-5 group rotate-3 hover:rotate-0 transition-transform duration-700 cursor-pointer"
             >
                <div className="w-full h-full rounded-[3.5rem] overflow-hidden relative">
-                 <img src={movie.thumbnailUrl} className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700 scale-105 group-hover:scale-100" />
+                 <img src={movie.thumbnailUrl} className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700 scale-105 group-hover:scale-100" alt={movie.title} />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
                  
                  <div className="absolute bottom-12 left-10 right-10 space-y-4">
@@ -182,13 +173,12 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </div>
       </div>
 
-      {/* Social proof & Volume - Adjusted positioning to avoid content row collision */}
       <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
         <div className="flex items-center gap-6">
           <div className="flex -space-x-4">
             {[1,2,3,4].map(i => (
               <div key={i} className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer">
-                <img src={`https://picsum.photos/seed/viewer-${i}/50/50`} className="w-full h-full object-cover" />
+                <img src={`https://picsum.photos/seed/viewer-${i}/50/50`} className="w-full h-full object-cover" alt="Viewer" />
               </div>
             ))}
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter">
@@ -211,7 +201,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </div>
       </div>
 
-      {/* Hero Particles Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
       </div>

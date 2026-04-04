@@ -1,22 +1,19 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Play, 
-  Plus, 
   Share2, 
   Star, 
   Clock, 
   Calendar, 
-  ArrowLeft, 
   User, 
   Film,
-  Check,
-  ChevronRight,
-  Info
+  Info,
+  ChevronLeft
 } from "lucide-react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { MovieRow } from "@/components/MovieRow";
@@ -26,9 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Movie } from "@/lib/types";
-import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function ContentDetailsPage() {
   const router = useRouter();
@@ -46,14 +42,14 @@ export default function ContentDetailsPage() {
 
   const relatedMovies = MOCK_MOVIES.filter(m => 
     m.id !== id && m.genres.some(g => movie?.genres.includes(g))
-  ).slice(0, 6);
+  ).slice(0, 8);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/20 uppercase tracking-[0.4em] font-black text-xs animate-pulse">Syncing Content Metadata</p>
+          <p className="text-white/20 uppercase tracking-[0.4em] font-black text-xs animate-pulse">Synchronizing Neural Records</p>
         </div>
       </div>
     );
@@ -62,8 +58,8 @@ export default function ContentDetailsPage() {
   if (!movie) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-4xl font-headline font-bold mb-4">Content Protocol Not Found</h1>
-        <p className="text-white/40 mb-8">The requested identifier is not synchronized with the current nexus.</p>
+        <h1 className="text-4xl font-headline font-bold mb-4">Content Protocol Offline</h1>
+        <p className="text-white/40 mb-8">The requested identifier is not synchronized with the nexus.</p>
         <Button onClick={() => router.push("/")} className="rounded-full bg-primary px-8">Return Home</Button>
       </div>
     );
@@ -72,7 +68,7 @@ export default function ContentDetailsPage() {
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
-      title: "Sync Link Copied",
+      title: "Protocol Shared",
       description: "Neural transmission address added to clipboard.",
     });
   };
@@ -81,7 +77,7 @@ export default function ContentDetailsPage() {
     <main className="min-h-screen bg-background text-foreground pb-32">
       <ReplicaNavbar />
       
-      {/* Hero Header Section */}
+      {/* Hero Backdrop Section */}
       <div className="relative h-[85vh] w-full overflow-hidden">
         <motion.div 
           initial={{ opacity: 0 }}
@@ -97,6 +93,15 @@ export default function ContentDetailsPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent" />
         </motion.div>
 
+        <div className="absolute top-32 left-6 md:left-12 lg:left-24 z-20">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-white/40 hover:text-white transition-colors uppercase font-black text-[10px] tracking-[0.3em] group"
+          >
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Nexus
+          </button>
+        </div>
+
         <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-12 lg:px-24 pb-20 max-w-[1600px] mx-auto w-full">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -110,7 +115,7 @@ export default function ContentDetailsPage() {
               </Badge>
               <div className="flex items-center gap-1.5 text-white/60 text-sm font-bold">
                 <Star className="w-4 h-4 text-primary fill-primary" />
-                <span className="text-white">{movie.rating} Match</span>
+                <span className="text-white">{movie.rating} Neural Match</span>
               </div>
             </div>
 
@@ -120,7 +125,7 @@ export default function ContentDetailsPage() {
 
             {movie.tagline && (
               <p className="text-2xl md:text-3xl font-headline text-primary/80 italic font-medium">
-                {movie.tagline}
+                "{movie.tagline}"
               </p>
             )}
 
@@ -160,10 +165,9 @@ export default function ContentDetailsPage() {
         </div>
       </div>
 
-      {/* Details Grid */}
+      {/* Deep Details Section */}
       <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 -mt-12 relative z-20 grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-8 space-y-20">
-          {/* Cast Section */}
           <section className="space-y-8">
             <h2 className="text-2xl font-headline font-bold text-white uppercase tracking-widest flex items-center gap-4">
               <span className="w-1.5 h-6 bg-primary rounded-full" />
@@ -184,7 +188,6 @@ export default function ContentDetailsPage() {
             </div>
           </section>
 
-          {/* Director / Info */}
           <section className="space-y-8">
             <h2 className="text-2xl font-headline font-bold text-white uppercase tracking-widest flex items-center gap-4">
               <span className="w-1.5 h-6 bg-accent rounded-full" />
@@ -196,25 +199,24 @@ export default function ContentDetailsPage() {
                 <p className="text-2xl font-headline font-bold text-white">{movie.director || "The Architect"}</p>
               </div>
               <div className="space-y-2">
-                <span className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-black">Studio Protocol</span>
-                <p className="text-2xl font-headline font-bold text-white">Replica Originals</p>
+                <span className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-black">Studio Nexus</span>
+                <p className="text-2xl font-headline font-bold text-white">Replica Original Systems</p>
               </div>
             </div>
           </section>
         </div>
 
-        {/* Sidebar Info */}
         <div className="lg:col-span-4 space-y-12">
           <div className="glass p-10 rounded-[3rem] border border-white/5 space-y-8">
             <h3 className="text-xl font-headline font-bold text-white flex items-center gap-3">
-              <Info className="w-5 h-5 text-primary" /> Technical Specs
+              <Info className="w-5 h-5 text-primary" /> Synchronization Specs
             </h3>
             <div className="space-y-6">
               {[
-                { label: "Quality", value: "4K ULTRA HD" },
-                { label: "Audio", value: "Neural Spatial 7.1" },
-                { label: "Subtitles", value: "Global Matrix Dialects" },
-                { label: "Rating", value: "IMDb " + movie.rating }
+                { label: "Stream Quality", value: "4K ULTRA HDR" },
+                { label: "Audio Profile", value: "Spatial Neural 7.1" },
+                { label: "Language Protocol", value: "Global Universal" },
+                { label: "IMDb Synchro", value: movie.rating }
               ].map((spec, i) => (
                 <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
                   <span className="text-xs text-white/40 font-bold uppercase tracking-widest">{spec.label}</span>
@@ -226,9 +228,8 @@ export default function ContentDetailsPage() {
         </div>
       </div>
 
-      {/* Related Content */}
       <div className="mt-32">
-        <MovieRow title="Related Protocols" movies={relatedMovies} />
+        <MovieRow title="Related Syncs" movies={relatedMovies} />
       </div>
 
       <Toaster />

@@ -3,11 +3,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Plus, Info, Volume2, VolumeX, Star, Clock } from "lucide-react";
+import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Share2 } from "lucide-react";
 import { Movie } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 interface MovieCardProps {
   movie: Movie;
@@ -21,10 +22,10 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isHovered) {
-      // Delay preview to ensure intentional hover (OTT standard)
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
         if (videoRef.current) {
@@ -46,12 +47,18 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
   }, [isHovered]);
 
   const handleCardClick = () => {
+    // Navigate to Details Page first as requested
     router.push(`/content/${movie.id}`);
   };
 
-  const handlePlayClick = (e: React.MouseEvent) => {
+  const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/watch/${movie.id}`);
+    const url = `${window.location.origin}/content/${movie.id}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Protocol Shared",
+      description: "Neural link copied to clipboard.",
+    });
   };
 
   return (
@@ -83,7 +90,6 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
           )}
         />
         
-        {/* Video Preview Layer */}
         <div className={cn(
           "absolute inset-0 transition-opacity duration-700",
           showPreview ? "opacity-100" : "opacity-0"
@@ -98,7 +104,6 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         </div>
         
-        {/* Card Info Overlay */}
         <AnimatePresence>
           {isHovered && (
             <motion.div 
@@ -123,16 +128,16 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={handlePlayClick}
+                    onClick={handleCardClick}
                     className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all transform hover:scale-110 shadow-xl"
                   >
                     <Play className="w-5 h-5 fill-current ml-1" />
                   </button>
                   <button 
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={handleShare}
                     className="w-10 h-10 rounded-full border-2 border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors"
                   >
-                    <Plus className="w-5 h-5" />
+                    <Share2 className="w-5 h-5" />
                   </button>
                 </div>
                 <button 

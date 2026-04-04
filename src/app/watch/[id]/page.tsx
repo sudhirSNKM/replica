@@ -7,17 +7,14 @@ import {
   ArrowLeft, 
   Play, 
   Pause, 
-  RotateCcw, 
-  RotateCw, 
   Volume2, 
   VolumeX, 
   Maximize, 
   SkipForward, 
   Settings, 
-  Subtitles, 
-  Languages,
   FastForward,
-  Loader2
+  Loader2,
+  Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -45,8 +42,6 @@ export default function VideoPlayer() {
   }, [firestore, id]);
 
   const { data: firestoreMovie, isLoading: isMovieLoading } = useDoc(movieRef);
-
-  // Fallback to MOCK_MOVIES if Firestore is empty or the specific ID is missing
   const movie = firestoreMovie || MOCK_MOVIES.find(m => m.id === id);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,16 +108,6 @@ export default function VideoPlayer() {
     }
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const handleMouseMove = () => {
@@ -148,21 +133,7 @@ export default function VideoPlayer() {
     );
   }
 
-  if (!movie) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white p-6 text-center">
-        <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-        </div>
-        <h2 className="text-4xl font-headline font-bold mb-4">Content Synchronization Required</h2>
-        <p className="text-white/40 mb-12 max-w-md mx-auto">The requested cinematic protocol is not available in your current nexus. Please synchronize your database in the Admin panel.</p>
-        <div className="flex gap-6">
-          <Button variant="outline" className="rounded-full px-10 h-14 border-white/10 glass" onClick={() => router.push("/admin")}>Go to Admin</Button>
-          <Button className="rounded-full px-10 h-14 bg-primary hover:bg-primary/90" onClick={() => router.push("/")}>Return Home</Button>
-        </div>
-      </div>
-    );
-  }
+  if (!movie) return null;
 
   return (
     <div className="fixed inset-0 bg-black z-[200] flex items-center justify-center group overflow-hidden select-none">
@@ -207,6 +178,12 @@ export default function VideoPlayer() {
               </button>
 
               <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => router.push(`/content/${movie.id}`)}
+                  className="w-12 h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all"
+                >
+                  <Info className="w-6 h-6" />
+                </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="w-12 h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all">
@@ -214,7 +191,7 @@ export default function VideoPlayer() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="glass border-white/10 text-white w-56" align="end">
-                    <DropdownMenuLabel>Playback Settings</DropdownMenuLabel>
+                    <DropdownMenuLabel>Playback Sync</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex justify-between" onClick={() => {
                       const speeds = [1, 1.25, 1.5, 2];
@@ -222,12 +199,10 @@ export default function VideoPlayer() {
                       setPlaybackSpeed(next);
                       if (videoRef.current) videoRef.current.playbackRate = next;
                     }}>
-                      Speed <span>{playbackSpeed}x</span>
+                      Neural Speed <span>{playbackSpeed}x</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="w-px h-6 bg-white/20" />
-                <span className="text-white font-headline font-bold text-xl tracking-tighter">HD</span>
               </div>
             </motion.div>
 
@@ -255,37 +230,29 @@ export default function VideoPlayer() {
                 <div className="flex items-center gap-8">
                   <button 
                     onClick={togglePlay} 
-                    className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:scale-110 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                    className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all hover:scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                   >
                     {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
                   </button>
                   
                   <div className="flex items-center gap-4 group/vol w-40">
-                    <button 
-                      onClick={() => {
-                        const newMute = !isMuted;
-                        setIsMuted(newMute);
-                        if (videoRef.current) videoRef.current.muted = newMute;
-                      }}
-                      className="text-white/60 hover:text-white transition-colors"
-                    >
-                      {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                    <button className="text-white/60 hover:text-white transition-colors">
+                      {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                     </button>
                     <Slider
                       value={[isMuted ? 0 : volume]}
                       max={100}
-                      step={1}
                       onValueChange={handleVolumeChange}
-                      className="w-full opacity-0 group-hover/vol:opacity-100 transition-opacity"
+                      className="w-full"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <button 
-                    onClick={toggleFullscreen}
-                    className="text-white/60 hover:text-white transition-colors hover:scale-110"
-                  >
+                  <button onClick={() => {
+                    if (document.fullscreenElement) document.exitFullscreen();
+                    else document.documentElement.requestFullscreen();
+                  }} className="text-white/60 hover:text-white transition-colors">
                     <Maximize className="w-6 h-6" />
                   </button>
                 </div>
@@ -294,50 +261,6 @@ export default function VideoPlayer() {
           </>
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {showSkipIntro && (
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            className="absolute right-10 bottom-40 z-20"
-          >
-            <Button 
-              onClick={() => {
-                if (videoRef.current) videoRef.current.currentTime = 40;
-                setShowSkipIntro(false);
-              }}
-              className="bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-none px-8 py-6 text-lg font-bold hover:bg-white/20 transition-all hover:scale-105 group"
-            >
-              <SkipForward className="w-5 h-5 mr-3 group-hover:translate-x-1 transition-transform" /> Skip Intro
-            </Button>
-          </motion.div>
-        )}
-
-        {showNextEpisode && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute right-10 bottom-40 z-20"
-          >
-            <Button 
-              className="bg-primary hover:bg-primary/90 text-white rounded-none px-10 py-8 text-xl font-bold neon-glow-primary group"
-              onClick={() => router.push("/")}
-            >
-              Back to Home <FastForward className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.div
-        initial={{ scaleX: 1 }}
-        animate={{ scaleX: 0 }}
-        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute inset-0 bg-background z-[300] origin-left"
-      />
     </div>
   );
 }
