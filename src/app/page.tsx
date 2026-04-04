@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { motion } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, limit } from "firebase/firestore";
+import { ShowRow } from "@/components/ShowRow";
 
 export default function Home() {
   const { user, isUserLoading: isAuthLoading } = useUser();
@@ -76,6 +77,9 @@ export default function Home() {
     return <ProfileSelector onSelect={(id) => setSelectedProfile(id)} />;
   }
 
+  const moviesOnly = allMovies?.filter(m => m.type === 'movie') || [];
+  const showsOnly = allMovies?.filter(m => m.type === 'show') || [];
+
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <ReplicaNavbar />
@@ -87,6 +91,12 @@ export default function Home() {
         
         {allMovies && (
           <>
+            <ShowRow 
+              title="Top Series for You" 
+              shows={showsOnly} 
+              onHover={handleMovieHover} 
+            />
+
             <MovieRow 
               title="Trending Experiences" 
               movies={allMovies.filter(m => m.isTrending)} 
@@ -95,15 +105,21 @@ export default function Home() {
             
             <AIRecommendations />
 
+            <ShowRow 
+              title="Binge-Worthy Protocols" 
+              shows={[...showsOnly].reverse()} 
+              onHover={handleMovieHover} 
+            />
+
             <MovieRow 
               title="Neo-Tokyo Noir" 
-              movies={[...allMovies].reverse()} 
+              movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk")))} 
               onMovieHover={handleMovieHover}
             />
 
             <MovieRow 
               title="Sci-Fi Blockbusters" 
-              movies={allMovies.filter(m => m.genres.includes("Sci-Fi"))} 
+              movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("sci-fi")))} 
               onMovieHover={handleMovieHover}
             />
             
