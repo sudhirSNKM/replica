@@ -38,7 +38,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
 
   const profilesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, "users", user.uid, "profiles");
+    return collection(firestore, "userAccounts", user.uid, "userProfiles");
   }, [firestore, user]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
@@ -57,18 +57,17 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const handleAddProfile = async () => {
     if (!firestore || !user) return;
     const id = "p-" + Math.random().toString(36).substring(7);
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
     
     const count = profiles?.length || 0;
     const name = count === 0 ? "Primary Protocol" : `Sub-Protocol ${count + 1}`;
     
     await setDoc(profileRef, {
       id,
-      userId: user.uid,
+      userAccountId: user.uid,
       name: name,
       avatarUrl: `https://picsum.photos/seed/${id}/200/200`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date().toISOString()
     });
     
     toast({ title: "Profile Initialized", description: `${name} added to your nexus.` });
@@ -76,8 +75,8 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
 
   const handleUpdateProfileName = async (id: string) => {
     if (!firestore || !user) return;
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
-    await setDoc(profileRef, { name: newProfileName, updatedAt: new Date().toISOString() }, { merge: true });
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
+    await setDoc(profileRef, { name: newProfileName }, { merge: true });
     setEditingProfileId(null);
     toast({ title: "Profile Synced", description: "Identity protocol updated." });
   };
@@ -85,7 +84,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const handleDeleteProfile = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!firestore || !user) return;
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
     await deleteDoc(profileRef);
     toast({ title: "Profile Terminated", description: "Identity removed from nexus." });
   };

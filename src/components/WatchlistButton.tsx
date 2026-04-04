@@ -1,12 +1,12 @@
 
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Plus, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 interface WatchlistButtonProps {
@@ -23,7 +23,7 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
   const watchlistQuery = useMemoFirebase(() => {
     if (!firestore || !user || !activeProfileId) return null;
     return query(
-      collection(firestore, "users", user.uid, "profiles", activeProfileId, "watchlist"),
+      collection(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems"),
       where("contentId", "==", movieId)
     );
   }, [firestore, user, movieId, activeProfileId]);
@@ -39,11 +39,12 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
 
     if (isInWatchlist) {
       const itemToDelete = watchlistItem[0];
-      const docRef = doc(firestore, "users", user.uid, "profiles", activeProfileId, "watchlist", itemToDelete.id);
+      const docRef = doc(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems", itemToDelete.id);
       deleteDocumentNonBlocking(docRef);
     } else {
-      const colRef = collection(firestore, "users", user.uid, "profiles", activeProfileId, "watchlist");
+      const colRef = collection(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems");
       addDocumentNonBlocking(colRef, {
+        userAccountId: user.uid,
         userProfileId: activeProfileId,
         contentId: movieId,
         addedAt: new Date().toISOString()

@@ -35,24 +35,21 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Create user document in Firestore
-      await setDoc(doc(firestore, "users", user.uid), {
+      // Create user document in userAccounts
+      await setDoc(doc(firestore, "userAccounts", user.uid), {
         id: user.uid,
-        name: name,
         email: email,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: new Date().toISOString()
       });
 
-      // Create a default profile
+      // Create a default profile in userProfiles subcollection
       const profileId = "primary-" + Math.random().toString(36).substring(7);
-      await setDoc(doc(firestore, "users", user.uid, "profiles", profileId), {
+      await setDoc(doc(firestore, "userAccounts", user.uid, "userProfiles", profileId), {
         id: profileId,
-        userId: user.uid,
+        userAccountId: user.uid,
         name: name,
         avatarUrl: `https://picsum.photos/seed/${profileId}/200/200`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: new Date().toISOString()
       });
 
       toast({ 
