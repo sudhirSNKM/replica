@@ -32,7 +32,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   const { user, auth } = useUser();
   const firestore = useFirestore();
 
-  // Get active profile ID from local storage if not passed
   const profileId = activeProfileId || (typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null);
 
   const profileRef = useMemoFirebase(() => {
@@ -52,9 +51,13 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
 
   const handleLogout = async () => {
     if (auth) {
-      await signOut(auth);
-      localStorage.removeItem('replica_active_profile');
-      router.push('/login');
+      try {
+        await signOut(auth);
+        localStorage.removeItem('replica_active_profile');
+        router.push('/login');
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
     }
   };
 
@@ -66,7 +69,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     { href: "/watchlist", label: "My List" },
   ];
 
-  if (pathname === '/login') return null;
+  if (pathname === '/login' || pathname === '/register') return null;
 
   return (
     <>
@@ -137,15 +140,15 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="glass border-white/10 text-white w-72 mt-4 p-2 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" align="end">
                   <DropdownMenuLabel className="px-5 py-4 flex flex-col">
-                    <span className="font-headline font-bold text-xl">{profile?.name || "Initializing..."}</span>
-                    <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Neural ID: {profileId?.substring(0, 8)}</span>
+                    <span className="font-headline font-bold text-xl">{profile?.name || user.email?.split('@')[0] || "Neural Node"}</span>
+                    <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Status: Online</span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <div className="p-2 space-y-1">
                     <DropdownMenuItem 
                       onClick={() => {
                         localStorage.removeItem('replica_active_profile');
-                        window.location.reload();
+                        router.push('/');
                       }}
                       className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
                     >
@@ -168,9 +171,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                         <span className="font-bold text-sm">Core Settings</span>
                         <span className="text-[10px] text-white/40">Protocols & security</span>
                       </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="mt-2 bg-primary/10 hover:bg-primary/20 rounded-2xl cursor-pointer flex items-center justify-center py-4 px-5 text-primary font-black uppercase tracking-widest text-[10px] transition-all border border-primary/20 gap-3">
-                      <Sparkles className="w-4 h-4" /> Access Pro Tier
                     </DropdownMenuItem>
                   </div>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
@@ -223,16 +223,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                 {link.label}
               </Link>
             ))}
-            <div className="h-px bg-white/10" />
-            <button 
-              className="flex items-center gap-6 text-2xl font-bold text-white/60"
-              onClick={() => {
-                setIsSearchOpen(true);
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Search className="w-8 h-8" /> Find Content
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

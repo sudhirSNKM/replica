@@ -1,0 +1,144 @@
+
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, User, Sparkles } from "lucide-react";
+import { useUser, useFirestore } from "@/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { auth } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth || !firestore || !email || !password || !name) return;
+
+    setIsLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document in Firestore
+      await setDoc(doc(firestore, "users", user.uid), {
+        id: user.uid,
+        name: name,
+        email: email,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Create a default profile
+      const profileId = Math.random().toString(36).substring(7);
+      await setDoc(doc(firestore, "users", user.uid, "profiles", profileId), {
+        id: profileId,
+        userId: user.uid,
+        name: name,
+        avatarUrl: `https://picsum.photos/seed/${profileId}/200/200`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      toast({ 
+        title: "Protocol Established", 
+        description: "Your neural identity has been added to the matrix." 
+      });
+      router.push('/');
+    } catch (e: any) {
+      toast({ 
+        title: "Registration Error", 
+        description: e.message, 
+        variant: "destructive" 
+      });
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#050507] flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background pointer-events-none" />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="text-center mb-12 space-y-4">
+          <Link href="/login" className="text-3xl font-headline font-bold tracking-tighter text-white inline-flex items-center gap-1">
+            <span className="text-primary">RE</span>
+            <span>PLICA</span>
+          </Link>
+          <h1 className="text-4xl font-headline font-bold text-white">Create Identity</h1>
+          <p className="text-white/40 font-medium">Register your unique link to the Nexus.</p>
+        </div>
+
+        <div className="glass p-12 rounded-[4rem] border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.8)]">
+          <form onSubmit={handleRegister} className="space-y-6">
+            <div className="relative group/input">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within/input:text-primary transition-colors" />
+              <Input 
+                placeholder="Identity Name" 
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="relative group/input">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within/input:text-primary transition-colors" />
+              <Input 
+                type="email" 
+                placeholder="Matrix Address (Email)" 
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="relative group/input">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within/input:text-primary transition-colors" />
+              <Input 
+                type="password" 
+                placeholder="Sync Key (Password)" 
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <Button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg neon-glow-primary transition-all active:scale-95 group"
+            >
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                <>Establish Link <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" /></>
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center mt-10">
+            <Link href="/login" className="text-xs text-white/40 hover:text-white uppercase tracking-widest font-black transition-colors">
+              Already verified? Sign In
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    </main>
+  );
+}
