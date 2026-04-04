@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Share2 } from "lucide-react";
+import { Play, Volume2, VolumeX, Star, Share2 } from "lucide-react";
 import { Movie } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
 
   useEffect(() => {
     if (isHovered) {
+      // User must hover for at least 700ms to trigger the cinematic preview
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
         if (videoRef.current) {
@@ -47,7 +48,7 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
   }, [isHovered]);
 
   const handleCardClick = () => {
-    // Navigate to Details Page first as requested
+    // Navigate to Details Page first
     router.push(`/content/${movie.id}`);
   };
 

@@ -10,9 +10,7 @@ import {
   Volume2, 
   VolumeX, 
   Maximize, 
-  SkipForward, 
   Settings, 
-  FastForward,
   Loader2,
   Info
 } from "lucide-react";
@@ -42,6 +40,8 @@ export default function VideoPlayer() {
   }, [firestore, id]);
 
   const { data: firestoreMovie, isLoading: isMovieLoading } = useDoc(movieRef);
+  
+  // Define movie with fallback to mock data if Firestore record is missing
   const movie = firestoreMovie || MOCK_MOVIES.find(m => m.id === id);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -53,9 +53,8 @@ export default function VideoPlayer() {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showSkipIntro, setShowSkipIntro] = useState(false);
-  const [showNextEpisode, setShowNextEpisode] = useState(false);
 
+  // Toggle play/pause
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -75,8 +74,6 @@ export default function VideoPlayer() {
       if (isFinite(total) && total > 0) {
         const percent = (current / total) * 100;
         setProgress(percent);
-        setShowSkipIntro(current > 10 && current < 40);
-        setShowNextEpisode(percent > 85);
       }
       
       const formatTime = (time: number) => {
@@ -133,7 +130,17 @@ export default function VideoPlayer() {
     );
   }
 
-  if (!movie) return null;
+  if (!movie) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white p-6">
+        <p className="text-2xl mb-4 font-headline font-bold">Media Protocol Missing</p>
+        <p className="text-white/40 mb-8 max-w-md text-center">We encountered a de-synchronization error. Please initialize sample data to the nexus.</p>
+        <Button onClick={() => router.push("/")} className="bg-primary hover:neon-glow-primary rounded-xl px-10 py-6 font-bold uppercase tracking-widest text-xs">
+          Return to Portal
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black z-[200] flex items-center justify-center group overflow-hidden select-none">

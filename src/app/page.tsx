@@ -15,6 +15,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection, query, limit } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
+import { SeedContent } from "@/components/SeedContent";
 
 export default function Home() {
   const router = useRouter();
@@ -176,6 +177,8 @@ export default function Home() {
             />
           </section>
         </div>
+
+        <SeedContent />
       </div>
 
       <footer className="bg-[#050507] border-t border-white/5 py-48 px-6 md:px-12">
