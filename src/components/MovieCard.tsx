@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Plus, Info, Volume2, VolumeX, Star } from "lucide-react";
+import { Play, Plus, Info, Volume2, VolumeX, Star, Clock } from "lucide-react";
 import { Movie } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -23,13 +23,13 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
 
   useEffect(() => {
     if (isHovered) {
-      // Delay preview to ensure intentional hover
+      // Delay preview to ensure intentional hover (OTT standard)
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
         if (videoRef.current) {
           videoRef.current.play().catch(() => {});
         }
-      }, 600);
+      }, 700);
     } else {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       setShowPreview(false);
@@ -46,7 +46,7 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
 
   return (
     <div 
-      className="relative flex-none w-[160px] md:w-[240px] aspect-[2/3] group cursor-pointer perspective-1000"
+      className="relative flex-none w-[180px] md:w-[260px] aspect-[2/3] group cursor-pointer"
       onMouseEnter={() => {
         setIsHovered(true);
         onHover?.(movie);
@@ -55,9 +55,13 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
       onClick={() => router.push(`/watch/${movie.id}`)}
     >
       <motion.div
-        className="relative w-full h-full rounded-2xl overflow-hidden border border-white/5 transition-all duration-500 group-hover:neon-glow-primary group-hover:border-primary/50 bg-black"
-        whileHover={{ scale: 1.15, zIndex: 100, y: -30 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="relative w-full h-full rounded-2xl overflow-hidden border border-white/5 bg-black"
+        whileHover={{ 
+          scale: 1.25, 
+          zIndex: 100, 
+          y: -40,
+          transition: { type: "spring", stiffness: 400, damping: 25 }
+        }}
         layoutId={`movie-card-${movie.id}`}
       >
         <img 
@@ -88,32 +92,31 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
         <AnimatePresence>
           {isHovered && (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute bottom-0 left-0 right-0 p-4 space-y-2 bg-gradient-to-t from-black via-black/80 to-transparent"
+              className="absolute inset-0 flex flex-col justify-end p-5 space-y-3"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(var(--primary),0.5)]">
-                  {movie.isNew ? "NEW" : "HOT"}
-                </span>
-                <span className="text-white/80 text-[10px] font-bold flex items-center gap-0.5">
-                  <Star className="w-2.5 h-2.5 fill-primary text-primary" /> {movie.rating}
-                </span>
-                <span className="text-white/40 text-[10px]">{movie.duration}</span>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(var(--primary),0.5)]">
+                  {movie.isNew ? "NEW" : "FEATURED"}
+                </Badge>
+                <div className="flex items-center gap-1 text-white text-[10px] font-bold">
+                  <Star className="w-3 h-3 fill-primary text-primary" /> {movie.rating}
+                </div>
               </div>
               
-              <h3 className="font-headline font-bold text-sm md:text-base text-white leading-tight truncate">
+              <h3 className="font-headline font-bold text-base md:text-lg text-white leading-tight drop-shadow-md">
                 {movie.title}
               </h3>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all transform hover:scale-110 active:scale-90 shadow-lg">
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                <div className="flex items-center gap-3">
+                  <button className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all transform hover:scale-110 shadow-xl">
+                    <Play className="w-5 h-5 fill-current ml-1" />
                   </button>
-                  <button className="w-8 h-8 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
-                    <Plus className="w-4 h-4" />
+                  <button className="w-10 h-10 rounded-full border-2 border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
                 <button 
@@ -121,16 +124,16 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
                     e.stopPropagation();
                     setIsMuted(!isMuted);
                   }}
-                  className="text-white/60 hover:text-white transition-colors p-1"
+                  className="w-8 h-8 rounded-full glass flex items-center justify-center text-white/60 hover:text-white"
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
               </div>
               
-              <div className="flex flex-wrap gap-1.5">
-                {movie.genres.slice(0, 2).map(g => (
-                  <span key={g} className="text-[9px] text-white/40 uppercase tracking-tight">{g}</span>
-                ))}
+              <div className="flex items-center gap-3 text-[10px] text-white/40 font-bold uppercase tracking-tight">
+                <span>{movie.duration}</span>
+                <span className="w-1 h-1 bg-white/20 rounded-full" />
+                <span className="truncate">{movie.genres.join(" • ")}</span>
               </div>
             </motion.div>
           )}
