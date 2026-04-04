@@ -4,10 +4,11 @@
 import React, { useState } from "react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { ReplicaHero } from "@/components/ReplicaHero";
-import { MovieRow } from "@/components/MovieRow";
+import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
+import { Monitor, Tv, Layers } from "lucide-react";
 
 export default function TVShowsPage() {
   const shows = MOCK_MOVIES.filter(m => m.type === 'show');
@@ -24,31 +25,44 @@ export default function TVShowsPage() {
       <ReplicaNavbar />
       <ReplicaHero movie={featuredShow} />
 
-      <div className="relative z-20 -mt-32 md:-mt-64 space-y-12 pb-32">
+      <div className="relative z-20 -mt-32 md:-mt-64 space-y-16 pb-32">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background -z-10 h-[500px]" />
         
-        <MovieRow 
+        {/* Category Selector */}
+        <div className="flex items-center gap-6 px-6 md:px-12 overflow-x-auto scrollbar-hide py-4">
+          {[
+            { id: 'all', name: 'All Shows', icon: Tv },
+            { id: 'trending', name: 'Trending', icon: Layers },
+            { id: 'dramas', name: 'Dramas', icon: Monitor },
+          ].map(cat => (
+            <button key={cat.id} className="flex-none flex items-center gap-2 px-6 py-3 rounded-2xl glass border border-white/5 hover:border-primary/50 text-white/60 hover:text-white transition-all text-sm font-bold uppercase tracking-widest whitespace-nowrap">
+              <cat.icon className="w-4 h-4 text-primary" /> {cat.name}
+            </button>
+          ))}
+        </div>
+
+        <ShowRow 
           title="Trending Shows" 
-          movies={shows.filter(s => s.isTrending)} 
-          onMovieHover={handleMovieHover} 
+          shows={shows.filter(s => s.isTrending)} 
+          onHover={handleMovieHover} 
         />
 
-        <MovieRow 
+        <ShowRow 
           title="Cyberpunk Dramas" 
-          movies={shows.filter(s => s.genres.includes("Cyberpunk"))} 
-          onMovieHover={handleMovieHover} 
+          shows={shows.filter(s => s.genres.includes("Cyberpunk"))} 
+          onHover={handleMovieHover} 
         />
         
-        <MovieRow 
+        <ShowRow 
           title="New Arrivals" 
-          movies={shows.filter(s => s.isNew)} 
-          onMovieHover={handleMovieHover}
+          shows={shows.filter(s => s.isNew)} 
+          onHover={handleMovieHover}
         />
 
-        <MovieRow 
+        <ShowRow 
           title="All TV Series" 
-          movies={shows} 
-          onMovieHover={handleMovieHover}
+          shows={shows} 
+          onHover={handleMovieHover}
         />
       </div>
       <Toaster />

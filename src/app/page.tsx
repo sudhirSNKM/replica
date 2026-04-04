@@ -12,6 +12,8 @@ import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { ShowRow } from "@/components/ShowRow";
+
 export default function Home() {
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [featuredMovie, setFeaturedMovie] = useState<Movie>(MOCK_MOVIES[0]);
@@ -57,6 +59,9 @@ export default function Home() {
     return <ProfileSelector onSelect={(id) => setSelectedProfile(id)} />;
   }
 
+  const moviesOnly = MOCK_MOVIES.filter(m => m.type === 'movie');
+  const showsOnly = MOCK_MOVIES.filter(m => m.type === 'show');
+
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <ReplicaNavbar />
@@ -72,6 +77,12 @@ export default function Home() {
           onMovieHover={handleMovieHover} 
         />
 
+        <ShowRow 
+          title="Top Series for You" 
+          shows={showsOnly} 
+          onHover={handleMovieHover} 
+        />
+
         <MovieRow 
           title="Trending Experiences" 
           movies={MOCK_MOVIES} 
@@ -80,15 +91,21 @@ export default function Home() {
         
         <AIRecommendations />
 
+        <ShowRow 
+          title="Binge-Worthy Protocols" 
+          shows={[...showsOnly].reverse()} 
+          onHover={handleMovieHover} 
+        />
+
         <MovieRow 
           title="Neo-Tokyo Noir" 
-          movies={[...MOCK_MOVIES].reverse()} 
+          movies={moviesOnly.filter(m => m.genres.includes("Cyberpunk"))} 
           onMovieHover={handleMovieHover}
         />
 
         <MovieRow 
           title="Sci-Fi Blockbusters" 
-          movies={MOCK_MOVIES.filter(m => m.genres.includes("Sci-Fi"))} 
+          movies={moviesOnly.filter(m => m.genres.includes("Sci-Fi"))} 
           onMovieHover={handleMovieHover}
         />
         
