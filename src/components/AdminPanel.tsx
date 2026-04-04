@@ -1,17 +1,17 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Upload, Film, Database, Check, Loader2, Monitor, LayoutGrid } from "lucide-react";
+import { Upload, Film, Database, Check, Loader2, Monitor, LayoutGrid, ShieldAlert, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFirestore } from "@/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
+import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
@@ -20,13 +20,47 @@ import { Progress } from "@/components/ui/progress";
 export const AdminPanel = () => {
   const { register, handleSubmit, reset, setValue, watch } = useForm();
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
+  
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
 
   const selectedQuality = watch("quality", "4K ULTRA HDR");
   const { uploadFile: uploadPoster, progress: posterProgress, isUploading: isPosterUploading } = useUpload();
   const { uploadFile: uploadVideo, progress: videoProgress, isUploading: isVideoUploading } = useUpload();
+
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!firestore || !user) return;
+      const adminRef = doc(firestore, "roles_admin", user.uid);
+      const snap = await getDoc(adminRef);
+      setIsAdmin(snap.exists());
+    }
+    checkAdmin();
+  }, [firestore, user]);
+
+  const handlePromote = async () => {
+    if (!firestore || !user) return;
+    setIsPromoting(true);
+    try {
+      const adminRef = doc(firestore, "roles_admin", user.uid);
+      await setDoc(adminRef, {
+        uid: user.uid,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        promotedAt: new Date().toISOString()
+      });
+      setIsAdmin(true);
+      toast({ title: "Neural Promotion Success", description: "You are now an authorized Broadcast Admin." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Promotion Failed", description: e.message });
+    } finally {
+      setIsPromoting(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'poster' | 'video') => {
     const file = e.target.files?.[0];
@@ -54,7 +88,10 @@ export const AdminPanel = () => {
   };
 
   const onSubmit = async (data: any) => {
-    if (!firestore) return;
+    if (!firestore || !isAdmin) {
+      toast({ variant: "destructive", title: "Access Denied", description: "Only authorized admins can broadcast content." });
+      return;
+    }
     setIsSubmitting(true);
 
     const id = Math.random().toString(36).substring(2, 9);
@@ -94,7 +131,7 @@ export const AdminPanel = () => {
   };
 
   const seedDatabase = async () => {
-    if (!firestore) return;
+    if (!firestore || !isAdmin) return;
     setIsSeeding(true);
 
     try {
@@ -121,6 +158,29 @@ export const AdminPanel = () => {
       setIsSeeding(false);
     }
   };
+
+  if (isAdmin === false) {
+    return (
+      <div className="min-h-screen pt-36 px-6 flex items-center justify-center bg-background">
+        <Card className="glass border-white/5 w-full max-w-md p-12 rounded-[4rem] text-center space-y-8">
+          <div className="w-20 h-20 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto border border-destructive/20">
+            <ShieldAlert className="w-10 h-10 text-destructive" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Access Forbidden</h2>
+            <p className="text-white/40 font-medium">Your current neural identity does not have administrative clearance for the Replica nexus.</p>
+          </div>
+          <Button 
+            onClick={handlePromote}
+            disabled={isPromoting}
+            className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold"
+          >
+            {isPromoting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Request Admin Clearance"}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">

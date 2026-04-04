@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isUserLoading, auth } = useFirebase();
+  const { user, isUserLoading, auth, firestore } = useFirebase();
   const { toast } = useToast();
 
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
@@ -32,7 +33,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
+    if (!auth || !firestore) {
       toast({ title: "Auth Protocol Offline", description: "The authentication service is not responding.", variant: "destructive" });
       return;
     }
@@ -42,8 +43,33 @@ export default function LoginPage() {
       if (authMode === 'email') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // Simulated Neural Phone Auth using Anonymous Sign-in
-        await signInAnonymously(auth);
+        // Phone Auth Simulation for Prototype - Isolated by Phone ID
+        const userCredential = await signInAnonymously(auth);
+        const uid = userCredential.user.uid;
+        
+        // Check if user document exists, if not create one tied to the phone
+        const userRef = doc(firestore, "users", uid);
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+          await setDoc(userRef, {
+            id: uid,
+            phoneNumber: phone,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          
+          // Create initial profile for this number
+          const profileId = "primary-" + uid.substring(0, 5);
+          await setDoc(doc(firestore, "users", uid, "profiles", profileId), {
+            id: profileId,
+            userId: uid,
+            name: `Nexus ${phone.slice(-4)}`,
+            avatarUrl: `https://picsum.photos/seed/${phone}/200/200`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+        }
       }
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
     } catch (e: any) {
@@ -79,7 +105,6 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#050507] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
       
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
         <motion.div 
@@ -96,7 +121,7 @@ export default function LoginPage() {
             Sync your identity with the <span className="text-primary">matrix</span>.
           </h1>
           <p className="text-white/40 text-2xl max-w-xl font-medium leading-relaxed">
-            Experience high-fidelity storytelling tailored to your neural patterns. Access your personal nexus from any node.
+            Every number creates a unique cinematic nexus. Your data stays with you.
           </p>
         </motion.div>
 
