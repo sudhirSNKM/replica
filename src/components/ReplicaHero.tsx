@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Plus, Info, Volume2, VolumeX, Star, Clock } from "lucide-react";
+import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -45,37 +44,37 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           className="absolute inset-0 z-0"
         >
           <div 
-            className="absolute inset-0 bg-cover bg-center animate-ken-burns scale-110"
+            className="absolute inset-0 bg-cover bg-center"
             style={{ 
               backgroundImage: `url(${movie.thumbnailUrl})`,
-              transform: `translate(${mousePosition.x * 30}px, ${mousePosition.y * 30}px) scale(1.1)` 
+              transform: `translate(${mousePosition.x * 30}px, ${mousePosition.y * 30}px) scale(1.15)` 
             }}
           />
           {/* Advanced Multi-layered Overlays for depth */}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-50" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-30" />
         </motion.div>
       </AnimatePresence>
 
       {/* Content Layer */}
-      <div className="relative z-10 h-full flex items-center px-6 md:px-12 lg:px-24">
-        <div className="max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-12 w-full">
+      <div className="relative z-10 h-full flex items-center px-6 md:px-12 lg:px-24 pt-20">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 w-full items-center">
           <motion.div
             initial={{ x: -80, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="lg:col-span-8 space-y-8"
+            className="lg:col-span-7 space-y-8"
           >
             <div className="flex flex-wrap items-center gap-4">
-              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 backdrop-blur-xl px-4 py-1.5 text-xs font-bold tracking-widest uppercase rounded-full">
-                #1 Worldwide Trending
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 backdrop-blur-xl px-4 py-1.5 text-xs font-bold tracking-widest uppercase rounded-full flex items-center gap-2">
+                <Flame className="w-3.5 h-3.5 fill-current" /> Trending Protocol #1
               </Badge>
               <div className="flex items-center gap-4">
                 {movie.genres.map((g) => (
                   <span key={g} className="text-xs font-bold text-white/50 tracking-widest uppercase flex items-center gap-2">
-                    <span className="w-1 h-1 bg-white/30 rounded-full" />
+                    <span className="w-1 h-1 bg-primary/40 rounded-full" />
                     {g}
                   </span>
                 ))}
@@ -84,11 +83,11 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
 
             <motion.div
               style={{ 
-                x: mousePosition.x * -25,
-                y: mousePosition.y * -15
+                x: mousePosition.x * -20,
+                y: mousePosition.y * -10
               }}
             >
-              <h1 className="text-6xl md:text-9xl font-headline font-bold text-white leading-[0.9] tracking-tighter drop-shadow-2xl">
+              <h1 className="text-6xl md:text-[8rem] font-headline font-bold text-white leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                 {movie.title}
               </h1>
             </motion.div>
@@ -96,16 +95,16 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             <div className="flex items-center gap-8 text-white/60 font-bold">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-primary fill-primary" />
-                <span>{movie.rating} Match</span>
+                <span className="text-white">{movie.rating} Match</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 <span>{movie.duration}</span>
               </div>
-              <span className="border border-white/20 px-2 py-0.5 rounded text-xs">4K Ultra HD</span>
+              <span className="border border-white/20 px-3 py-1 rounded text-[10px] font-black tracking-widest">4K DOLBY VISION</span>
             </div>
 
-            <p className="text-xl md:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md">
+            <p className="text-xl md:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-3">
               {movie.description}
             </p>
 
@@ -117,64 +116,101 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               >
                 <Play className="w-6 h-6 mr-3 fill-current" /> Watch Now
               </Button>
-              <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5" />
+              <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10" />
               <Button size="icon" variant="outline" className="rounded-full border-white/20 glass hover:bg-white/10 h-16 w-16 transition-transform hover:rotate-90">
                 <Info className="w-8 h-8" />
               </Button>
             </div>
           </motion.div>
 
-          {/* Floating Depth Card Preview */}
+          {/* Floating Depth Panel Preview */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0, x: 50 }}
             animate={{ scale: 1, opacity: 1, x: 0 }}
             transition={{ delay: 0.6, duration: 1.2 }}
-            className="hidden lg:flex lg:col-span-4 flex-col justify-center items-end"
+            className="hidden lg:flex lg:col-span-5 flex-col justify-center items-end relative"
             style={{
-              x: mousePosition.x * 40,
-              y: mousePosition.y * 30
+              x: mousePosition.x * 30,
+              y: mousePosition.y * 20
             }}
           >
-            <div className="relative w-full max-w-[320px] aspect-[2/3] glass-card rounded-[3rem] p-4 group">
-               <img src={movie.thumbnailUrl} className="w-full h-full object-cover rounded-[2.5rem] brightness-75 group-hover:brightness-100 transition-all duration-700" />
-               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-[2.5rem]" />
-               <div className="absolute bottom-10 left-8 right-8 space-y-2">
-                  <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full w-1/3 bg-primary" />
-                  </div>
-                  <p className="text-white text-xs font-bold uppercase tracking-widest text-center">Resume from 42:12</p>
+            {/* Background floating elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -z-10" />
+            
+            <div className="relative w-full max-w-[400px] aspect-[2/3] glass-card rounded-[4rem] p-5 group rotate-3 hover:rotate-0 transition-transform duration-700">
+               <div className="w-full h-full rounded-[3.5rem] overflow-hidden relative">
+                 <img src={movie.thumbnailUrl} className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700 scale-105 group-hover:scale-100" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                 
+                 <div className="absolute bottom-12 left-10 right-10 space-y-4">
+                    <div className="flex items-center justify-between text-[10px] text-white/60 font-black tracking-widest uppercase">
+                      <span>Resume</span>
+                      <span>42:12 / 2:15:00</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "33%" }}
+                        transition={{ delay: 1, duration: 1.5 }}
+                        className="h-full bg-primary neon-glow-primary" 
+                      />
+                    </div>
+                 </div>
                </div>
+               
+               {/* Smaller Floating Cards */}
+               <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -left-16 top-20 w-32 h-44 glass-card rounded-3xl overflow-hidden p-2 hidden xl:block"
+               >
+                 <img src="https://picsum.photos/seed/float1/200/300" className="w-full h-full object-cover rounded-2xl" />
+               </motion.div>
+
+               <motion.div 
+                animate={{ y: [0, 15, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-8 bottom-20 w-28 h-40 glass-card rounded-3xl overflow-hidden p-2 hidden xl:block"
+               >
+                 <img src="https://picsum.photos/seed/float2/200/300" className="w-full h-full object-cover rounded-2xl" />
+               </motion.div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Controls & Social proof */}
-      <div className="absolute bottom-20 right-10 z-20 flex items-center gap-6">
-        <div className="flex -space-x-4">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden">
-              <img src={`https://picsum.photos/seed/user-${i}/40/40`} className="w-full h-full object-cover" />
+      {/* Social proof & Volume */}
+      <div className="absolute bottom-20 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
+        <div className="flex items-center gap-6">
+          <div className="flex -space-x-4">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer">
+                <img src={`https://picsum.photos/seed/viewer-${i}/50/50`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter">
+              +82K
             </div>
-          ))}
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center border-2 border-background text-[10px] font-bold">
-            +42k
           </div>
+          <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Watching Now</div>
         </div>
-        <div className="h-12 w-px bg-white/10" />
-        <button 
-          onClick={() => setIsMuted(!isMuted)}
-          className="w-14 h-14 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-all hover:scale-110"
-        >
-          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-        </button>
-        <span className="text-white font-headline font-bold text-2xl tracking-tighter glass px-4 py-2 rounded-xl">18+</span>
+        
+        <div className="h-12 w-px bg-white/10 hidden md:block" />
+        
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => setIsMuted(!isMuted)}
+            className="w-14 h-14 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-all hover:scale-110 active:scale-95 group"
+          >
+            {isMuted ? <VolumeX className="w-6 h-6 text-white/60 group-hover:text-white" /> : <Volume2 className="w-6 h-6 text-white group-hover:text-primary" />}
+          </button>
+          <div className="glass px-6 py-2 rounded-2xl font-headline font-black text-2xl tracking-tighter text-white">18+</div>
+        </div>
       </div>
 
-      {/* Hero Particles/Subtle Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30" />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-background/0 via-background/0 to-background" />
+      {/* Hero Particles Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
       </div>
     </div>
   );

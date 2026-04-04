@@ -78,3 +78,19 @@ h1, h2, h3, h4, h5, h6 {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+.shimmer-container {
+  @apply relative overflow-hidden bg-white/5;
+}
+
+.shimmer-container::after {
+  content: "";
+  @apply absolute inset-0;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
