@@ -1,297 +1,67 @@
+
 {
   "entities": {
     "UserAccount": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserAccount",
       "type": "object",
-      "description": "Represents a primary user account, linked directly to an external authentication system (e.g., Firebase Authentication). This entity stores core user details but no sensitive authentication credentials.",
+      "description": "Represents a primary user account, linked to Firebase Auth. Stores identity markers like email or phone.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserAccount entity. This typically corresponds to the Firebase Authentication User ID (UID)."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address associated with the user account, used for identification.",
-          "format": "email"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        },
-        "lastLoginAt": {
-          "type": "string",
-          "description": "Timestamp indicating the last time the user logged into the application.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "createdAt"
-      ]
+      "required": ["id", "createdAt"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a distinct viewing profile associated with a UserAccount, allowing for personalized experiences (e.g., different watchlists, continue watching) under one main user. A single UserAccount can have multiple UserProfiles.",
+      "description": "A viewing profile under a UserAccount.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "userAccountId": {
-          "type": "string",
-          "description": "Reference to the parent UserAccount this profile belongs to. (Relationship: UserAccount 1:N UserProfile)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The display name for the user profile (e.g., 'Kids Profile', 'John's Profile')."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL to the avatar image chosen for this profile.",
-          "format": "uri"
-        },
-        "isKidProfile": {
-          "type": "boolean",
-          "description": "Boolean flag indicating if this profile is designated as a 'kids' profile, potentially enabling content restrictions."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user profile was created.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "userAccountId": { "type": "string" },
+        "name": { "type": "string" },
+        "avatarUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userAccountId",
-        "name",
-        "avatarUrl",
-        "createdAt"
-      ]
+      "required": ["id", "userAccountId", "name", "avatarUrl", "createdAt"]
     },
-    "Genre": {
+    "Content": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Genre",
+      "title": "Content",
       "type": "object",
-      "description": "Defines a content genre, used for categorizing movies and shows (e.g., Action, Sci-Fi, Comedy).",
+      "description": "Represents a movie or show in the system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Genre entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the genre (e.g., 'Action', 'Science Fiction', 'Comedy')."
-        },
-        "description": {
-          "type": "string",
-          "description": "An optional brief description of the genre."
-        }
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnailUrl": { "type": "string", "format": "uri" },
+        "videoUrl": { "type": "string", "format": "uri" },
+        "genres": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "string" },
+        "releaseYear": { "type": "string" },
+        "quality": { "type": "string", "enum": ["4K ULTRA HDR", "1080P FULL HD", "720P HD"] }
       },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Category",
-      "type": "object",
-      "description": "Defines a curated collection or dynamic grouping of content, such as 'Trending', 'Top Picks', or 'New Releases'. Distinct from genres, these are often for discovery and promotion.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the category (e.g., 'Trending Now', 'Top Picks', 'Critically Acclaimed')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description explaining the purpose or content of the category."
-        },
-        "displayOrder": {
-          "type": "number",
-          "description": "An optional numeric value to determine the display order of categories in the UI."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description"
-      ]
-    },
-    "Movie": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Movie",
-      "type": "object",
-      "description": "Represents a single piece of streamable content, such as a movie or a TV show episode, with all its associated metadata.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Movie entity."
-        },
-        "title": {
-          "type": "string",
-          "description": "The main title of the movie or show."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief synopsis or tagline for the content."
-        },
-        "thumbnailUrl": {
-          "type": "string",
-          "description": "URL to the primary thumbnail or poster image for the movie, typically hosted in Firebase Storage.",
-          "format": "uri"
-        },
-        "videoUrl": {
-          "type": "string",
-          "description": "URL to the main video file for the movie, typically hosted in Firebase Storage.",
-          "format": "uri"
-        },
-        "trailerUrl": {
-          "type": "string",
-          "description": "URL to a short trailer or preview video, typically hosted in Firebase Storage.",
-          "format": "uri"
-        },
-        "durationMinutes": {
-          "type": "number",
-          "description": "The total duration of the movie or episode in minutes."
-        },
-        "releaseYear": {
-          "type": "number",
-          "description": "The year the content was originally released."
-        },
-        "ageRating": {
-          "type": "string",
-          "description": "The official age rating of the content (e.g., 'G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-MA')."
-        },
-        "userRating": {
-          "type": "number",
-          "description": "An average user rating for the movie, typically on a scale of 0 to 5 or 0 to 10."
-        },
-        "genreIds": {
-          "type": "array",
-          "description": "An array of IDs referencing the genres this movie belongs to. (Relationship: Genre N:N Movie)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "categoryIds": {
-          "type": "array",
-          "description": "An array of IDs referencing the categories this movie belongs to (e.g., 'Trending', 'Top Picks'). (Relationship: Category N:N Movie)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the movie metadata was first added to the system.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating the last time the movie metadata was updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "description",
-        "thumbnailUrl",
-        "videoUrl",
-        "durationMinutes",
-        "releaseYear",
-        "ageRating",
-        "genreIds",
-        "categoryIds",
-        "createdAt"
-      ]
+      "required": ["id", "title", "videoUrl"]
     },
     "WatchlistItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "WatchlistItem",
       "type": "object",
-      "description": "Represents a specific movie or show that a UserProfile has added to their personalized 'My List' or watchlist.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the WatchlistItem entity."
-        },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to the UserProfile that added this item to their watchlist. (Relationship: UserProfile 1:N WatchlistItem)"
-        },
-        "movieId": {
-          "type": "string",
-          "description": "Reference to the Movie that is on the watchlist. (Relationship: Movie 1:N WatchlistItem)"
-        },
-        "addedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the movie was added to the watchlist.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "contentId": { "type": "string" },
+        "userAccountId": { "type": "string" },
+        "userProfileId": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userProfileId",
-        "movieId",
-        "addedAt"
-      ]
-    },
-    "ContinueWatchingItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ContinueWatchingItem",
-      "type": "object",
-      "description": "Stores the playback state for a movie or show, allowing a UserProfile to resume watching from where they left off.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ContinueWatchingItem entity."
-        },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to the UserProfile that is watching this content. (Relationship: UserProfile 1:N ContinueWatchingItem)"
-        },
-        "movieId": {
-          "type": "string",
-          "description": "Reference to the Movie being watched. (Relationship: Movie 1:N ContinueWatchingItem)"
-        },
-        "playbackPositionSeconds": {
-          "type": "number",
-          "description": "The timestamp in seconds from the beginning of the video where the user last stopped watching."
-        },
-        "lastWatchedAt": {
-          "type": "string",
-          "description": "Timestamp indicating the last time this content was actively watched by the user profile.",
-          "format": "date-time"
-        },
-        "isCompleted": {
-          "type": "boolean",
-          "description": "Boolean flag indicating whether the user has watched the entire movie/episode."
-        }
-      },
-      "required": [
-        "id",
-        "userProfileId",
-        "movieId",
-        "playbackPositionSeconds",
-        "lastWatchedAt",
-        "isCompleted"
-      ]
+      "required": ["id", "contentId", "userAccountId", "userProfileId", "addedAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -299,145 +69,42 @@
         "path": "/userAccounts/{userAccountId}",
         "definition": {
           "entityName": "UserAccount",
-          "schema": {
-            "$ref": "#/backend/entities/UserAccount"
-          },
-          "description": "Stores core user information, linked to Firebase Authentication. The document ID (`userAccountId`) must match the Firebase Auth UID (`request.auth.uid`)."
+          "schema": { "$ref": "#/backend/entities/UserAccount" },
+          "description": "Primary user account node."
         }
       },
       {
         "path": "/userAccounts/{userAccountId}/userProfiles/{userProfileId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores individual viewing profiles for a user account. Includes denormalized 'userAccountId' for authorization independence, ensuring `request.auth.uid` can be verified directly against the document.",
-          "params": [
-            {
-              "name": "userAccountId",
-              "description": "The unique identifier of the parent UserAccount, matching the Firebase Auth UID."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier for the UserProfile."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserProfile" },
+          "description": "Isolated profiles for a specific account."
         }
       },
       {
         "path": "/userAccounts/{userAccountId}/userProfiles/{userProfileId}/watchlistItems/{watchlistItemId}",
         "definition": {
           "entityName": "WatchlistItem",
-          "schema": {
-            "$ref": "#/backend/entities/WatchlistItem"
-          },
-          "description": "Stores content added to a specific user profile's watchlist. Includes denormalized 'userAccountId' and 'userProfileId' for authorization independence, allowing direct rule checks without parent document lookups.",
-          "params": [
-            {
-              "name": "userAccountId",
-              "description": "The unique identifier of the owning UserAccount, matching the Firebase Auth UID."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier of the parent UserProfile."
-            },
-            {
-              "name": "watchlistItemId",
-              "description": "The unique identifier for the WatchlistItem."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/WatchlistItem" },
+          "description": "Personalized list of synchronized content."
         }
       },
       {
-        "path": "/userAccounts/{userAccountId}/userProfiles/{userProfileId}/continueWatchingItems/{continueWatchingItemId}",
+        "path": "/content/{contentId}",
         "definition": {
-          "entityName": "ContinueWatchingItem",
-          "schema": {
-            "$ref": "#/backend/entities/ContinueWatchingItem"
-          },
-          "description": "Stores playback state for content being watched by a specific user profile. Includes denormalized 'userAccountId' and 'userProfileId' for authorization independence, allowing direct rule checks without parent document lookups.",
-          "params": [
-            {
-              "name": "userAccountId",
-              "description": "The unique identifier of the owning UserAccount, matching the Firebase Auth UID."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier of the parent UserProfile."
-            },
-            {
-              "name": "continueWatchingItemId",
-              "description": "The unique identifier for the ContinueWatchingItem."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/genres/{genreId}",
-        "definition": {
-          "entityName": "Genre",
-          "schema": {
-            "$ref": "#/backend/entities/Genre"
-          },
-          "description": "Stores metadata for content genres. Publicly readable by all authenticated users. Writable only by administrators.",
-          "params": [
-            {
-              "name": "genreId",
-              "description": "The unique identifier for the Genre."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores metadata for curated content categories (e.g., 'Trending Now', 'Top Picks'). Publicly readable by all authenticated users. Writable only by administrators.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique identifier for the Category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/movies/{movieId}",
-        "definition": {
-          "entityName": "Movie",
-          "schema": {
-            "$ref": "#/backend/entities/Movie"
-          },
-          "description": "Stores comprehensive metadata for movies and TV show episodes. Publicly readable by all authenticated users. Writable only by administrators.",
-          "params": [
-            {
-              "name": "movieId",
-              "description": "The unique identifier for the Movie."
-            }
-          ]
+          "entityName": "Content",
+          "schema": { "$ref": "#/backend/entities/Content" },
+          "description": "The global cinematic library."
         }
       },
       {
         "path": "/roles_admin/{adminUid}",
         "definition": {
           "entityName": "UserAccount",
-          "schema": {
-            "$ref": "#/backend/entities/UserAccount"
-          },
-          "description": "A sentinel collection used to grant administrative privileges. The existence of a document with 'adminUid' matching `request.auth.uid` grants admin rights for content management.",
-          "params": [
-            {
-              "name": "adminUid",
-              "description": "The unique identifier of a user with administrative privileges, matching their Firebase Auth UID."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserAccount" },
+          "description": "Admin sentinel collection."
         }
       }
-    ],
-    "reasoning": "The Firestore structure for 'Replica' is designed to be secure, scalable, and highly debuggable by strictly adhering to the core design principles and strategy mandates. \n\n**Authorization Independence (CRITICAL) & Denormalization:**\nTo eliminate the need for `get()` calls in Firestore Security Rules, which are costly and complex, authorization context is denormalized directly into the child documents. For instance:\n1.  **UserAccount:** The `userAccountId` (which corresponds to `request.auth.uid`) is the document ID for `/userAccounts/{userAccountId}`. This makes authentication a direct path match (`request.auth.uid == userAccountId`).\n2.  **UserProfile:** Resides at `/userAccounts/{userAccountId}/userProfiles/{userProfileId}`. The `UserProfile` document itself includes `userAccountId` as a field. This allows rules to check `request.auth.uid == resource.data.userAccountId` without fetching the parent `UserAccount` document.\n3.  **WatchlistItem & ContinueWatchingItem:** These are subcollections of `UserProfile`. Each `WatchlistItem` and `ContinueWatchingItem` document explicitly includes both `userAccountId` and `userProfileId` as fields. This denormalization allows rules to verify ownership like `request.auth.uid == resource.data.userAccountId && request.resource.data.userProfileId == userProfileId` directly from the document's own data, completely avoiding `get()` calls on `UserProfile` or `UserAccount` documents. This is vital for atomic write operations and overall rule efficiency.\n\n**QAPs (Query as Authorization Predicate) & Structural Segregation:**\n\nThe structure ensures that `list` operations are secure and performant:\n1.  **User-Specific Data (`/userAccounts/{userAccountId}/...`):** User profiles, watchlists, and continue watching items are organized hierarchically under a user's unique ID (`/userAccounts/{userAccountId}`). Security rules will enforce that a user can only access documents within their own `userAccountId` path. For example, a rule `match /userAccounts/{userAccountId}/userProfiles/{userProfileId} { allow read, write: if request.auth.uid == userAccountId; }` means any `list` query for `userProfiles` will inherently only return data for the authenticated user, as querying across different `userAccountId` paths would be denied. This fulfills the QAP by making the authorization predicate part of the query path.\n2.  **Global/Public Data (`/genres`, `/categories`, `/movies`):** These collections hold content metadata that is universally readable by all authenticated users. Their security posture is homogenous (read-all for users, write-only for admins). Since all documents within these collections share the same access rules, `list` queries are inherently secure without needing complex server-side filtering. Admin access is controlled via the `/roles_admin/{adminUid}` collection, where the mere existence of a document for a `uid` grants administrative privileges, allowing rules like `allow create, update, delete: if exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));`. This separation of concerns simplifies rules and supports QAPs for both public and private data models."
+    ]
   }
 }
