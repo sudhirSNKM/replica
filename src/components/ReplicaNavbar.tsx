@@ -18,8 +18,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirebase, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
 
 export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | null }) => {
@@ -54,7 +53,8 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
       try {
         await signOut(auth);
         localStorage.removeItem('replica_active_profile');
-        router.push('/login');
+        // Force a hard redirect to ensure all states are cleared
+        window.location.href = '/login';
       } catch (error) {
         console.error("Logout failed:", error);
       }
@@ -228,3 +228,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     </>
   );
 };
+
+// Internal components need doc import for profileRef
+import { doc } from "firebase/firestore";
