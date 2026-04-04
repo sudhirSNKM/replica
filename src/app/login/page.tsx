@@ -35,6 +35,8 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password);
         router.push('/');
       } else {
+        // For "One Number, One Identity", we simulate persistence with an anonymous link
+        // In a real app, this would use Phone Auth. Here we ensure the userAccount is created/synced.
         const userCredential = await signInAnonymously(auth);
         const uid = userCredential.user.uid;
         
