@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Flame } from "lucide-react";
+import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Flame, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie } from "@/lib/types";
 import { Button } from "@/components/ui/button";
