@@ -16,10 +16,10 @@ import {
   Settings, 
   Subtitles, 
   Languages,
-  FastForward
+  FastForward,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -30,11 +30,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export default function VideoPlayer() {
   const router = useRouter();
   const { id } = useParams();
-  const movie = MOCK_MOVIES.find(m => m.id === id) || MOCK_MOVIES[0];
+  const firestore = useFirestore();
+
+  const movieRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, "content", id as string);
+  }, [firestore, id]);
+
+  const { data: movie, isLoading: isMovieLoading } = useDoc(movieRef);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -67,12 +76,8 @@ export default function VideoPlayer() {
       if (isFinite(total) && total > 0) {
         const percent = (current / total) * 100;
         setProgress(percent);
-        
-        // Skip intro logic (show between 10s and 40s)
         setShowSkipIntro(current > 10 && current < 40);
-        
-        // Next episode logic (show after 80%)
-        setShowNextEpisode(percent > 80);
+        setShowNextEpisode(percent > 85);
       }
       
       const formatTime = (time: number) => {
@@ -139,6 +144,23 @@ export default function VideoPlayer() {
     };
   }, [isPlaying]);
 
+  if (isMovieLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-[500]">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!movie) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white">
+        <p className="text-2xl mb-4">Content not found</p>
+        <Button onClick={() => router.push("/")}>Return Home</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black z-[200] flex items-center justify-center group overflow-hidden select-none">
       <video
@@ -152,7 +174,6 @@ export default function VideoPlayer() {
         onPause={() => setIsPlaying(false)}
       />
 
-      {/* Cinematic Gradient Overlays */}
       <AnimatePresence>
         {showControls && (
           <>
@@ -163,7 +184,6 @@ export default function VideoPlayer() {
               className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/70 pointer-events-none"
             />
 
-            {/* Top Bar */}
             <motion.div 
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -177,8 +197,8 @@ export default function VideoPlayer() {
                 <div className="w-12 h-12 rounded-full glass flex items-center justify-center group-hover/back:bg-white/20 transition-all">
                   <ArrowLeft className="w-6 h-6 group-hover/back:-translate-x-1 transition-transform" />
                 </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-xs text-white/50 uppercase tracking-widest font-bold">Watching {movie.type === 'show' ? 'Series' : 'Movie'}</span>
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-xs text-white/50 uppercase tracking-widest font-bold">Watching</span>
                   <span className="text-2xl font-headline font-bold text-glow">{movie.title}</span>
                 </div>
               </button>
@@ -194,31 +214,29 @@ export default function VideoPlayer() {
                     <DropdownMenuLabel>Playback Settings</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex justify-between" onClick={() => {
-                      const newSpeed = playbackSpeed === 2 ? 1 : playbackSpeed + 0.5;
-                      setPlaybackSpeed(newSpeed);
-                      if (videoRef.current) videoRef.current.playbackRate = newSpeed;
+                      const speeds = [1, 1.25, 1.5, 2];
+                      const next = speeds[(speeds.indexOf(playbackSpeed) + 1) % speeds.length];
+                      setPlaybackSpeed(next);
+                      if (videoRef.current) videoRef.current.playbackRate = next;
                     }}>
                       Speed <span>{playbackSpeed}x</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex justify-between">
-                      Quality <span>1080p HD</span>
+                      Quality <span>4K Ultra HD</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-
                 <div className="w-px h-6 bg-white/20" />
                 <span className="text-white font-headline font-bold text-xl tracking-tighter">HD</span>
               </div>
             </motion.div>
 
-            {/* Bottom Controls */}
             <motion.div 
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
               className="absolute bottom-0 left-0 right-0 p-8 pt-20 z-10"
             >
-              {/* Progress Bar */}
               <div className="space-y-4 mb-8">
                 <Slider
                   value={[progress]}
@@ -292,7 +310,6 @@ export default function VideoPlayer() {
         )}
       </AnimatePresence>
 
-      {/* Floating Action Buttons */}
       <AnimatePresence>
         {showSkipIntro && (
           <motion.div
@@ -322,15 +339,14 @@ export default function VideoPlayer() {
           >
             <Button 
               className="bg-primary hover:bg-primary/90 text-white rounded-none px-10 py-8 text-xl font-bold neon-glow-primary group"
-              onClick={() => router.push(`/watch/${MOCK_MOVIES[Math.floor(Math.random() * MOCK_MOVIES.length)].id}`)}
+              onClick={() => router.push("/")}
             >
-              Next Episode <FastForward className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+              Back to Home <FastForward className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Cinema Curtain Effect on load */}
       <motion.div
         initial={{ scaleX: 1 }}
         animate={{ scaleX: 0 }}
@@ -340,4 +356,3 @@ export default function VideoPlayer() {
     </div>
   );
 }
-

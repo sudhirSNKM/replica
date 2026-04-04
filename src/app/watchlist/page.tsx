@@ -1,22 +1,54 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { MovieCard } from "@/components/MovieCard";
-import { MOCK_MOVIES } from "@/app/lib/mock-data";
-import { Movie } from "@/lib/types";
 import { motion } from "framer-motion";
-import { Ghost } from "lucide-react";
+import { Ghost, Loader2 } from "lucide-react";
+import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+
+function WatchlistItem({ itemId, contentId }: { itemId: string, contentId: string }) {
+  const firestore = useFirestore();
+  const contentRef = useMemoFirebase(() => {
+    if (!firestore || !contentId) return null;
+    return doc(firestore, "content", contentId);
+  }, [firestore, contentId]);
+
+  const { data: movie } = useDoc(contentRef);
+
+  if (!movie) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <MovieCard movie={movie} />
+    </motion.div>
+  );
+}
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState<Movie[]>([]);
+  const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+  const activeProfileId = "default-profile";
 
-  useEffect(() => {
-    // In a real app, we'd fetch from Firestore. 
-    // Here we'll simulate by picking a few items for the "working condition" demo.
-    setWatchlist(MOCK_MOVIES.slice(0, 3));
-  }, []);
+  const watchlistRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, "users", user.uid, "profiles", activeProfileId, "watchlist");
+  }, [firestore, user]);
+
+  const { data: watchlist, isLoading } = useCollection(watchlistRef);
+
+  if (isUserLoading || isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground pt-32 px-6 md:px-12">
@@ -30,17 +62,10 @@ export default function WatchlistPage() {
           <p className="text-white/40 text-lg">Your curated collection of future experiences.</p>
         </div>
 
-        {watchlist.length > 0 ? (
+        {watchlist && watchlist.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8">
-            {watchlist.map((movie, idx) => (
-              <motion.div
-                key={movie.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <MovieCard movie={movie} />
-              </motion.div>
+            {watchlist.map((item) => (
+              <WatchlistItem key={item.id} itemId={item.id} contentId={item.contentId} />
             ))}
           </div>
         ) : (
