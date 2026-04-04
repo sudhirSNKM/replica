@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
