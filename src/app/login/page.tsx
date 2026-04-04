@@ -5,16 +5,17 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LogIn, UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, Phone } from "lucide-react";
-import { useUser } from "@/firebase";
+import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isUserLoading, auth } = useUser();
+  const { user, isUserLoading, auth } = useFirebase();
   const { toast } = useToast();
 
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
@@ -31,18 +32,20 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth) {
+      toast({ title: "Auth Protocol Offline", description: "The authentication service is not responding.", variant: "destructive" });
+      return;
+    }
 
     setIsLoading(true);
     try {
       if (authMode === 'email') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // Simulated Neural Phone Auth
+        // Simulated Neural Phone Auth using Anonymous Sign-in
         await signInAnonymously(auth);
       }
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
-      router.push('/');
     } catch (e: any) {
       toast({ 
         title: "Sync Failed", 
@@ -59,14 +62,19 @@ export default function LoginPage() {
     try {
       await signInAnonymously(auth);
       toast({ title: "Demo Protocol Active", description: "Accessing as temporary guest node." });
-      router.push('/');
     } catch (e: any) {
       toast({ title: "Demo Sync Failed", description: e.message, variant: "destructive" });
       setIsLoading(false);
     }
   };
 
-  if (isUserLoading) return null;
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#050507] flex items-center justify-center p-6 relative overflow-hidden">
@@ -110,13 +118,13 @@ export default function LoginPage() {
               <div className="flex p-1 bg-white/5 rounded-2xl">
                 <button 
                   onClick={() => setAuthMode('email')}
-                  className={cn("flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all", authMode === 'email' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white')}
+                  className={cn("flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", authMode === 'email' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white')}
                 >
                   Matrix Addr
                 </button>
                 <button 
                   onClick={() => setAuthMode('phone')}
-                  className={cn("flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all", authMode === 'phone' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white')}
+                  className={cn("flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", authMode === 'phone' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white')}
                 >
                   Neural Link
                 </button>
@@ -196,8 +204,4 @@ export default function LoginPage() {
       </div>
     </main>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }
