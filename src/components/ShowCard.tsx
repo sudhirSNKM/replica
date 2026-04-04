@@ -23,7 +23,8 @@ export const ShowCard = ({ show, onHover }: ShowCardProps) => {
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/watch/${show.id}`);
+    // Navigate to Details Page first as requested
+    router.push(`/content/${show.id}`);
   };
 
   return (
