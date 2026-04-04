@@ -18,15 +18,27 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
-export const ReplicaNavbar = () => {
+export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | null }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useUser();
+  const firestore = useFirestore();
+
+  // Get active profile ID from local storage if not passed
+  const profileId = activeProfileId || (typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, "users", user.uid, "profiles", profileId);
+  }, [firestore, user, profileId]);
+
+  const { data: profile } = useDoc(profileRef);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,33 +109,58 @@ export const ReplicaNavbar = () => {
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
               <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all group-hover:neon-glow-primary">
-                  <img src="https://picsum.photos/seed/avatar1/44/44" alt="Profile" className="w-full h-full object-cover" />
+                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all group-hover:neon-glow-primary bg-white/5">
+                  <img 
+                    src={profile?.avatarUrl || "https://picsum.photos/seed/avatar1/44/44"} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
                 <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white transition-all group-hover:rotate-180" />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="glass border-white/10 text-white w-64 mt-4 p-2 rounded-[2rem]" align="end">
-              <DropdownMenuLabel className="px-4 py-3 font-headline font-bold text-lg">My Matrix</DropdownMenuLabel>
+            <DropdownMenuContent className="glass border-white/10 text-white w-72 mt-4 p-2 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" align="end">
+              <DropdownMenuLabel className="px-5 py-4 flex flex-col">
+                <span className="font-headline font-bold text-xl">{profile?.name || "Guest User"}</span>
+                <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Neural ID: {profileId?.substring(0, 8)}</span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10 mx-2" />
               <div className="p-2 space-y-1">
-                <DropdownMenuItem className="hover:bg-white/10 rounded-xl cursor-pointer flex gap-3 py-3 px-4 transition-colors">
-                  <User className="w-4 h-4 text-primary" /> Neural Profile
+                <DropdownMenuItem className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">Neural Profile</span>
+                    <span className="text-[10px] text-white/40">Manage your identity</span>
+                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setIsSettingsOpen(true)}
-                  className="hover:bg-white/10 rounded-xl cursor-pointer flex gap-3 py-3 px-4 transition-colors"
+                  className="hover:bg-white/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 transition-colors group"
                 >
-                  <Settings className="w-4 h-4 text-primary" /> Core Settings
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">Core Settings</span>
+                    <span className="text-[10px] text-white/40">Protocols & security</span>
+                  </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="bg-primary/10 hover:bg-primary/20 rounded-xl cursor-pointer flex gap-3 py-3 px-4 text-primary font-black uppercase tracking-widest text-[10px] transition-all border border-primary/20">
+                <DropdownMenuItem className="mt-2 bg-primary/10 hover:bg-primary/20 rounded-2xl cursor-pointer flex items-center justify-center py-4 px-5 text-primary font-black uppercase tracking-widest text-[10px] transition-all border border-primary/20 gap-3">
                   <Sparkles className="w-4 h-4" /> Access Pro Tier
                 </DropdownMenuItem>
               </div>
               <DropdownMenuSeparator className="bg-white/10 mx-2" />
               <div className="p-2">
-                <DropdownMenuItem className="hover:bg-destructive/10 rounded-xl cursor-pointer flex gap-3 py-3 px-4 text-destructive font-bold transition-colors">
-                  <LogOut className="w-4 h-4" /> Terminate Session
+                <DropdownMenuItem 
+                  onClick={() => {
+                    localStorage.removeItem('replica_active_profile');
+                    window.location.reload();
+                  }}
+                  className="hover:bg-destructive/10 rounded-2xl cursor-pointer flex gap-4 py-4 px-5 text-destructive font-bold transition-colors group"
+                >
+                  <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Switch Neural Link
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -137,7 +174,6 @@ export const ReplicaNavbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div 
