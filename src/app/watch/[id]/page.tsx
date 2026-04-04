@@ -109,14 +109,6 @@ export default function VideoPlayer() {
     }
   };
 
-  const skipForward = () => {
-    if (videoRef.current) videoRef.current.currentTime += 10;
-  };
-
-  const skipBackward = () => {
-    if (videoRef.current) videoRef.current.currentTime -= 10;
-  };
-
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -221,9 +213,6 @@ export default function VideoPlayer() {
                     }}>
                       Speed <span>{playbackSpeed}x</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex justify-between">
-                      Quality <span>4K Ultra HD</span>
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <div className="w-px h-6 bg-white/20" />
@@ -260,15 +249,6 @@ export default function VideoPlayer() {
                     {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
                   </button>
                   
-                  <div className="flex items-center gap-4">
-                    <button onClick={skipBackward} className="text-white/60 hover:text-white transition-colors">
-                      <RotateCcw className="w-6 h-6" />
-                    </button>
-                    <button onClick={skipForward} className="text-white/60 hover:text-white transition-colors">
-                      <RotateCw className="w-6 h-6" />
-                    </button>
-                  </div>
-
                   <div className="flex items-center gap-4 group/vol w-40">
                     <button 
                       onClick={() => {
@@ -291,12 +271,6 @@ export default function VideoPlayer() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <button className="text-white/60 hover:text-white transition-colors">
-                    <Subtitles className="w-6 h-6" />
-                  </button>
-                  <button className="text-white/60 hover:text-white transition-colors">
-                    <Languages className="w-6 h-6" />
-                  </button>
                   <button 
                     onClick={toggleFullscreen}
                     className="text-white/60 hover:text-white transition-colors hover:scale-110"
