@@ -18,15 +18,15 @@ interface WatchlistButtonProps {
 export const WatchlistButton = ({ movieId, className, variant = "outline" }: WatchlistButtonProps) => {
   const firestore = useFirestore();
   const { user } = useUser();
-  const activeProfileId = "default-profile"; // In a real app, this would come from profile state
+  const activeProfileId = typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null;
 
   const watchlistQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !activeProfileId) return null;
     return query(
       collection(firestore, "users", user.uid, "profiles", activeProfileId, "watchlist"),
       where("contentId", "==", movieId)
     );
-  }, [firestore, user, movieId]);
+  }, [firestore, user, movieId, activeProfileId]);
 
   const { data: watchlistItem, isLoading } = useCollection(watchlistQuery);
   const isInWatchlist = watchlistItem && watchlistItem.length > 0;
@@ -35,7 +35,7 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
     e.preventDefault();
     e.stopPropagation();
 
-    if (!firestore || !user) return;
+    if (!firestore || !user || !activeProfileId) return;
 
     if (isInWatchlist) {
       const itemToDelete = watchlistItem[0];
@@ -56,7 +56,7 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
       variant={variant}
       size="lg"
       onClick={toggleWatchlist}
-      disabled={isLoading}
+      disabled={isLoading || !activeProfileId}
       className={cn(
         "rounded-full transition-all duration-300 min-w-[140px]",
         isInWatchlist ? "bg-accent/20 border-accent text-accent" : "border-white/20 hover:bg-white/10",

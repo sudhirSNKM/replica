@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -15,6 +16,10 @@
           "description": "The user's primary email address, obtained from the authentication system.",
           "format": "email"
         },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The user's verified phone number."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp indicating when the user account was created.",
@@ -28,7 +33,6 @@
       },
       "required": [
         "id",
-        "email",
         "createdAt",
         "updatedAt"
       ]
@@ -376,7 +380,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "phone"
     ]
   },
   "firestore": {
@@ -388,11 +393,11 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores core user account data. The document ID (`userId`) must match the Firebase Authentication UID (`request.auth.uid`). This path provides direct ownership for user-specific data, enabling simple, robust security rules.",
+          "description": "Stores core user account data.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user, corresponding to their Firebase Authentication UID."
+              "description": "The unique identifier of the user."
             }
           ]
         }
@@ -404,7 +409,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores individual viewing profiles associated with a user. Nested under a user's path, `userId` in the path (and explicitly in the document) ensures authorization independence for profile management. The `userProfileId` is the document ID. Access requires `request.auth.uid == userId`.",
+          "description": "Stores individual viewing profiles associated with a user.",
           "params": [
             {
               "name": "userId",
@@ -424,128 +429,15 @@
           "schema": {
             "$ref": "#/backend/entities/Content"
           },
-          "description": "Stores metadata for all movies and TV shows. This is a top-level collection, accessible for public reads and restricted to authenticated administrators for write operations.",
+          "description": "Stores metadata for all movies and TV shows.",
           "params": [
             {
               "name": "contentId",
-              "description": "The unique identifier for a piece of content (movie or TV show)."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/genres/{genreId}",
-        "definition": {
-          "entityName": "Genre",
-          "schema": {
-            "$ref": "#/backend/entities/Genre"
-          },
-          "description": "Stores definitions for content genres (e.g., 'Action', 'Sci-Fi'). This is a top-level collection, publicly readable and admin-managed for write operations.",
-          "params": [
-            {
-              "name": "genreId",
-              "description": "The unique identifier for a specific content genre."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores curated lists of content (e.g., 'Trending', 'Top Picks'). This is a top-level collection, publicly readable and admin-managed for write operations. Includes denormalized `contentIds` for efficient retrieval of categorized content.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique identifier for a specific content category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/profiles/{userProfileId}/watchlist/{watchlistItemId}",
-        "definition": {
-          "entityName": "WatchlistItem",
-          "schema": {
-            "$ref": "#/backend/entities/WatchlistItem"
-          },
-          "description": "Stores content items added to a specific user profile's watchlist. Nested under the user and profile paths, `userId` and `userProfileId` from the path provide authorization independence. The `watchlistItemId` is the document ID. Includes denormalized 'userProfileId' and 'contentId' fields for explicit linking.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the parent user."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier of the parent user profile."
-            },
-            {
-              "name": "watchlistItemId",
-              "description": "The unique identifier for a watchlist item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/profiles/{userProfileId}/continueWatching/{continueWatchingItemId}",
-        "definition": {
-          "entityName": "ContinueWatchingItem",
-          "schema": {
-            "$ref": "#/backend/entities/ContinueWatchingItem"
-          },
-          "description": "Tracks playback progress for content watched by a specific user profile. Nested under the user and profile paths, `userId` and `userProfileId` from the path provide authorization independence. The `continueWatchingItemId` is the document ID. Includes denormalized 'userProfileId' and 'contentId' fields for explicit linking.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the parent user."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier of the parent user profile."
-            },
-            {
-              "name": "continueWatchingItemId",
-              "description": "The unique identifier for a continue watching item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/people/{personId}",
-        "definition": {
-          "entityName": "Person",
-          "schema": {
-            "$ref": "#/backend/entities/Person"
-          },
-          "description": "Stores biographical details for individuals involved in content production (e.g., actors, directors). This is a top-level collection, publicly readable and admin-managed for write operations.",
-          "params": [
-            {
-              "name": "personId",
-              "description": "The unique identifier for a person (e.g., actor, director)."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "AdminRole",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores documents representing users with administrative privileges. The `adminId` (document ID) matches the Firebase Authentication UID. Used for Database Access Control (DBAC) to grant write access to content and configuration. Authorization relies solely on the existence of the document for `request.auth.uid`.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique identifier (UID) of an administrator user."
+              "description": "The unique identifier for a piece of content."
             }
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure for 'Replica' prioritizes security, scalability, and debuggability by strictly adhering to the mandated design principles, especially Authorization Independence and Structural Segregation. \n\n**Authorization Independence:**\n1.  **User-Owned Data Denormalization:** For entities like `UserProfile`, `WatchlistItem`, and `ContinueWatchingItem`, the `userId` and `userProfileId` are explicitly included in their hierarchical paths (e.g., `/users/{userId}/profiles/{userProfileId}/watchlist/{watchlistItemId}`). This structure makes the authorization context directly available within the document's path. Consequently, security rules do not need to perform `get()` operations on parent documents (like `UserProfile` or `User`) to verify ownership. This eliminates hierarchical authorization dependencies, enabling atomic operations and simplifying rule logic significantly. For instance, a `WatchlistItem` can be created or updated without needing to first fetch its associated `UserProfile` to check if `request.auth.uid` matches the profile's owner. The rule simply checks if `request.auth.uid == userId` from the path. \n2.  **Admin Roles:** A dedicated top-level collection `/roles_admin/{adminId}` is used. Authorization for admin actions (e.g., creating/updating `Content` or `Genre`) is determined by checking for the existence of `request.auth.uid` within this collection. This avoids `get()` calls on arbitrary documents and offers a clear, scalable DBAC (Database Access Control) mechanism.\n\n**QAPs (Rules are not Filters) Support:**\n1.  **Structural Segregation:** Publicly accessible, globally managed content (`Content`, `Genre`, `Category`, `Person`) is placed in top-level collections (e.g., `/content/{contentId}`, `/genres/{genreId}`). This allows for simple security rules that grant blanket read access (`allow read: if true;`) while restricting write access to authenticated administrators. This design inherently supports QAPs for `list` operations, as all documents within these collections share the same security posture and are intended to be publicly discoverable without complex server-side filtering. \n2.  **Path-Based Ownership for Private Data:** User-specific and profile-specific data (`User`, `UserProfile`, `WatchlistItem`, `ContinueWatchingItem`) are deeply nested under `/users/{userId}` and then `/profiles/{userProfileId}`. This ensures that any `list` operation performed on these collections (e.g., `/users/{userId}/profiles/{userProfileId}/watchlist`) is automatically scoped to the authenticated user and their specific profile. The `userId` and `userProfileId` wildcards in the path directly correspond to `request.auth.uid` and the selected profile, making `list` operations inherently secure and performant without needing complex rule filters or `get()` calls. This structure allows rules like `allow list: if request.auth.uid == userId;` to effectively restrict results to the requesting user's data."
+    ]
   }
 }

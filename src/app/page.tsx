@@ -18,7 +18,7 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 export default function Home() {
   const { user, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
-  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch real content for the rows
@@ -34,6 +34,12 @@ export default function Home() {
   const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
 
   useEffect(() => {
+    // Persist profile selection during session
+    const savedProfile = localStorage.getItem('replica_active_profile');
+    if (savedProfile) setSelectedProfileId(savedProfile);
+  }, []);
+
+  useEffect(() => {
     if (!isAuthLoading && !isContentLoading) {
       const timer = setTimeout(() => setIsLoading(false), 2000);
       return () => clearTimeout(timer);
@@ -46,6 +52,11 @@ export default function Home() {
       setFeaturedMovie(featured);
     }
   }, [allContent, featuredMovie]);
+
+  const handleProfileSelect = (id: string) => {
+    setSelectedProfileId(id);
+    localStorage.setItem('replica_active_profile', id);
+  };
 
   if (isLoading || isAuthLoading) {
     return (
@@ -73,8 +84,8 @@ export default function Home() {
     );
   }
 
-  if (!selectedProfile) {
-    return <ProfileSelector onSelect={(id) => setSelectedProfile(id)} />;
+  if (!selectedProfileId || !user) {
+    return <ProfileSelector onSelect={handleProfileSelect} />;
   }
 
   const moviesOnly = allContent.filter(m => m.type === 'movie');
@@ -82,11 +93,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
-      <ReplicaNavbar />
+      <ReplicaNavbar activeProfileId={selectedProfileId} />
       
       <AnimatePresence mode="wait">
         {featuredMovie && (
           <motion.div
+            key={featuredMovie.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
