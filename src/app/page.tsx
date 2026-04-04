@@ -11,16 +11,21 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@/firebase";
 
 export default function Home() {
+  const { isUserLoading: isAuthLoading } = useUser();
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [featuredMovie, setFeaturedMovie] = useState<Movie>(MOCK_MOVIES[0]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    // Wait for auth to settle and provide a short splash feel
+    if (!isAuthLoading) {
+      const timer = setTimeout(() => setIsLoading(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthLoading]);
 
   const handleMovieHover = (movie: Movie) => {
     if (featuredMovie.id !== movie.id) {
