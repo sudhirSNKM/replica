@@ -23,7 +23,7 @@ export default function Home() {
   // Fetch real content for the rows
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "content"), limit(40));
+    return query(collection(firestore, "content"), limit(50));
   }, [firestore]);
 
   const { data: allMovies, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
@@ -38,14 +38,15 @@ export default function Home() {
 
   useEffect(() => {
     if (allMovies && allMovies.length > 0 && !featuredMovie) {
-      setFeaturedMovie(allMovies[0]);
+      // Select the first featured item or just the first available content
+      const featured = allMovies.find(m => m.isTrending) || allMovies[0];
+      setFeaturedMovie(featured);
     }
   }, [allMovies, featuredMovie]);
 
   const handleMovieHover = (movie: Movie) => {
-    if (featuredMovie?.id !== movie.id) {
-      setFeaturedMovie(movie);
-    }
+    // Optional: Dynamic hero background updates on row hover
+    // but we'll keep it stable for better UX unless card is clicked
   };
 
   if (isLoading || isAuthLoading) {
@@ -92,10 +93,11 @@ export default function Home() {
         
         {allMovies && (
           <div className="space-y-32">
+            {/* Primary Rows */}
             <section className="relative group">
               <ShowRow 
                 title="Top Series for You" 
-                shows={showsOnly} 
+                shows={showsOnly.slice(0, 10)} 
                 onHover={handleMovieHover} 
               />
             </section>
@@ -103,38 +105,43 @@ export default function Home() {
             <section className="relative">
               <MovieRow 
                 title="Trending Experiences" 
-                movies={allMovies.filter(m => m.isTrending)} 
+                movies={allMovies.filter(m => m.isTrending).slice(0, 12)} 
                 onMovieHover={handleMovieHover} 
               />
             </section>
             
-            {/* AI section is now a distinct full-width break */}
+            {/* AI section as a visual break */}
             <section className="relative py-12 bg-white/[0.02] border-y border-white/[0.05]">
               <AIRecommendations />
             </section>
 
+            {/* Categorized Rows */}
             <section className="space-y-32">
               <ShowRow 
                 title="Binge-Worthy Protocols" 
-                shows={[...showsOnly].reverse()} 
+                shows={showsOnly.slice(10, 20)} 
                 onHover={handleMovieHover} 
               />
 
               <MovieRow 
                 title="Neo-Tokyo Noir" 
-                movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk")))} 
+                movies={moviesOnly.filter(m => 
+                  m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk"))
+                ).slice(0, 12)} 
                 onMovieHover={handleMovieHover}
               />
 
               <MovieRow 
                 title="Sci-Fi Blockbusters" 
-                movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("sci-fi")))} 
+                movies={moviesOnly.filter(m => 
+                  m.genres.some(g => g.toLowerCase().includes("sci-fi"))
+                ).slice(0, 12)} 
                 onMovieHover={handleMovieHover}
               />
               
               <MovieRow 
                 title="Newly Added" 
-                movies={allMovies.filter(m => m.isNew)} 
+                movies={allMovies.filter(m => m.isNew).slice(0, 12)} 
                 onMovieHover={handleMovieHover}
               />
             </section>
@@ -155,7 +162,7 @@ export default function Home() {
           </div>
           
           <div className="space-y-8">
-            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Nexus</h4>
+            <h4 className="text-white font-bold text-sm uppercase tracking-widest">Nexus</h4>
             <ul className="text-white/40 space-y-5 text-base">
               <li className="hover:text-primary cursor-pointer transition-colors">Neural Library</li>
               <li className="hover:text-primary cursor-pointer transition-colors">Originals</li>
@@ -164,7 +171,7 @@ export default function Home() {
           </div>
           
           <div className="space-y-8">
-            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Core</h4>
+            <h4 className="text-white font-bold text-sm uppercase tracking-widest">Core</h4>
             <ul className="text-white/40 space-y-5 text-base">
               <li className="hover:text-primary cursor-pointer transition-colors">Help Module</li>
               <li className="hover:text-primary cursor-pointer transition-colors">User Protocol</li>
@@ -173,7 +180,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-8">
-            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Newsletter</h4>
+            <h4 className="text-white font-bold text-sm uppercase tracking-widest">Newsletter</h4>
             <div className="flex flex-col gap-5">
               <input 
                 placeholder="Enter matrix address" 
