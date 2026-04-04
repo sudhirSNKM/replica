@@ -3,175 +3,156 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * REPLICA - SECURITY RULES DOCUMENTATION
-     *
-     * Core Philosophy: 
-     * This ruleset implements a multi-tenant media streaming model ("Replica") where 
-     * access is divided between Public/Shared Content and Private User Data. 
-     * Administrative access is controlled via a dedicated roles collection.
-     *
-     * Data Structure:
-     * - /content, /genres, /categories, /people: Global, public metadata collections.
-     * - /users/{userId}: Private user account roots.
-     * - /users/{userId}/profiles/{profileId}: User-managed viewing profiles.
-     * - /users/{userId}/profiles/{profileId}/watchlist: Profile-specific save lists.
-     * - /users/{userId}/profiles/{profileId}/continueWatching: Profile-specific playback progress.
-     * - /roles_admin: Security-critical collection for database access control.
-     *
-     * Key Security Decisions:
-     * - Read-Only Public Content: Movies, TV shows, and genres are publicly readable 
-     *   by all users (including anonymous) but strictly writable only by verified admins.
-     * - Strict Ownership: All user and profile data are locked to the specific Firebase 
-     *   Auth UID matching the document path.
-     * - Relational Integrity: On creation, documents nested under users or profiles 
-     *   must contain internal fields that match their path IDs to prevent data leakage 
-     *   or orphaned records.
-     * - Administrative Control: Write access to global catalogs is determined by 
-     *   the existence of a document in the '/roles_admin' collection.
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict User-Ownership model for personalized data and a 
+     * Role-Based Access Control (RBAC) model for global content management.
+     * 
+     * DATA STRUCTURE:
+     * - User-specific data is nested under `/userAccounts/{userAccountId}/...`.
+     * - Global metadata (Genres, Categories, Movies) exists in top-level collections.
+     * - Administrative privileges are managed via a sentinel `/roles_admin` collection.
+     * 
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: Ownership fields (userAccountId) are denormalized onto 
+     *    all nested documents. Rules verify these fields directly against the path and auth 
+     *    context to avoid expensive 'get()' lookups.
+     * 2. Identity Verification: All write operations and non-public reads require a 
+     *    verified Firebase Auth UID.
+     * 3. Admin Control: The existence of a document in `/roles_admin/{uid}` grants 
+     *    global create/update/delete permissions for the content catalog.
+     * 4. Relational Integrity: On creation, documents in user-specific paths must 
+     *    have an internal 'userAccountId' field that matches the authenticated user.
      */
 
-    // --- GLOBAL HELPER FUNCTIONS ---
+    // --- Helper Functions ---
 
-    /**
-     * @description Checks if the request is from an authenticated user.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user's UID matches the provided ID.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the user is an owner AND the document exists (for updates/deletes).
-     */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    /**
-     * @description Checks if the authenticated user has an entry in the admin roles collection.
-     */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     /**
-     * @description Checks if the user is an admin AND the document exists.
+     * Verifies that the user owns the existing document before a change or deletion.
      */
-    function isExistingAdmin() {
-      return resource != null && isAdmin();
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
-    // --- COLLECTION RULES ---
+    // --- Rules ---
 
     /**
-     * @description Core user account document. Restricted to the authenticated user.
-     * @path /users/{userId}
-     * @allow get, list, create, update: if request.auth.uid == userId
-     * @deny (create) if request.auth.uid != userId
-     * @principle Ownership: Only the user can manage their root account data.
+     * @description Rules for the root UserAccount document. Identical to the Auth UID.
+     * @path /userAccounts/{userAccountId}
+     * @allow get (isOwner), list (isOwner), create (isOwner), update (isOwner), delete (isOwner)
+     * @deny if the authenticated user ID does not match the document ID.
+     * @principle Ownership: The UserAccount ID is the primary key for authorization.
      */
-    match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+    match /userAccounts/{userAccountId} {
+      allow get, list: if isOwner(userAccountId);
+      allow create: if isOwner(userAccountId) && request.resource.data.id == userAccountId;
+      allow update: if isExistingOwner(userAccountId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userAccountId);
 
       /**
-       * @description Viewing profiles associated with a user account.
-       * @path /users/{userId}/profiles/{userProfileId}
-       * @allow create: if request.auth.uid == userId
-       * @principle Ownership: Profiles are strictly nested and owned by the parent user.
+       * @description Rules for UserProfiles. Supports multiple profiles per account.
+       * @path /userAccounts/{userAccountId}/userProfiles/{userProfileId}
+       * @allow get, list, create, update, delete if the user owns the parent UserAccount.
+       * @deny if the authenticated user is not the owner of the parent userAccountId.
+       * @principle Relational Integrity: Enforces that the profile's 'userAccountId' matches the path.
        */
-      match /profiles/{userProfileId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+      match /userProfiles/{userProfileId} {
+        allow get, list: if isOwner(userAccountId);
+        allow create: if isOwner(userAccountId) && request.resource.data.userAccountId == userAccountId;
+        allow update: if isExistingOwner(userAccountId) && request.resource.data.userAccountId == resource.data.userAccountId;
+        allow delete: if isExistingOwner(userAccountId);
 
         /**
-         * @description Content items added to a profile's watchlist.
-         * @path /users/{userId}/profiles/{userProfileId}/watchlist/{itemId}
+         * @description Personal watchlist items for a specific profile.
+         * @path /userAccounts/{userAccountId}/userProfiles/{userProfileId}/watchlistItems/{watchlistItemId}
+         * @allow get, list, create, delete if the user owns the account.
+         * @deny any access from users other than the path owner.
+         * @principle Denormalization: Checks internal 'userAccountId' for path consistency.
          */
-        match /watchlist/{watchlistItemId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.userProfileId == userProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.userProfileId == resource.data.userProfileId;
-          allow delete: if isExistingOwner(userId);
+        match /watchlistItems/{watchlistItemId} {
+          allow get, list: if isOwner(userAccountId);
+          allow create: if isOwner(userAccountId) && request.resource.data.userAccountId == userAccountId;
+          allow update: if isExistingOwner(userAccountId) && request.resource.data.userAccountId == resource.data.userAccountId;
+          allow delete: if isExistingOwner(userAccountId);
         }
 
         /**
-         * @description Playback progress tracking for a specific profile.
-         * @path /users/{userId}/profiles/{userProfileId}/continueWatching/{itemId}
+         * @description Tracks playback progress per profile.
+         * @path /userAccounts/{userAccountId}/userProfiles/{userProfileId}/continueWatchingItems/{continueWatchingItemId}
+         * @allow get, list, create, update, delete if the user owns the account.
+         * @deny if the user is not authenticated or not the owner.
+         * @principle User-Scoped Access: Limits listing and mutations to the account owner.
          */
-        match /continueWatching/{continueWatchingItemId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.userProfileId == userProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.userProfileId == resource.data.userProfileId;
-          allow delete: if isExistingOwner(userId);
+        match /continueWatchingItems/{continueWatchingItemId} {
+          allow get, list: if isOwner(userAccountId);
+          allow create: if isOwner(userAccountId) && request.resource.data.userAccountId == userAccountId;
+          allow update: if isExistingOwner(userAccountId) && request.resource.data.userAccountId == resource.data.userAccountId;
+          allow delete: if isExistingOwner(userAccountId);
         }
       }
     }
 
     /**
-     * @description Global media content (movies/shows).
-     * @path /content/{contentId}
-     * @allow get, list: if true (Public)
-     * @allow create, update, delete: if isAdmin()
-     * @principle Role-Based Access: Public discovery with admin-only management.
-     */
-    match /content/{contentId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
-    }
-
-    /**
-     * @description Content genres (e.g., Action, Sci-Fi).
+     * @description Global content genres.
      * @path /genres/{genreId}
+     * @allow get, list: if isSignedIn();
+     * @allow create, update, delete: if isAdmin();
+     * @deny writes if the user is not in the roles_admin collection.
+     * @principle Public Read with Admin-Only Writes.
      */
     match /genres/{genreId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Curated lists/sections (e.g., Trending, New Releases).
+     * @description Curated content categories.
      * @path /categories/{categoryId}
+     * @allow get, list: if isSignedIn();
+     * @allow create, update, delete: if isAdmin();
+     * @deny writes if the user is not in the roles_admin collection.
+     * @principle Role-Based Access Control (RBAC).
      */
     match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Biographical data for actors and directors.
-     * @path /people/{personId}
+     * @description Movie and TV show metadata.
+     * @path /movies/{movieId}
+     * @allow get, list: if isSignedIn();
+     * @allow create, update, delete: if isAdmin();
+     * @deny anonymous writes or non-admin writes.
+     * @principle Global Metadata Security.
      */
-    match /people/{personId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isExistingAdmin();
+    match /movies/{movieId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Registry of users with administrative privileges.
-     * @path /roles_admin/{adminId}
-     * @allow get: if isOwner(adminId) || isAdmin()
-     * @deny create, update, delete: if true (Managed via Console/Admin SDK)
-     * @principle Database Access Control: Protects the definition of who is an admin.
+     * @description Admin Role Sentinel Collection.
+     * @path /roles_admin/{adminUid}
+     * @allow get: if isSignedIn();
+     * @allow list, create, update, delete: if false;
+     * @deny all mutations; roles are managed externally or via Super Admin.
+     * @principle Security Sentinel: Read-only access to verify administrative status.
      */
-    match /roles_admin/{adminId} {
-      allow get: if isOwner(adminId) || isAdmin();
-      allow list: if isAdmin();
-      allow create, update, delete: if false; 
+    match /roles_admin/{adminUid} {
+      allow get: if isSignedIn();
+      allow list, create, update, delete: if false;
     }
   }
 }
