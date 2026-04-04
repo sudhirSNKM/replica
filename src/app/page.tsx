@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, limit } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
+import { MOCK_MOVIES } from "@/app/lib/mock-data";
 
 export default function Home() {
   const { user, isUserLoading: isAuthLoading } = useUser();
@@ -26,8 +27,11 @@ export default function Home() {
     return query(collection(firestore, "content"), limit(50));
   }, [firestore]);
 
-  const { data: allMovies, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
+  const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
+
+  // Fallback to MOCK_MOVIES if Firestore is empty
+  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
 
   useEffect(() => {
     if (!isAuthLoading && !isContentLoading) {
@@ -37,16 +41,14 @@ export default function Home() {
   }, [isAuthLoading, isContentLoading]);
 
   useEffect(() => {
-    if (allMovies && allMovies.length > 0 && !featuredMovie) {
-      // Select the first featured item or just the first available content
-      const featured = allMovies.find(m => m.isTrending) || allMovies[0];
+    if (allContent && allContent.length > 0 && !featuredMovie) {
+      const featured = allContent.find(m => m.isTrending) || allContent[0];
       setFeaturedMovie(featured);
     }
-  }, [allMovies, featuredMovie]);
+  }, [allContent, featuredMovie]);
 
   const handleMovieHover = (movie: Movie) => {
-    // Optional: Dynamic hero background updates on row hover
-    // but we'll keep it stable for better UX unless card is clicked
+    // Optional: Update hero or preview state
   };
 
   if (isLoading || isAuthLoading) {
@@ -78,8 +80,8 @@ export default function Home() {
     return <ProfileSelector onSelect={(id) => setSelectedProfile(id)} />;
   }
 
-  const moviesOnly = allMovies?.filter(m => m.type === 'movie') || [];
-  const showsOnly = allMovies?.filter(m => m.type === 'show') || [];
+  const moviesOnly = allContent.filter(m => m.type === 'movie');
+  const showsOnly = allContent.filter(m => m.type === 'show');
 
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -87,66 +89,64 @@ export default function Home() {
       
       {featuredMovie && <ReplicaHero movie={featuredMovie} />}
 
-      <div className="relative z-20 -mt-40 md:-mt-72 space-y-24 pb-32">
-        {/* Subtle shelf fade to content */}
+      <div className="relative z-20 -mt-40 md:-mt-72 space-y-32 pb-32">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[800px] pointer-events-none" />
         
-        {allMovies && (
-          <div className="space-y-32">
-            {/* Primary Rows */}
-            <section className="relative group">
-              <ShowRow 
-                title="Top Series for You" 
-                shows={showsOnly.slice(0, 10)} 
-                onHover={handleMovieHover} 
-              />
-            </section>
+        <div className="space-y-32">
+          {/* Trending Row */}
+          <section className="relative">
+            <MovieRow 
+              title="Global Trending" 
+              movies={allContent.filter(m => m.isTrending).slice(0, 12)} 
+              onMovieHover={handleMovieHover} 
+            />
+          </section>
 
-            <section className="relative">
-              <MovieRow 
-                title="Trending Experiences" 
-                movies={allMovies.filter(m => m.isTrending).slice(0, 12)} 
-                onMovieHover={handleMovieHover} 
-              />
-            </section>
+          {/* Shows Section */}
+          <section className="relative">
+            <ShowRow 
+              title="Series Spotlight" 
+              shows={showsOnly.slice(0, 10)} 
+              onHover={handleMovieHover} 
+            />
+          </section>
+          
+          {/* AI recommendations */}
+          <section className="relative py-12 bg-white/[0.02] border-y border-white/[0.05]">
+            <AIRecommendations />
+          </section>
+
+          {/* Genre specific rows */}
+          <section className="space-y-32">
+            <MovieRow 
+              title="Cyberpunk Noir" 
+              movies={moviesOnly.filter(m => 
+                m.genres.some(g => g.toLowerCase().includes("cyberpunk") || g.toLowerCase().includes("noir"))
+              ).slice(0, 12)} 
+              onMovieHover={handleMovieHover}
+            />
+
+            <ShowRow 
+              title="Binge-Worthy Dramas" 
+              shows={showsOnly.filter(s => s.genres.includes("Drama")).slice(0, 10)} 
+              onHover={handleMovieHover} 
+            />
+
+            <MovieRow 
+              title="Sci-Fi Blockbusters" 
+              movies={moviesOnly.filter(m => 
+                m.genres.some(g => g.toLowerCase().includes("sci-fi"))
+              ).slice(0, 12)} 
+              onMovieHover={handleMovieHover}
+            />
             
-            {/* AI section as a visual break */}
-            <section className="relative py-12 bg-white/[0.02] border-y border-white/[0.05]">
-              <AIRecommendations />
-            </section>
-
-            {/* Categorized Rows */}
-            <section className="space-y-32">
-              <ShowRow 
-                title="Binge-Worthy Protocols" 
-                shows={showsOnly.slice(10, 20)} 
-                onHover={handleMovieHover} 
-              />
-
-              <MovieRow 
-                title="Neo-Tokyo Noir" 
-                movies={moviesOnly.filter(m => 
-                  m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk"))
-                ).slice(0, 12)} 
-                onMovieHover={handleMovieHover}
-              />
-
-              <MovieRow 
-                title="Sci-Fi Blockbusters" 
-                movies={moviesOnly.filter(m => 
-                  m.genres.some(g => g.toLowerCase().includes("sci-fi"))
-                ).slice(0, 12)} 
-                onMovieHover={handleMovieHover}
-              />
-              
-              <MovieRow 
-                title="Newly Added" 
-                movies={allMovies.filter(m => m.isNew).slice(0, 12)} 
-                onMovieHover={handleMovieHover}
-              />
-            </section>
-          </div>
-        )}
+            <MovieRow 
+              title="Fresh Arrivals" 
+              movies={allContent.filter(m => m.isNew).slice(0, 12)} 
+              onMovieHover={handleMovieHover}
+            />
+          </section>
+        </div>
       </div>
 
       <footer className="bg-[#050507] border-t border-white/5 py-32 px-6 md:px-12">
