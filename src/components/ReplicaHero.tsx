@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -25,6 +26,14 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
     const x = (e.clientX - left) / width - 0.5;
     const y = (e.clientY - top) / height - 0.5;
     setMousePosition({ x, y });
+  };
+
+  const handleDetailsClick = () => {
+    router.push(`/content/${movie.id}`);
+  };
+
+  const handlePlayClick = () => {
+    router.push(`/watch/${movie.id}`);
   };
 
   return (
@@ -87,7 +96,10 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
                 y: mousePosition.y * -10
               }}
             >
-              <h1 className="text-6xl md:text-[8rem] font-headline font-bold text-white leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+              <h1 
+                onClick={handleDetailsClick}
+                className="text-6xl md:text-[8rem] font-headline font-bold text-white leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer hover:text-primary transition-colors"
+              >
                 {movie.title}
               </h1>
             </motion.div>
@@ -111,13 +123,18 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             <div className="flex flex-wrap items-center gap-6 pt-6">
               <Button 
                 size="lg" 
-                onClick={() => router.push(`/watch/${movie.id}`)}
+                onClick={handlePlayClick}
                 className="bg-white text-black hover:bg-primary hover:text-white rounded-full px-12 h-16 font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-2xl"
               >
                 <Play className="w-6 h-6 mr-3 fill-current" /> Watch Now
               </Button>
               <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10" />
-              <Button size="icon" variant="outline" className="rounded-full border-white/20 glass hover:bg-white/10 h-16 w-16 transition-transform hover:rotate-90">
+              <Button 
+                onClick={handleDetailsClick}
+                size="icon" 
+                variant="outline" 
+                className="rounded-full border-white/20 glass hover:bg-white/10 h-16 w-16 transition-transform hover:rotate-90"
+              >
                 <Info className="w-8 h-8" />
               </Button>
             </div>
@@ -137,43 +154,29 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             {/* Background floating elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -z-10" />
             
-            <div className="relative w-full max-w-[400px] aspect-[2/3] glass-card rounded-[4rem] p-5 group rotate-3 hover:rotate-0 transition-transform duration-700">
+            <div 
+              onClick={handleDetailsClick}
+              className="relative w-full max-w-[400px] aspect-[2/3] glass-card rounded-[4rem] p-5 group rotate-3 hover:rotate-0 transition-transform duration-700 cursor-pointer"
+            >
                <div className="w-full h-full rounded-[3.5rem] overflow-hidden relative">
                  <img src={movie.thumbnailUrl} className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700 scale-105 group-hover:scale-100" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
                  
                  <div className="absolute bottom-12 left-10 right-10 space-y-4">
                     <div className="flex items-center justify-between text-[10px] text-white/60 font-black tracking-widest uppercase">
-                      <span>Resume</span>
-                      <span>42:12 / 2:15:00</span>
+                      <span>Sync Details</span>
+                      <ChevronRight className="w-4 h-4 text-primary" />
                     </div>
                     <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: "33%" }}
+                        animate={{ width: "100%" }}
                         transition={{ delay: 1, duration: 1.5 }}
                         className="h-full bg-primary neon-glow-primary" 
                       />
                     </div>
                  </div>
                </div>
-               
-               {/* Smaller Floating Cards */}
-               <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -left-16 top-20 w-32 h-44 glass-card rounded-3xl overflow-hidden p-2 hidden xl:block"
-               >
-                 <img src="https://picsum.photos/seed/float1/200/300" className="w-full h-full object-cover rounded-2xl" />
-               </motion.div>
-
-               <motion.div 
-                animate={{ y: [0, 15, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -right-8 bottom-20 w-28 h-40 glass-card rounded-3xl overflow-hidden p-2 hidden xl:block"
-               >
-                 <img src="https://picsum.photos/seed/float2/200/300" className="w-full h-full object-cover rounded-2xl" />
-               </motion.div>
             </div>
           </motion.div>
         </div>

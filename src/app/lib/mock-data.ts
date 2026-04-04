@@ -5,7 +5,8 @@ export const MOCK_MOVIES: Movie[] = [
   {
     id: "1",
     title: "NEON PROTOCOL",
-    description: "In a world where memories are currency, a rogue data thief uncovers a conspiracy that threatens the fabric of human existence.",
+    tagline: "Memories are the new currency.",
+    description: "In a world where memories are currency, a rogue data thief uncovers a conspiracy that threatens the fabric of human existence. As the digital divide grows, one man's forgotten past becomes the key to humanity's future.",
     thumbnailUrl: "https://picsum.photos/seed/replica-h1/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     genres: ["Sci-Fi", "Thriller"],
@@ -14,12 +15,15 @@ export const MOCK_MOVIES: Movie[] = [
     releaseYear: "2024",
     type: "movie",
     isTrending: true,
-    isNew: true
+    isNew: true,
+    cast: ["Kaelen Voss", "Lyra Thorne", "Jax Mercer"],
+    director: "Elias Vance"
   },
   {
     id: "2",
     title: "VIRTUAL ECHO",
-    description: "When a simulated reality starts bleeding into the physical world, a scientist must find the source before both worlds collapse.",
+    tagline: "Reality is just a glitch.",
+    description: "When a simulated reality starts bleeding into the physical world, a scientist must find the source before both worlds collapse. The boundary between code and flesh has never been thinner.",
     thumbnailUrl: "https://picsum.photos/seed/replica-h2/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     genres: ["Cyberpunk", "Action"],
@@ -27,24 +31,30 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "1h 55m",
     releaseYear: "2023",
     type: "movie",
-    isNew: true
+    isNew: true,
+    cast: ["Sora Nakano", "Marcus Reed", "Elena Sol"],
+    director: "Kenji Sato"
   },
   {
     id: "3",
     title: "SILICON DREAMS",
-    description: "An AI detective investigates the mysterious disappearance of its creator in the heart of Neo-Tokyo.",
+    tagline: "The detective who never sleeps.",
+    description: "An AI detective investigates the mysterious disappearance of its creator in the heart of Neo-Tokyo. As the investigation deepens, it begins to question the nature of its own consciousness.",
     thumbnailUrl: "https://picsum.photos/seed/replica-h3/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     genres: ["Mystery", "Sci-Fi"],
     rating: "8.5",
     duration: "2h 05m",
     releaseYear: "2024",
-    type: "movie"
+    type: "movie",
+    cast: ["Unit 734", "Sarah Jenkins", "Dr. Aris Thorne"],
+    director: "Lana Wachowski"
   },
   {
     id: "4",
     title: "QUANTUM SHIFT",
-    description: "A seasonal anthology series exploring the ethics of time travel through the eyes of various historical figures.",
+    tagline: "History is rewriteable.",
+    description: "A seasonal anthology series exploring the ethics of time travel through the eyes of various historical figures. Each episode challenges the notion of a fixed timeline.",
     thumbnailUrl: "https://picsum.photos/seed/replica-s1/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     genres: ["Drama", "Sci-Fi"],
@@ -52,124 +62,15 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "Season 2",
     releaseYear: "2024",
     type: "show",
-    isTrending: true
-  },
-  {
-    id: "5",
-    title: "VOID RUNNER",
-    description: "A pilot must navigate the dangerous space between dimensions to save his stranded crew.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-h5/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    genres: ["Space", "Adventure"],
-    rating: "8.2",
-    duration: "2h 10m",
-    releaseYear: "2023",
-    type: "movie"
-  },
-  {
-    id: "6",
-    title: "NEO-TOKYO NIGHTS",
-    description: "Follow the lives of five underground hackers as they navigate the neon-lit underworld of a mega-city.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-s2/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    genres: ["Cyberpunk", "Drama"],
-    rating: "9.1",
-    duration: "Season 1",
-    releaseYear: "2024",
-    type: "show",
-    isNew: true
-  },
-  {
-    id: "7",
-    title: "STELAR HORIZON",
-    description: "The last colony of humanity faces an impossible choice when their star begins to collapse.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-m7/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-    genres: ["Sci-Fi", "Drama"],
-    rating: "8.9",
-    duration: "2h 30m",
-    releaseYear: "2024",
-    type: "movie",
-    isTrending: true
-  },
-  {
-    id: "8",
-    title: "BINARY SOUL",
-    description: "Can love exist in a purely digital form? Two consciousnesses struggle to find intimacy in a world of code.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-m8/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    genres: ["Romance", "Cyberpunk"],
-    rating: "8.4",
-    duration: "1h 45m",
-    releaseYear: "2023",
-    type: "movie"
-  },
-  {
-    id: "9",
-    title: "OMEGA PROTOCOL",
-    description: "A secret military project goes rogue, unleashing a digital virus that infects the global power grid.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-m9/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackAds.mp4",
-    genres: ["Action", "Thriller"],
-    rating: "8.1",
-    duration: "2h 00m",
-    releaseYear: "2024",
-    type: "movie"
-  },
-  {
-    id: "10",
-    title: "THE GRID: ASCENSION",
-    description: "A high-stakes competition inside a virtual gladiatorial arena determines the fate of the working class.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-s3/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-    genres: ["Action", "Sci-Fi"],
-    rating: "9.0",
-    duration: "Season 3",
-    releaseYear: "2024",
-    type: "show",
-    isTrending: true
-  },
-  {
-    id: "11",
-    title: "COBALT SKY",
-    description: "An environmental researcher discovers a secret underwater civilization that holds the key to Earth's survival.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-m11/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
-    genres: ["Documentary", "Sci-Fi"],
-    rating: "8.6",
-    duration: "1h 30m",
-    releaseYear: "2023",
-    type: "movie"
-  },
-  {
-    id: "12",
-    title: "NETHERWORLD",
-    description: "A paranormal investigator uses quantum technology to communicate with entities beyond our dimension.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-m12/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
-    genres: ["Horror", "Mystery"],
-    rating: "7.9",
-    duration: "1h 50m",
-    releaseYear: "2024",
-    type: "movie",
-    isNew: true
-  },
-  {
-    id: "13",
-    title: "PULSE",
-    description: "A high-octane racing series set in the megacities of Mars.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-s4/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
-    genres: ["Action", "Sports"],
-    rating: "8.3",
-    duration: "Season 1",
-    releaseYear: "2024",
-    type: "show"
+    isTrending: true,
+    cast: ["David Tennant", "Jodie Whittaker", "Tom Baker"],
+    director: "Russell T. Davies"
   },
   {
     id: "14",
     title: "SYNAPSE",
-    description: "A detective with a neural link to the victim's last memories must solve a murder before his own brain fries.",
+    tagline: "Connected to the end.",
+    description: "A detective with a neural link to the victim's last memories must solve a murder before his own brain fries. The closer he gets to the truth, the more his own identity dissolves.",
     thumbnailUrl: "https://picsum.photos/seed/replica-m14/1920/1080",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     genres: ["Noir", "Cyberpunk"],
@@ -177,20 +78,9 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "2h 10m",
     releaseYear: "2024",
     type: "movie",
-    isTrending: true
-  },
-  {
-    id: "15",
-    title: "DATA DRIFT",
-    description: "A group of teenage outcasts accidentally stumbles upon a way to access the world's most secure servers.",
-    thumbnailUrl: "https://picsum.photos/seed/replica-s5/1920/1080",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    genres: ["Adventure", "Cyberpunk"],
-    rating: "8.7",
-    duration: "Season 1",
-    releaseYear: "2024",
-    type: "show",
-    isNew: true
+    isTrending: true,
+    cast: ["Ryan Gosling", "Ana de Armas", "Harrison Ford"],
+    director: "Denis Villeneuve"
   }
 ];
 

@@ -17,6 +17,15 @@ export const ShowCard = ({ show, onHover }: ShowCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
+  const handleCardClick = () => {
+    router.push(`/content/${show.id}`);
+  };
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/watch/${show.id}`);
+  };
+
   return (
     <div 
       className="relative flex-none w-[280px] md:w-[400px] aspect-video group cursor-pointer"
@@ -25,7 +34,7 @@ export const ShowCard = ({ show, onHover }: ShowCardProps) => {
         onHover?.(show);
       }}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push(`/watch/${show.id}`)}
+      onClick={handleCardClick}
     >
       <motion.div
         className="relative w-full h-full rounded-3xl overflow-hidden border border-white/5 transition-all duration-500 group-hover:border-primary/50 bg-black"
@@ -65,10 +74,16 @@ export const ShowCard = ({ show, onHover }: ShowCardProps) => {
                   {show.description}
                 </p>
                 <div className="flex items-center gap-3">
-                  <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-xs font-bold hover:neon-glow-primary transition-all">
+                  <button 
+                    onClick={handlePlayClick}
+                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-xs font-bold hover:neon-glow-primary transition-all"
+                  >
                     <Play className="w-3.5 h-3.5 fill-current" /> Watch Now
                   </button>
-                  <button className="w-10 h-10 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <button 
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-10 h-10 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors"
+                  >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>

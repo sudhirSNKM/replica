@@ -45,6 +45,15 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
     };
   }, [isHovered]);
 
+  const handleCardClick = () => {
+    router.push(`/content/${movie.id}`);
+  };
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/watch/${movie.id}`);
+  };
+
   return (
     <div 
       className="relative flex-none w-[180px] md:w-[260px] aspect-[2/3] group cursor-pointer"
@@ -53,7 +62,7 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
         onHover?.(movie);
       }}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push(`/watch/${movie.id}`)}
+      onClick={handleCardClick}
     >
       <motion.div
         className="relative w-full h-full rounded-2xl overflow-hidden border border-white/5 bg-black"
@@ -113,10 +122,16 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <button className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all transform hover:scale-110 shadow-xl">
+                  <button 
+                    onClick={handlePlayClick}
+                    className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all transform hover:scale-110 shadow-xl"
+                  >
                     <Play className="w-5 h-5 fill-current ml-1" />
                   </button>
-                  <button className="w-10 h-10 rounded-full border-2 border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <button 
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-10 h-10 rounded-full border-2 border-white/20 text-white flex items-center justify-center hover:bg-white/10 transition-colors"
+                  >
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>

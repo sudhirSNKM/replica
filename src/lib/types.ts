@@ -12,6 +12,9 @@ export interface Movie {
   type: 'movie' | 'show';
   isTrending?: boolean;
   isNew?: boolean;
+  cast?: string[];
+  director?: string;
+  tagline?: string;
 }
 
 export interface UserProfile {
