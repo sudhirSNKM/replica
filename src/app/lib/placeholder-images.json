@@ -1,0 +1,53 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "Futuristic city landscape at night",
+      "imageUrl": "https://picsum.photos/seed/replica-hero-1/1920/1080",
+      "imageHint": "cyberpunk city"
+    },
+    {
+      "id": "movie-1",
+      "description": "Sci-fi space station",
+      "imageUrl": "https://picsum.photos/seed/replica-m1/600/900",
+      "imageHint": "space station"
+    },
+    {
+      "id": "movie-2",
+      "description": "Cybernetic human portrait",
+      "imageUrl": "https://picsum.photos/seed/replica-m2/600/900",
+      "imageHint": "cybernetic portrait"
+    },
+    {
+      "id": "movie-3",
+      "description": "Neon street in rain",
+      "imageUrl": "https://picsum.photos/seed/replica-m3/600/900",
+      "imageHint": "neon street"
+    },
+    {
+      "id": "movie-4",
+      "description": "Abstract light trails",
+      "imageUrl": "https://picsum.photos/seed/replica-m4/600/900",
+      "imageHint": "light trails"
+    },
+    {
+      "id": "movie-5",
+      "description": "High tech cockpit",
+      "imageUrl": "https://picsum.photos/seed/replica-m5/600/900",
+      "imageHint": "tech cockpit"
+    },
+    {
+      "id": "profile-1",
+      "description": "Abstract blue avatar",
+      "imageUrl": "https://picsum.photos/seed/avatar1/200/200",
+      "imageHint": "blue avatar"
+    },
+    {
+      "id": "profile-2",
+      "description": "Abstract magenta avatar",
+      "imageUrl": "https://picsum.photos/seed/avatar2/200/200",
+      "imageHint": "magenta avatar"
+    }
+  ]
+}
