@@ -17,7 +17,6 @@ import { doc } from "firebase/firestore";
 
 export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | null }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pathname = usePathname();
@@ -44,7 +43,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     if (auth) {
       await signOut(auth);
       localStorage.removeItem('replica_active_profile');
-      window.location.href = '/login';
+      router.push('/login');
     }
   };
 

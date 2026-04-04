@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, Phone, Sparkles } from "lucide-react";
+import { LogIn, UserPlus, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isUserLoading, auth, firestore } = useFirebase();
+  const { auth, firestore, isUserLoading } = useFirebase();
   const { toast } = useToast();
 
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');

@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserAccount",
       "type": "object",
-      "description": "Represents a primary user account, linked to Firebase Auth. Stores identity markers like email or phone.",
+      "description": "Primary user account node, identified by Auth UID.",
       "properties": {
         "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
@@ -18,7 +18,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "A viewing profile under a UserAccount.",
+      "description": "An individual viewing profile within a UserAccount.",
       "properties": {
         "id": { "type": "string" },
         "userAccountId": { "type": "string" },
@@ -32,7 +32,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Content",
       "type": "object",
-      "description": "Represents a movie or show in the system.",
+      "description": "Cinematic content protocol (Movie or Show).",
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
@@ -42,9 +42,13 @@
         "genres": { "type": "array", "items": { "type": "string" } },
         "rating": { "type": "string" },
         "releaseYear": { "type": "string" },
-        "quality": { "type": "string", "enum": ["4K ULTRA HDR", "1080P FULL HD", "720P HD"] }
+        "type": { "type": "string", "enum": ["movie", "show"] },
+        "quality": { "type": "string", "enum": ["4K ULTRA HDR", "1080P FULL HD", "720P HD"] },
+        "publishDate": { "type": "string", "format": "date-time", "description": "When this content becomes visible to users." },
+        "isTrending": { "type": "boolean" },
+        "isNew": { "type": "boolean" }
       },
-      "required": ["id", "title", "videoUrl"]
+      "required": ["id", "title", "videoUrl", "type", "publishDate"]
     },
     "WatchlistItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -53,11 +57,9 @@
       "properties": {
         "id": { "type": "string" },
         "contentId": { "type": "string" },
-        "userAccountId": { "type": "string" },
-        "userProfileId": { "type": "string" },
         "addedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "contentId", "userAccountId", "userProfileId", "addedAt"]
+      "required": ["id", "contentId", "addedAt"]
     }
   },
   "auth": {
@@ -70,7 +72,7 @@
         "definition": {
           "entityName": "UserAccount",
           "schema": { "$ref": "#/backend/entities/UserAccount" },
-          "description": "Primary user account node."
+          "description": "Root identity node."
         }
       },
       {
@@ -78,7 +80,7 @@
         "definition": {
           "entityName": "UserProfile",
           "schema": { "$ref": "#/backend/entities/UserProfile" },
-          "description": "Isolated profiles for a specific account."
+          "description": "User-defined identities."
         }
       },
       {
@@ -86,7 +88,7 @@
         "definition": {
           "entityName": "WatchlistItem",
           "schema": { "$ref": "#/backend/entities/WatchlistItem" },
-          "description": "Personalized list of synchronized content."
+          "description": "Personalized queue."
         }
       },
       {
@@ -94,7 +96,7 @@
         "definition": {
           "entityName": "Content",
           "schema": { "$ref": "#/backend/entities/Content" },
-          "description": "The global cinematic library."
+          "description": "Global content protocols."
         }
       },
       {
@@ -102,7 +104,7 @@
         "definition": {
           "entityName": "UserAccount",
           "schema": { "$ref": "#/backend/entities/UserAccount" },
-          "description": "Admin sentinel collection."
+          "description": "Admin clearance node."
         }
       }
     ]
