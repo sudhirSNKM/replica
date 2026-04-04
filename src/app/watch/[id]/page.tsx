@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { MOCK_MOVIES } from "@/app/lib/mock-data";
 
 export default function VideoPlayer() {
   const router = useRouter();
@@ -43,7 +44,10 @@ export default function VideoPlayer() {
     return doc(firestore, "content", id as string);
   }, [firestore, id]);
 
-  const { data: movie, isLoading: isMovieLoading } = useDoc(movieRef);
+  const { data: firestoreMovie, isLoading: isMovieLoading } = useDoc(movieRef);
+
+  // Fallback to MOCK_MOVIES if Firestore is empty or the specific ID is missing
+  const movie = firestoreMovie || MOCK_MOVIES.find(m => m.id === id);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -146,9 +150,16 @@ export default function VideoPlayer() {
 
   if (!movie) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white">
-        <p className="text-2xl mb-4">Content not found</p>
-        <Button onClick={() => router.push("/")}>Return Home</Button>
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white p-6 text-center">
+        <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+        <h2 className="text-4xl font-headline font-bold mb-4">Content Synchronization Required</h2>
+        <p className="text-white/40 mb-12 max-w-md mx-auto">The requested cinematic protocol is not available in your current nexus. Please synchronize your database in the Admin panel.</p>
+        <div className="flex gap-6">
+          <Button variant="outline" className="rounded-full px-10 h-14 border-white/10 glass" onClick={() => router.push("/admin")}>Go to Admin</Button>
+          <Button className="rounded-full px-10 h-14 bg-primary hover:bg-primary/90" onClick={() => router.push("/")}>Return Home</Button>
+        </div>
       </div>
     );
   }
