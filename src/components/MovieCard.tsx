@@ -26,7 +26,6 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
 
   useEffect(() => {
     if (isHovered) {
-      // User must hover for at least 700ms to trigger the cinematic preview
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
         if (videoRef.current) {
@@ -48,7 +47,6 @@ export const MovieCard = ({ movie, onHover }: MovieCardProps) => {
   }, [isHovered]);
 
   const handleCardClick = () => {
-    // Navigate to Details Page first
     router.push(`/content/${movie.id}`);
   };
 

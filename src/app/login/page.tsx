@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { LogIn, UserPlus, Loader2, ArrowRight, Sparkles, ShieldCheck, Mail, Lock, Phone } from "lucide-react";
+import { motion } from "framer-motion";
+import { LogIn, UserPlus, Loader2, ArrowRight, ShieldCheck, Mail, Lock, Phone } from "lucide-react";
 import { useUser } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -192,7 +192,7 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </main>
   );

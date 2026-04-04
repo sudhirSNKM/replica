@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFirebase, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { doc } from "firebase/firestore";
 
 export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | null }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,7 +54,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
       try {
         await signOut(auth);
         localStorage.removeItem('replica_active_profile');
-        // Force a hard redirect to ensure all states are cleared
         window.location.href = '/login';
       } catch (error) {
         console.error("Logout failed:", error);
@@ -228,6 +228,3 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     </>
   );
 };
-
-// Internal components need doc import for profileRef
-import { doc } from "firebase/firestore";
