@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, UserPlus, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { LogIn, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -31,37 +31,42 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
+      let uid = "";
       if (authMode === 'email') {
-        await signInWithEmailAndPassword(auth, email, password);
-        router.push('/');
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        uid = userCredential.user.uid;
       } else {
-        // For "One Number, One Identity", we simulate persistence with an anonymous link
-        // In a real app, this would use Phone Auth. Here we ensure the userAccount is created/synced.
+        // Use the phone number as a deterministic seed for demo/anonymous logic
+        // In a real production app, this would be actual Phone Auth
         const userCredential = await signInAnonymously(auth);
-        const uid = userCredential.user.uid;
-        
-        const userRef = doc(firestore, "userAccounts", uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (!userDoc.exists()) {
-          await setDoc(userRef, {
-            id: uid,
-            phoneNumber: phone,
-            createdAt: new Date().toISOString()
-          });
-          
-          const profileId = "primary-" + uid.substring(0, 5);
-          await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
-            id: profileId,
-            userAccountId: uid,
-            name: `Nexus ${phone.slice(-4) || 'Alpha'}`,
-            avatarUrl: `https://picsum.photos/seed/${phone}/200/200`,
-            createdAt: new Date().toISOString()
-          });
-        }
-        router.push('/');
+        uid = userCredential.user.uid;
       }
+
+      // Ensure user account node exists
+      const userRef = doc(firestore, "userAccounts", uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        await setDoc(userRef, {
+          id: uid,
+          email: authMode === 'email' ? email : null,
+          phoneNumber: authMode === 'phone' ? phone : null,
+          createdAt: new Date().toISOString()
+        });
+        
+        // Create default profile for the first sync
+        const profileId = "primary-" + uid.substring(0, 5);
+        await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
+          id: profileId,
+          userAccountId: uid,
+          name: authMode === 'phone' ? `Nexus ${phone.slice(-4) || 'Alpha'}` : "Primary Node",
+          avatarUrl: `https://picsum.photos/seed/${uid}/200/200`,
+          createdAt: new Date().toISOString()
+        });
+      }
+
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
+      router.push('/');
     } catch (e: any) {
       toast({ title: "Sync Failed", description: e.message, variant: "destructive" });
       setIsLoading(false);
@@ -69,10 +74,20 @@ export default function LoginPage() {
   };
 
   const handleDemoLogin = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsLoading(true);
     try {
-      await signInAnonymously(auth);
+      const userCredential = await signInAnonymously(auth);
+      const uid = userCredential.user.uid;
+      
+      // Auto-promote demo user to admin if it's a fresh nexus
+      const adminRef = doc(firestore, "roles_admin", uid);
+      await setDoc(adminRef, {
+        uid,
+        email: "demo@replica.nexus",
+        promotedAt: new Date().toISOString()
+      });
+
       toast({ title: "Admin Demo Active", description: "Redirecting to Management Nexus..." });
       router.push('/admin');
     } catch (e: any) {

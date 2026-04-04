@@ -12,12 +12,10 @@ import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, limit, Timestamp } from "firebase/firestore";
+import { collection, query, where, limit } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
-import { ArrowRight, Shield, Zap, Globe, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
@@ -26,11 +24,16 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isAuthLoading, router]);
+
   // Fetch only published content
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // For non-admins, security rules will handle the publishDate filter, 
-    // but we add it here for cleaner UI listing.
     const now = new Date().toISOString();
     return query(
       collection(firestore, "content"),
@@ -68,6 +71,7 @@ export default function Home() {
     localStorage.setItem('replica_active_profile', id);
   };
 
+  // While checking auth or loading main app data
   if (isAuthLoading || (user && isLoading)) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col items-center justify-center z-[500]">
@@ -84,32 +88,9 @@ export default function Home() {
     );
   }
 
-  if (!user && !isAuthLoading) {
-    return (
-      <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-        <ReplicaNavbar />
-        <section className="relative h-screen flex items-center justify-center text-center px-6 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center brightness-[0.2] scale-110 blur-[2px]" />
-             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          </div>
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 1 }} className="relative z-10 max-w-5xl space-y-12">
-            <h1 className="text-6xl md:text-9xl font-headline font-bold text-white tracking-tighter leading-[0.9]">
-              Unlimited <span className="text-primary text-glow">Movies</span> & <br className="hidden md:block" />TV Episodes.
-            </h1>
-            <p className="text-xl md:text-3xl text-white/40 font-medium max-w-3xl mx-auto">
-              Experience the world's most advanced decentralized streaming network. Watch anywhere, synchronize anytime.
-            </p>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-8">
-              <Button onClick={() => router.push('/login')} className="h-20 px-12 rounded-full bg-white text-black hover:bg-primary hover:text-white font-black text-xl transition-all shadow-2xl group">
-                Get Started <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" />
-              </Button>
-            </div>
-          </motion.div>
-        </section>
-        <ReplicaFooter />
-      </main>
-    );
+  // If not logged in, we render nothing (useEffect will redirect)
+  if (!user) {
+    return null;
   }
 
   if (!selectedProfileId) {
