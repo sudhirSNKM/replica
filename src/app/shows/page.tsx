@@ -9,6 +9,7 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { Monitor, Tv, Layers } from "lucide-react";
+import { ReplicaFooter } from "@/components/ReplicaFooter";
 
 export default function TVShowsPage() {
   const shows = MOCK_MOVIES.filter(m => m.type === 'show');
@@ -65,6 +66,7 @@ export default function TVShowsPage() {
           onHover={handleMovieHover}
         />
       </div>
+      <ReplicaFooter />
       <Toaster />
     </main>
   );

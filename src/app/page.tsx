@@ -16,6 +16,9 @@ import { collection, query, limit } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { SeedContent } from "@/components/SeedContent";
+import { ReplicaFooter } from "@/components/ReplicaFooter";
+import { ArrowRight, Play, Shield, Zap, Globe, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
@@ -36,11 +39,7 @@ export default function Home() {
   // Fallback to MOCK_MOVIES if Firestore is empty
   const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
 
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isAuthLoading, router]);
+  // Removed automatic redirect to login to show the Landing Page instead
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('replica_active_profile');
@@ -92,7 +91,99 @@ export default function Home() {
     );
   }
 
-  if (!user) return null;
+  if (!user && !isAuthLoading) {
+    return (
+      <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
+        <ReplicaNavbar />
+        
+        {/* Cinematic Hero Landing */}
+        <section className="relative h-screen flex items-center justify-center text-center px-6 overflow-hidden">
+          <div className="absolute inset-0 z-0">
+             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center brightness-[0.2] scale-110 blur-[2px]" />
+             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+             <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/80" />
+          </div>
+
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 1 }}
+            className="relative z-10 max-w-5xl space-y-12"
+          >
+            <div className="space-y-6">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-xl text-primary text-[10px] font-black uppercase tracking-[0.4em]"
+              >
+                <Sparkles className="w-3 h-3 fill-current" /> Next-Gen Neural Streaming
+              </motion.div>
+              <h1 className="text-6xl md:text-9xl font-headline font-bold text-white tracking-tighter leading-[0.9] drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                Unlimited <span className="text-primary text-glow">Movies</span> & <br className="hidden md:block" />TV Episodes.
+              </h1>
+              <p className="text-xl md:text-3xl text-white/40 font-medium max-w-3xl mx-auto leading-relaxed">
+                Experience the world's most advanced decentralized streaming network. Watch anywhere, synchronize anytime.
+              </p>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-8">
+              <Button 
+                onClick={() => router.push('/login')}
+                className="h-20 px-12 rounded-full bg-white text-black hover:bg-primary hover:text-white font-black text-xl transition-all shadow-2xl hover:scale-105 active:scale-95 group"
+              >
+                Get Started <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" />
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => router.push('/register')}
+                className="h-20 px-12 rounded-full border-white/10 glass text-white hover:bg-white/10 font-bold text-xl transition-all shadow-xl"
+              >
+                Create Account
+              </Button>
+            </div>
+
+            <p className="text-sm text-white/20 uppercase tracking-[0.3em] font-black">Ready to watch? Enter the matrix today.</p>
+          </motion.div>
+
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-20">
+             <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center p-1">
+                <div className="w-1 h-2 bg-white rounded-full" />
+             </div>
+          </div>
+        </section>
+
+        {/* Feature Grid */}
+        <section className="py-48 px-6 md:px-12 lg:px-24 bg-white/[0.01]">
+          <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-24">
+            <div className="space-y-8 group">
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(var(--primary),0.1)]">
+                <Shield className="w-10 h-10" />
+              </div>
+              <h3 className="text-3xl font-headline font-bold text-white">Encrypted Privacy</h3>
+              <p className="text-lg text-white/40 leading-relaxed">Your neural signatures are protected by military-grade decentralized encryption. You own your data.</p>
+            </div>
+            <div className="space-y-8 group">
+              <div className="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(var(--accent),0.1)]">
+                <Zap className="w-10 h-10" />
+              </div>
+              <h3 className="text-3xl font-headline font-bold text-white">Ultra Low Latency</h3>
+              <p className="text-lg text-white/40 leading-relaxed">Global CDN powered by edge-computing nodes ensures instant buffering and seamless 4K playback.</p>
+            </div>
+            <div className="space-y-8 group">
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(var(--primary),0.1)]">
+                <Globe className="w-10 h-10" />
+              </div>
+              <h3 className="text-3xl font-headline font-bold text-white">Watch Anywhere</h3>
+              <p className="text-lg text-white/40 leading-relaxed">Synchronize your sessions across all hardware - from mobile rigs to VR neural links.</p>
+            </div>
+          </div>
+        </section>
+
+        <ReplicaFooter />
+      </main>
+    );
+  }
 
   if (!selectedProfileId) {
     return <ProfileSelector onSelect={handleProfileSelect} />;
@@ -181,68 +272,7 @@ export default function Home() {
         <SeedContent />
       </div>
 
-      <footer className="bg-[#050507] border-t border-white/5 py-48 px-6 md:px-12">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-5 gap-24">
-          <div className="col-span-1 md:col-span-2 space-y-12">
-            <div className="text-5xl font-headline font-bold tracking-tighter text-white">
-              <span className="text-primary">RE</span>
-              <span>PLICA</span>
-            </div>
-            <p className="text-white/30 text-xl leading-relaxed max-w-md font-medium">
-              The future of decentralized, high-fidelity cinematic entertainment. Experience storytelling tailored to your neural patterns.
-            </p>
-            <div className="flex items-center gap-6">
-              {['Twitter', 'Matrix', 'Discord'].map(social => (
-                <button key={social} className="text-xs font-black uppercase tracking-widest text-white/40 hover:text-primary transition-colors">{social}</button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="space-y-10">
-            <h4 className="text-white font-black text-xs uppercase tracking-[0.4em]">Nexus</h4>
-            <ul className="text-white/30 space-y-6 text-lg font-medium">
-              <li className="hover:text-primary cursor-pointer transition-colors">Neural Library</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">Replica Originals</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">Live Streams</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">Protocols</li>
-            </ul>
-          </div>
-          
-          <div className="space-y-10">
-            <h4 className="text-white font-black text-xs uppercase tracking-[0.4em]">Core</h4>
-            <ul className="text-white/30 space-y-6 text-lg font-medium">
-              <li className="hover:text-primary cursor-pointer transition-colors">Support Node</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">User Agreement</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">Privacy Module</li>
-              <li className="hover:text-primary cursor-pointer transition-colors">Security Matrix</li>
-            </ul>
-          </div>
-
-          <div className="space-y-10">
-            <h4 className="text-white font-black text-xs uppercase tracking-[0.4em]">Sync List</h4>
-            <div className="flex flex-col gap-6">
-              <p className="text-white/20 text-sm">Join 2.4M nodes in the matrix.</p>
-              <div className="relative">
-                <input 
-                  placeholder="Enter matrix address" 
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-sm focus:outline-none focus:border-primary transition-all text-white placeholder:text-white/20" 
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-primary text-white rounded-xl px-6 py-2.5 font-bold hover:neon-glow-primary transition-all active:scale-95 text-xs uppercase tracking-widest">
-                  Sync
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="max-w-[1600px] mx-auto mt-48 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-          <div>© 2024 REPLICA SYSTEMS INC. ALL RIGHTS RESERVED.</div>
-          <div className="flex items-center gap-12">
-            <span>VERSION 2.4.0-STABLE</span>
-            <span>NEURAL ENCRYPTION: ACTIVE</span>
-          </div>
-        </div>
-      </footer>
+      <ReplicaFooter />
       <Toaster />
     </main>
   );

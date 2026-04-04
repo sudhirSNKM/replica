@@ -47,13 +47,27 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           transition={{ duration: 1.5, ease: "easeOut" }}
           className="absolute inset-0 z-0"
         >
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: `url(${movie.thumbnailUrl})`,
-              transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.1)` 
-            }}
-          />
+          {movie.videoUrl ? (
+            <div className="absolute inset-0">
+              <video
+                src={movie.videoUrl}
+                autoPlay
+                muted={isMuted}
+                loop
+                playsInline
+                className="w-full h-full object-cover scale-110"
+              />
+              <div className="absolute inset-0 bg-black/20" />
+            </div>
+          ) : (
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ 
+                backgroundImage: `url(${movie.thumbnailUrl})`,
+                transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.1)` 
+              }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />

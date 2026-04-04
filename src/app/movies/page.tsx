@@ -10,6 +10,7 @@ import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, ArrowRight } from "lucide-react";
+import { ReplicaFooter } from "@/components/ReplicaFooter";
 
 const LANGUAGES = [
   { id: 'en', name: 'English', native: 'English', icon: '🇺🇸' },
@@ -143,6 +144,7 @@ export default function MoviesPage() {
           onMovieHover={handleMovieHover}
         />
       </div>
+      <ReplicaFooter />
       <Toaster />
     </main>
   );

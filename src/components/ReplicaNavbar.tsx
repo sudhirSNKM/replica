@@ -29,7 +29,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, auth } = useUser();
+  const { user, auth } = useFirebase();
   const firestore = useFirestore();
 
   const profileId = activeProfileId || (typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null);
