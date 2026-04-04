@@ -7,6 +7,7 @@ import { Play, Plus, Info, Volume2, VolumeX, Star, Clock } from "lucide-react";
 import { Movie } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface MovieCardProps {
   movie: Movie;
