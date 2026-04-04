@@ -23,7 +23,7 @@ export default function Home() {
   // Fetch real content for the rows
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "content"), limit(20));
+    return query(collection(firestore, "content"), limit(40));
   }, [firestore]);
 
   const { data: allMovies, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
@@ -86,55 +86,65 @@ export default function Home() {
       
       {featuredMovie && <ReplicaHero movie={featuredMovie} />}
 
-      <div className="relative z-20 -mt-32 md:-mt-64 space-y-12 pb-32">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background -z-10 h-[500px]" />
+      <div className="relative z-20 -mt-40 md:-mt-72 space-y-24 pb-32">
+        {/* Subtle shelf fade to content */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[800px] pointer-events-none" />
         
         {allMovies && (
-          <>
-            <ShowRow 
-              title="Top Series for You" 
-              shows={showsOnly} 
-              onHover={handleMovieHover} 
-            />
+          <div className="space-y-32">
+            <section className="relative group">
+              <ShowRow 
+                title="Top Series for You" 
+                shows={showsOnly} 
+                onHover={handleMovieHover} 
+              />
+            </section>
 
-            <MovieRow 
-              title="Trending Experiences" 
-              movies={allMovies.filter(m => m.isTrending)} 
-              onMovieHover={handleMovieHover} 
-            />
+            <section className="relative">
+              <MovieRow 
+                title="Trending Experiences" 
+                movies={allMovies.filter(m => m.isTrending)} 
+                onMovieHover={handleMovieHover} 
+              />
+            </section>
             
-            <AIRecommendations />
+            {/* AI section is now a distinct full-width break */}
+            <section className="relative py-12 bg-white/[0.02] border-y border-white/[0.05]">
+              <AIRecommendations />
+            </section>
 
-            <ShowRow 
-              title="Binge-Worthy Protocols" 
-              shows={[...showsOnly].reverse()} 
-              onHover={handleMovieHover} 
-            />
+            <section className="space-y-32">
+              <ShowRow 
+                title="Binge-Worthy Protocols" 
+                shows={[...showsOnly].reverse()} 
+                onHover={handleMovieHover} 
+              />
 
-            <MovieRow 
-              title="Neo-Tokyo Noir" 
-              movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk")))} 
-              onMovieHover={handleMovieHover}
-            />
+              <MovieRow 
+                title="Neo-Tokyo Noir" 
+                movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("noir") || g.toLowerCase().includes("cyberpunk")))} 
+                onMovieHover={handleMovieHover}
+              />
 
-            <MovieRow 
-              title="Sci-Fi Blockbusters" 
-              movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("sci-fi")))} 
-              onMovieHover={handleMovieHover}
-            />
-            
-            <MovieRow 
-              title="Newly Added" 
-              movies={allMovies.filter(m => m.isNew)} 
-              onMovieHover={handleMovieHover}
-            />
-          </>
+              <MovieRow 
+                title="Sci-Fi Blockbusters" 
+                movies={moviesOnly.filter(m => m.genres.some(g => g.toLowerCase().includes("sci-fi")))} 
+                onMovieHover={handleMovieHover}
+              />
+              
+              <MovieRow 
+                title="Newly Added" 
+                movies={allMovies.filter(m => m.isNew)} 
+                onMovieHover={handleMovieHover}
+              />
+            </section>
+          </div>
         )}
       </div>
 
-      <footer className="bg-[#050507] border-t border-white/5 py-24 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-16">
-          <div className="col-span-1 md:col-span-2 space-y-8">
+      <footer className="bg-[#050507] border-t border-white/5 py-32 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-20">
+          <div className="col-span-1 md:col-span-2 space-y-10">
             <div className="text-4xl font-headline font-bold tracking-tighter text-white">
               <span className="text-primary">RE</span>
               <span>PLICA</span>
@@ -144,28 +154,34 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="space-y-6">
-            <h4 className="text-white font-bold text-xl">Nexus</h4>
-            <ul className="text-white/40 space-y-4">
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Nexus</h4>
+            <ul className="text-white/40 space-y-5 text-base">
               <li className="hover:text-primary cursor-pointer transition-colors">Neural Library</li>
               <li className="hover:text-primary cursor-pointer transition-colors">Originals</li>
               <li className="hover:text-primary cursor-pointer transition-colors">Live Matrix</li>
             </ul>
           </div>
           
-          <div className="space-y-6">
-            <h4 className="text-white font-bold text-xl">Core</h4>
-            <ul className="text-white/40 space-y-4">
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Core</h4>
+            <ul className="text-white/40 space-y-5 text-base">
               <li className="hover:text-primary cursor-pointer transition-colors">Help Module</li>
               <li className="hover:text-primary cursor-pointer transition-colors">User Protocol</li>
+              <li className="hover:text-primary cursor-pointer transition-colors">Security Node</li>
             </ul>
           </div>
 
-          <div className="space-y-6">
-            <h4 className="text-white font-bold text-xl">Newsletter</h4>
-            <div className="flex flex-col gap-4">
-              <input placeholder="Enter matrix address" className="bg-white/5 border border-white/10 rounded-full px-6 py-3 text-sm focus:outline-none focus:border-primary" />
-              <button className="bg-primary text-white rounded-full py-3 font-bold hover:neon-glow-primary transition-all">Synchronize</button>
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-xl uppercase tracking-widest text-sm">Newsletter</h4>
+            <div className="flex flex-col gap-5">
+              <input 
+                placeholder="Enter matrix address" 
+                className="bg-white/5 border border-white/10 rounded-full px-6 py-4 text-sm focus:outline-none focus:border-primary transition-all" 
+              />
+              <button className="bg-primary text-white rounded-full py-4 font-bold hover:neon-glow-primary transition-all active:scale-95">
+                Synchronize
+              </button>
             </div>
           </div>
         </div>
