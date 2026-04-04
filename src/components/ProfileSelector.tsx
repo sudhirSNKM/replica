@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Check, X, Loader2, Trash2, UserPlus, Sparkles } from "lucide-react";
+import { Plus, Edit2, Check, X, Loader2, Trash2, UserPlus, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,11 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [newProfileName, setNewProfileName] = useState("");
+  
+  // Simulated Neural Link Verification
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const profilesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -30,9 +35,19 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
 
+  const handleVerify = () => {
+    if (verificationCode.length !== 6) return;
+    setIsVerifying(true);
+    setTimeout(() => {
+      setIsVerifying(false);
+      setIsVerified(true);
+      toast({ title: "Neural Link Active", description: "Identity synchronization authorized." });
+    }, 1200);
+  };
+
   const handleAddProfile = async () => {
     if (!firestore || !user) return;
-    const id = Math.random().toString(36).substring(7);
+    const id = "p-" + Math.random().toString(36).substring(7);
     const profileRef = doc(firestore, "users", user.uid, "profiles", id);
     
     const newName = !profiles || profiles.length === 0 ? "Primary Protocol" : "Sub-Protocol";
@@ -64,6 +79,40 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     await deleteDoc(profileRef);
     toast({ title: "Profile Terminated", description: "Identity removed from nexus." });
   };
+
+  if (!isVerified) {
+    return (
+      <div className="fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center px-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background opacity-40" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass p-12 rounded-[4rem] border-white/5 w-full max-w-md text-center space-y-10"
+        >
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
+            <ShieldCheck className="w-10 h-10 text-primary" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Neural Verification</h2>
+            <p className="text-white/40 font-medium leading-relaxed">Enter the 6-digit sync code sent to your linked device to initialize the library.</p>
+          </div>
+          <Input 
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            className="h-20 bg-white/5 border-white/10 text-white text-center text-4xl font-headline font-bold tracking-[0.5em] rounded-3xl"
+          />
+          <Button 
+            onClick={handleVerify}
+            disabled={verificationCode.length !== 6 || isVerifying}
+            className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold text-lg"
+          >
+            {isVerifying ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Verify Link <ArrowRight className="w-5 h-5 ml-2" /></>}
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center px-6 overflow-hidden">
@@ -99,13 +148,11 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                 <motion.div 
                   key={profile.id} 
                   layout
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
                   className="group flex flex-col items-center gap-6"
                 >
                   <div 
                     onClick={() => !isEditMode && onSelect(profile.id)}
-                    className="relative w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] overflow-hidden border-2 border-transparent transition-all duration-500 cursor-pointer group-hover:border-primary group-hover:neon-glow-primary hover:scale-105 active:scale-95 bg-white/5 shadow-2xl"
+                    className="relative w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] overflow-hidden border-2 border-transparent transition-all duration-500 cursor-pointer group-hover:border-primary group-hover:neon-glow-primary bg-white/5 shadow-2xl"
                   >
                     <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     
@@ -114,13 +161,13 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                         <div className="flex flex-col gap-3 w-full">
                           <button 
                             onClick={(e) => { e.stopPropagation(); setEditingProfileId(profile.id); setNewProfileName(profile.name); }}
-                            className="w-full py-3 rounded-xl bg-white/20 hover:bg-white/40 border border-white/20 text-white flex items-center justify-center gap-2 transition-all text-xs font-black uppercase tracking-widest"
+                            className="w-full py-3 rounded-xl bg-white/20 hover:bg-white/40 border border-white/20 text-white flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-widest"
                           >
                             <Edit2 className="w-4 h-4" /> Edit
                           </button>
                           <button 
                             onClick={(e) => handleDeleteProfile(profile.id, e)}
-                            className="w-full py-3 rounded-xl bg-destructive/20 hover:bg-destructive/40 border border-destructive/20 text-destructive flex items-center justify-center gap-2 transition-all text-xs font-black uppercase tracking-widest"
+                            className="w-full py-3 rounded-xl bg-destructive/20 hover:bg-destructive/40 border border-destructive/20 text-destructive flex items-center justify-center gap-2 transition-all text-[10px] font-black uppercase tracking-widest"
                           >
                             <Trash2 className="w-4 h-4" /> Delete
                           </button>
@@ -137,7 +184,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                         className="bg-white/10 border-white/20 text-white h-10 w-44 text-center rounded-xl font-bold"
                         autoFocus
                       />
-                      <button onClick={() => handleUpdateProfileName(profile.id)} className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg"><Check className="w-5 h-5" /></button>
+                      <button onClick={() => handleUpdateProfileName(profile.id)} className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white"><Check className="w-5 h-5" /></button>
                     </div>
                   ) : (
                     <span className="text-white/40 group-hover:text-white font-bold text-2xl transition-all tracking-tight">
@@ -151,7 +198,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                 onClick={handleAddProfile}
                 className="group flex flex-col items-center gap-6 cursor-pointer"
               >
-                <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] border-2 border-dashed border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary/5 transition-all bg-white/5 hover:neon-glow-primary">
+                <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] border-2 border-dashed border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary/5 transition-all bg-white/5">
                   <Plus className="w-14 h-14 text-white/10 group-hover:text-primary transition-colors" />
                 </div>
                 <span className="text-white/10 group-hover:text-white font-bold text-2xl transition-all tracking-tight">

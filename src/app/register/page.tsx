@@ -43,7 +43,7 @@ export default function RegisterPage() {
       });
 
       // Create a default profile
-      const profileId = Math.random().toString(36).substring(7);
+      const profileId = "primary-" + Math.random().toString(36).substring(7);
       await setDoc(doc(firestore, "users", user.uid, "profiles", profileId), {
         id: profileId,
         userId: user.uid,
@@ -82,8 +82,7 @@ export default function RegisterPage() {
             <span className="text-primary">RE</span>
             <span>PLICA</span>
           </Link>
-          <h1 className="text-4xl font-headline font-bold text-white">Create Identity</h1>
-          <p className="text-white/40 font-medium">Register your unique link to the Nexus.</p>
+          <h1 className="text-4xl font-headline font-bold text-white">New Identity</h1>
         </div>
 
         <div className="glass p-12 rounded-[4rem] border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.8)]">
@@ -91,8 +90,8 @@ export default function RegisterPage() {
             <div className="relative group/input">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within/input:text-primary transition-colors" />
               <Input 
-                placeholder="Identity Name" 
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                placeholder="Display Name" 
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -103,7 +102,7 @@ export default function RegisterPage() {
               <Input 
                 type="email" 
                 placeholder="Matrix Address (Email)" 
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -114,7 +113,7 @@ export default function RegisterPage() {
               <Input 
                 type="password" 
                 placeholder="Sync Key (Password)" 
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg focus:ring-primary focus:border-primary transition-all"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14 pr-6 text-lg"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -124,16 +123,14 @@ export default function RegisterPage() {
             <Button 
               type="submit"
               disabled={isLoading}
-              className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg neon-glow-primary transition-all active:scale-95 group"
+              className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg neon-glow-primary active:scale-95 transition-all"
             >
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
-                <>Establish Link <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" /></>
-              )}
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Establish Link"}
             </Button>
           </form>
 
           <div className="text-center mt-10">
-            <Link href="/login" className="text-xs text-white/40 hover:text-white uppercase tracking-widest font-black transition-colors">
+            <Link href="/login" className="text-[10px] text-white/40 hover:text-white uppercase tracking-widest font-black transition-colors">
               Already verified? Sign In
             </Link>
           </div>
