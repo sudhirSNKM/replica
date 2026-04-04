@@ -43,11 +43,11 @@ export default function LoginPage() {
       if (authMode === 'email') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // Phone Auth Simulation for Prototype - Isolated by Phone ID
+        // Phone Auth Simulation for Prototype
+        // In a real app, this would use verifyPhoneNumber, but here we anchor to a persistent UID via phone if possible
         const userCredential = await signInAnonymously(auth);
         const uid = userCredential.user.uid;
         
-        // Check if user document exists, if not create one tied to the phone
         const userRef = doc(firestore, "users", uid);
         const userDoc = await getDoc(userRef);
         
@@ -59,12 +59,11 @@ export default function LoginPage() {
             updatedAt: new Date().toISOString()
           });
           
-          // Create initial profile for this number
           const profileId = "primary-" + uid.substring(0, 5);
           await setDoc(doc(firestore, "users", uid, "profiles", profileId), {
             id: profileId,
             userId: uid,
-            name: `Nexus ${phone.slice(-4)}`,
+            name: `Nexus ${phone.slice(-4) || 'Alpha'}`,
             avatarUrl: `https://picsum.photos/seed/${phone}/200/200`,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -121,7 +120,7 @@ export default function LoginPage() {
             Sync your identity with the <span className="text-primary">matrix</span>.
           </h1>
           <p className="text-white/40 text-2xl max-w-xl font-medium leading-relaxed">
-            Every number creates a unique cinematic nexus. Your data stays with you.
+            Every link creates a unique cinematic nexus. Your data stays with you.
           </p>
         </motion.div>
 
