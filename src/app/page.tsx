@@ -118,12 +118,12 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-20 -mt-40 md:-mt-80 space-y-32 pb-48">
+      <div className="relative z-30 -mt-24 md:-mt-32 space-y-32 pb-48">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[1000px] pointer-events-none" />
         
         <div className="space-y-32">
-          {/* Trending Row */}
-          <section className="relative">
+          {/* Trending Row - Added padding to clear Hero footer */}
+          <section className="relative pt-12 md:pt-24">
             <MovieRow 
               title="Global Trending Now" 
               movies={allContent.filter(m => m.isTrending).slice(0, 15)} 
@@ -134,7 +134,7 @@ export default function Home() {
           {/* Shows Section */}
           <section className="relative">
             <ShowRow 
-              title="Featured TV Series" 
+              title="Top Series for You" 
               shows={showsOnly.slice(0, 12)} 
               onHover={setFeaturedMovie} 
             />
@@ -148,7 +148,7 @@ export default function Home() {
           {/* Genre specific rows */}
           <section className="space-y-32">
             <MovieRow 
-              title="Cyberpunk & Noir" 
+              title="Neo-Tokyo Noir" 
               movies={moviesOnly.filter(m => 
                 m.genres.some(g => g.toLowerCase().includes("cyberpunk") || g.toLowerCase().includes("noir"))
               ).slice(0, 15)} 
@@ -156,13 +156,13 @@ export default function Home() {
             />
 
             <ShowRow 
-              title="Neural Dramas" 
+              title="Binge-Worthy Protocols" 
               shows={showsOnly.filter(s => s.genres.includes("Drama")).slice(0, 12)} 
               onHover={setFeaturedMovie} 
             />
 
             <MovieRow 
-              title="Sci-Fi Protocols" 
+              title="Sci-Fi Blockbusters" 
               movies={moviesOnly.filter(m => 
                 m.genres.some(g => g.toLowerCase().includes("sci-fi"))
               ).slice(0, 15)} 

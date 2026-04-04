@@ -40,7 +40,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative h-[110vh] w-full overflow-hidden bg-background"
+      className="relative h-screen w-full overflow-hidden bg-background"
     >
       {/* Dynamic Background Image with Multi-layered Ken Burns Effect */}
       <AnimatePresence mode="wait">
@@ -56,7 +56,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             className="absolute inset-0 bg-cover bg-center"
             style={{ 
               backgroundImage: `url(${movie.thumbnailUrl})`,
-              transform: `translate(${mousePosition.x * 30}px, ${mousePosition.y * 30}px) scale(1.15)` 
+              transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.1)` 
             }}
           />
           {/* Advanced Multi-layered Overlays for depth */}
@@ -92,8 +92,8 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
 
             <motion.div
               style={{ 
-                x: mousePosition.x * -20,
-                y: mousePosition.y * -10
+                x: mousePosition.x * -15,
+                y: mousePosition.y * -8
               }}
             >
               <h1 
@@ -147,8 +147,8 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             transition={{ delay: 0.6, duration: 1.2 }}
             className="hidden lg:flex lg:col-span-5 flex-col justify-center items-end relative"
             style={{
-              x: mousePosition.x * 30,
-              y: mousePosition.y * 20
+              x: mousePosition.x * 20,
+              y: mousePosition.y * 15
             }}
           >
             {/* Background floating elements */}
@@ -182,8 +182,8 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </div>
       </div>
 
-      {/* Social proof & Volume */}
-      <div className="absolute bottom-20 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
+      {/* Social proof & Volume - Adjusted positioning to avoid content row collision */}
+      <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
         <div className="flex items-center gap-6">
           <div className="flex -space-x-4">
             {[1,2,3,4].map(i => (
