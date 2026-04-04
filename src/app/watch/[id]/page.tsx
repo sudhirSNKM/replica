@@ -33,6 +33,8 @@ import {
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 
+import { MOCK_MOVIES } from "@/app/lib/mock-data";
+
 export default function VideoPlayer() {
   const router = useRouter();
   const { id } = useParams();
@@ -43,7 +45,10 @@ export default function VideoPlayer() {
     return doc(firestore, "content", id as string);
   }, [firestore, id]);
 
-  const { data: movie, isLoading: isMovieLoading } = useDoc(movieRef);
+  const { data: firestoreMovie, isLoading: isMovieLoading } = useDoc(movieRef);
+  
+  // Define movie with fallback
+  const movie = firestoreMovie || MOCK_MOVIES.find(m => m.id === id);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -57,6 +62,7 @@ export default function VideoPlayer() {
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [showNextEpisode, setShowNextEpisode] = useState(false);
 
+  // Toggle play/pause
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -147,8 +153,11 @@ export default function VideoPlayer() {
   if (!movie) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white">
-        <p className="text-2xl mb-4">Content not found</p>
-        <Button onClick={() => router.push("/")}>Return Home</Button>
+        <p className="text-2xl mb-4">Media Protocol Protocol Missing</p>
+        <p className="text-white/40 mb-8 max-w-md text-center">We encountered a de-synchronization error. Please initialize sample data to the nexus.</p>
+        <Button onClick={() => router.push("/")} className="bg-primary hover:neon-glow-primary rounded-xl px-10 py-6">
+          Return to Portal
+        </Button>
       </div>
     );
   }
