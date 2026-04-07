@@ -39,8 +39,8 @@ service cloud.firestore {
     // Admin Clearance
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn();
-      // Allow self-promotion for the first user or demo protocol
-      allow create: if isSignedIn(); 
+      // Allow write for demo/seeding purposes in this prototype
+      allow write: if isSignedIn(); 
     }
   }
 }
