@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LogIn, ShieldCheck, Sparkles, Loader2, Key } from "lucide-react";
 import { useFirebase } from "@/firebase";
-import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
+import { 
+  signInWithEmailAndPassword, 
+  signInAnonymously, 
+  createUserWithEmailAndPassword 
+} from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,16 +50,40 @@ export default function LoginPage() {
       let isExplicitAdmin = false;
 
       if (authMode === 'email') {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        uid = userCredential.user.uid;
         isExplicitAdmin = email === 'admin@replica.com';
+        try {
+          // Attempt standard sync
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          uid = userCredential.user.uid;
+        } catch (err: any) {
+          // Auto-provision admin node if it's the first sync attempt for these credentials
+          if (isExplicitAdmin && (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential')) {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            uid = userCredential.user.uid;
+          } else {
+            throw err;
+          }
+        }
       } else {
-        // Use anonymous auth as a placeholder for phone auth in this prototype
-        const userCredential = await signInAnonymously(auth);
-        uid = userCredential.user.uid;
+        // "One Number - One Identity" Logic
+        // We simulate a persistent phone link by using a deterministic mock address
+        const cleanPhone = phone.replace(/\D/g, "");
+        if (cleanPhone.length < 10) throw new Error("Neural link requires a full 10-digit identifier.");
+        
+        const mockEmail = `phone_${cleanPhone}@replica.nexus`;
+        const mockPass = `pass_${cleanPhone}`;
+
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, mockEmail, mockPass);
+          uid = userCredential.user.uid;
+        } catch (err: any) {
+          // Initialize new persistent identity for this number
+          const userCredential = await createUserWithEmailAndPassword(auth, mockEmail, mockPass);
+          uid = userCredential.user.uid;
+        }
       }
 
-      // Ensure persistent user account node exists - One Number One Profile logic
+      // Ensure persistent user account node exists
       const userRef = doc(firestore, "userAccounts", uid);
       const userDoc = await getDoc(userRef);
       
