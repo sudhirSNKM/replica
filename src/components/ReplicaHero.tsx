@@ -32,6 +32,10 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
     router.push(`/content/${movie.id}`);
   };
 
+  // Generate a dynamic viewer count based on the rating and movie ID
+  const baseCount = Math.floor((parseFloat(movie.rating) || 8.5) * 10);
+  const viewerCount = `+${baseCount}K`;
+
   return (
     <div 
       ref={containerRef}
@@ -190,14 +194,29 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
       <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
         <div className="flex items-center gap-6">
           <div className="flex -space-x-4">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer">
-                <img src={`https://picsum.photos/seed/viewer-${i}/50/50`} className="w-full h-full object-cover" alt="Viewer" />
-              </div>
+            {[1, 2, 3, 4].map(i => (
+              <motion.div 
+                key={`${movie.id}-viewer-${i}`}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 + (i * 0.1) }}
+                className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer"
+              >
+                <img 
+                  src={`https://picsum.photos/seed/${movie.id}-view-${i}/50/50`} 
+                  className="w-full h-full object-cover" 
+                  alt="Viewer" 
+                />
+              </motion.div>
             ))}
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter">
-              +82K
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.3 }}
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter"
+            >
+              {viewerCount}
+            </motion.div>
           </div>
           <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Watching Now</div>
         </div>
