@@ -29,10 +29,13 @@ import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 
+import { useToast } from "@/hooks/use-toast";
+
 export default function VideoPlayer() {
   const router = useRouter();
   const { id } = useParams();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const movieRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -53,6 +56,7 @@ export default function VideoPlayer() {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [quality, setQuality] = useState(movie?.quality || "4K ULTRA HDR");
 
   // Toggle play/pause
   const togglePlay = () => {
@@ -208,6 +212,25 @@ export default function VideoPlayer() {
                     }}>
                       Neural Speed <span>{playbackSpeed}x</span>
                     </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-white/40">Stream Quality</DropdownMenuLabel>
+                    {["4K ULTRA HDR", "1080P FULL HD", "720P HD"].map((q) => (
+                      <DropdownMenuItem 
+                        key={q} 
+                        className={`hover:bg-white/10 cursor-pointer flex justify-between group/q ${quality === q ? 'text-primary' : 'text-white/70'}`}
+                        onClick={() => {
+                          setQuality(q);
+                          toast({ 
+                            title: "Quality Adjusted", 
+                            description: `Stream synchronized to ${q}.`,
+                          });
+                        }}
+                      >
+                        {q}
+                        {quality === q && <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_#FF2E63]" />}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

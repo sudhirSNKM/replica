@@ -38,6 +38,7 @@ export default function RegisterPage() {
         id: user.uid,
         name: name,
         email: email,
+        role: email === 'admin@replica.com' ? 'admin' : 'user',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });

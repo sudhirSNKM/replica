@@ -25,7 +25,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user && !isUserLoading) {
-      router.push('/');
+      if (user.email === 'admin@replica.com') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     }
   }, [user, isUserLoading, router]);
 
@@ -177,10 +181,27 @@ export default function LoginPage() {
                   variant="outline"
                   onClick={handleDemoLogin}
                   disabled={isLoading}
-                  className="w-full h-14 rounded-2xl glass border-white/10 text-white/60 hover:text-white hover:border-primary/50 transition-all"
+                  className="w-full h-14 rounded-2xl glass border-white/10 text-white/60 hover:text-white hover:border-primary/50 transition-all font-bold uppercase tracking-widest text-[10px]"
                 >
-                  Demo Protocol
+                  Guest Demo Protocol
                 </Button>
+
+                <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                    <div className="w-4 h-[1px] bg-primary" />
+                    Administrative Nexus
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-white/20 uppercase font-bold">Node Address</span>
+                      <p className="text-[10px] text-white/60 font-mono break-all selection:bg-primary/30">admin@replica.com</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-white/20 uppercase font-bold">Access Key</span>
+                      <p className="text-[10px] text-white/60 font-mono selection:bg-primary/30">replica2024</p>
+                    </div>
+                  </div>
+                </div>
               </form>
 
               <div className="text-center pt-4 border-t border-white/5">
@@ -192,7 +213,7 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </main>
   );
