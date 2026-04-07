@@ -31,16 +31,16 @@ export default function Home() {
     }
   }, [user, isAuthLoading, router]);
 
-  // Fetch only published content scheduled by the admin
+  // Fetch only published content scheduled by the admin - ONLY if user is present to avoid permission errors
   const contentRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     const now = new Date().toISOString();
     return query(
       collection(firestore, "content"),
       where("publishDate", "<=", now),
       limit(60)
     );
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);

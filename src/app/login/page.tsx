@@ -41,7 +41,7 @@ export default function LoginPage() {
         uid = userCredential.user.uid;
       }
 
-      // Ensure persistent user account node exists
+      // Ensure persistent user account node exists - One Number One Profile logic
       const userRef = doc(firestore, "userAccounts", uid);
       const userDoc = await getDoc(userRef);
       
@@ -85,7 +85,7 @@ export default function LoginPage() {
         uid,
         email: "demo@replica.nexus",
         promotedAt: new Date().toISOString()
-      });
+      }, { merge: true });
 
       toast({ title: "Admin Demo Active", description: "Redirecting to Management Nexus..." });
       router.push('/admin');

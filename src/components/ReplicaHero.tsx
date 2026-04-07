@@ -20,12 +20,12 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Generate unique viewer data for every movie change
+  // Generate unique viewer data for every movie change - Dynamically updates as requested
   const viewerData = useMemo(() => {
-    const baseCount = Math.floor((parseFloat(movie.rating) || 8.5) * 10);
+    const baseCount = Math.floor((parseFloat(movie.rating) || 8.5) * 10 + Math.random() * 20);
     return {
       count: `+${baseCount}K`,
-      seeds: Array.from({ length: 4 }, (_, i) => `${movie.id}-view-${i + 1}`)
+      seeds: Array.from({ length: 4 }, (_, i) => `${movie.id}-view-${i + 1}-${Math.floor(Math.random() * 1000)}`)
     };
   }, [movie.id, movie.rating]);
 
