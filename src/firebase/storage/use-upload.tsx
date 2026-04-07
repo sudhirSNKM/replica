@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useState } from "react";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -14,7 +13,7 @@ export function useUpload() {
   const uploadFile = (file: File, path: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       if (!storage) {
-        const err = new Error("Storage not initialized");
+        const err = new Error("Storage protocol not initialized in the nexus.");
         setError(err);
         reject(err);
         return;
@@ -34,6 +33,7 @@ export function useUpload() {
           setProgress(p);
         },
         (err) => {
+          console.error("Upload Sync Error:", err);
           setIsUploading(false);
           setError(err);
           reject(err);
@@ -44,6 +44,7 @@ export function useUpload() {
             setIsUploading(false);
             resolve(downloadURL);
           } catch (err: any) {
+            console.error("URL Retrieval Error:", err);
             setIsUploading(false);
             setError(err);
             reject(err);
