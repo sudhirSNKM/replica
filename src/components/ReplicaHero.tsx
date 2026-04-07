@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Play, Plus, Info, Volume2, VolumeX, Star, Clock, Flame, ChevronRight } from "lucide-react";
+import React, { useState, useRef, useMemo } from "react";
+import { Play, Info, Volume2, VolumeX, Star, Clock, Flame, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,15 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Generate unique viewer data for every movie change - Dynamically updates as requested
+  const viewerData = useMemo(() => {
+    const baseCount = Math.floor((parseFloat(movie.rating) || 8.5) * 10 + Math.random() * 20);
+    return {
+      count: `+${baseCount}K`,
+      seeds: Array.from({ length: 4 }, (_, i) => `${movie.id}-view-${i + 1}-${Math.floor(Math.random() * 1000)}`)
+    };
+  }, [movie.id, movie.rating]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -44,7 +53,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
           className="absolute inset-0 z-0"
         >
           {movie.videoUrl ? (
@@ -85,7 +94,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           >
             <div className="flex flex-wrap items-center gap-4">
               <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 backdrop-blur-xl px-4 py-1.5 text-xs font-bold tracking-widest uppercase rounded-full flex items-center gap-2">
-                <Flame className="w-3.5 h-3.5 fill-current" /> Trending Protocol #1
+                <Flame className="w-3.5 h-3.5 fill-current" /> Trending Protocol
               </Badge>
               <div className="flex items-center gap-4">
                 {movie.genres.map((g) => (
@@ -120,7 +129,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
                 <Clock className="w-5 h-5" />
                 <span>{movie.duration}</span>
               </div>
-              <span className="border border-white/20 px-3 py-1 rounded text-[10px] font-black tracking-widest">4K DOLBY VISION</span>
+              <span className="border border-white/20 px-3 py-1 rounded text-[10px] font-black tracking-widest uppercase">4K Neural Stream</span>
             </div>
 
             <p className="text-xl md:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-3">
@@ -190,16 +199,31 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
       <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 z-20 flex items-center gap-10">
         <div className="flex items-center gap-6">
           <div className="flex -space-x-4">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer">
-                <img src={`https://picsum.photos/seed/viewer-${i}/50/50`} className="w-full h-full object-cover" alt="Viewer" />
-              </div>
+            {viewerData.seeds.map((seed, i) => (
+              <motion.div 
+                key={`${movie.id}-viewer-${i}`}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 + (i * 0.1) }}
+                className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer"
+              >
+                <img 
+                  src={`https://picsum.photos/seed/${seed}/50/50`} 
+                  className="w-full h-full object-cover" 
+                  alt="Viewer" 
+                />
+              </motion.div>
             ))}
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter">
-              +82K
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.3 }}
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter"
+            >
+              {viewerData.count}
+            </motion.div>
           </div>
-          <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Watching Now</div>
+          <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Synchronized Now</div>
         </div>
         
         <div className="h-12 w-px bg-white/10 hidden md:block" />
@@ -211,7 +235,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           >
             {isMuted ? <VolumeX className="w-6 h-6 text-white/60 group-hover:text-white" /> : <Volume2 className="w-6 h-6 text-white group-hover:text-primary" />}
           </button>
-          <div className="glass px-6 py-2 rounded-2xl font-headline font-black text-2xl tracking-tighter text-white">18+</div>
+          <div className="glass px-6 py-2 rounded-2xl font-headline font-black text-2xl tracking-tighter text-white uppercase">18+ Protocol</div>
         </div>
       </div>
 

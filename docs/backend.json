@@ -1,441 +1,110 @@
 
 {
   "entities": {
-    "User": {
+    "UserAccount": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+      "title": "UserAccount",
       "type": "object",
-      "description": "Represents an authenticated user account in the system, primarily linking to external authentication (Firebase Auth). Passwords and other sensitive authentication data are managed by Firebase Auth and not stored here.",
+      "description": "Primary user account node, identified by Auth UID.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity, typically the Firebase Authentication User ID (UID)."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's primary email address, obtained from the authentication system.",
-          "format": "email"
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "The user's verified phone number."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account's data was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "createdAt"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a specific viewing profile associated with a user account, allowing for multiple personalized experiences per user (e.g., 'Kids', 'Dad's Profile').",
+      "description": "An individual viewing profile within a UserAccount.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User this profile belongs to. (Relationship: User 1:N UserProfile)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The display name for the user profile (e.g., 'John's Profile', 'Kids')."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL to the avatar image used for this profile.",
-          "format": "uri"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user profile was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "userAccountId": { "type": "string" },
+        "name": { "type": "string" },
+        "avatarUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "name",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "userAccountId", "name", "avatarUrl", "createdAt"]
     },
     "Content": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Content",
       "type": "object",
-      "description": "Represents a single piece of media content such as a movie or TV show episode, including all its metadata and media URLs.",
+      "description": "Cinematic content protocol (Movie or Show).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Content entity."
-        },
-        "title": {
-          "type": "string",
-          "description": "The main title of the content (e.g., 'Replicant Dawn')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief summary or synopsis of the content."
-        },
-        "tagline": {
-          "type": "string",
-          "description": "A short, catchy phrase or slogan for the content, often used in hero sections."
-        },
-        "thumbnailUrl": {
-          "type": "string",
-          "description": "URL to the primary poster or thumbnail image for the content, typically hosted in Firebase Storage.",
-          "format": "uri"
-        },
-        "videoUrl": {
-          "type": "string",
-          "description": "URL to the main video file for streaming the content, typically hosted in Firebase Storage.",
-          "format": "uri"
-        },
-        "trailerUrl": {
-          "type": "string",
-          "description": "URL to a short, muted video preview or trailer for the content, used for interactive previews.",
-          "format": "uri"
-        },
-        "durationMinutes": {
-          "type": "number",
-          "description": "The total duration of the content in minutes."
-        },
-        "releaseDate": {
-          "type": "string",
-          "description": "The date when the content was originally released.",
-          "format": "date"
-        },
-        "rating": {
-          "type": "string",
-          "description": "The content rating (e.g., 'PG-13', 'TV-MA', 'G')."
-        },
-        "imdbRating": {
-          "type": "number",
-          "description": "The IMDb rating for the content, on a scale of 0 to 10."
-        },
-        "genreIds": {
-          "type": "array",
-          "description": "References to the Genres this content belongs to. (Relationship: Content N:N Genre)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "directorIds": {
-          "type": "array",
-          "description": "References to the People who directed this content. (Relationship: Content N:N Person)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "castIds": {
-          "type": "array",
-          "description": "References to the People who are part of the cast for this content. (Relationship: Content N:N Person)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "isFeatured": {
-          "type": "boolean",
-          "description": "A boolean indicating if the content should be prominently featured, for example, in the hero section."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the content metadata was created or uploaded.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the content metadata was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnailUrl": { "type": "string", "format": "uri" },
+        "videoUrl": { "type": "string", "format": "uri" },
+        "genres": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "string" },
+        "releaseYear": { "type": "string" },
+        "type": { "type": "string", "enum": ["movie", "show"] },
+        "quality": { "type": "string", "enum": ["4K ULTRA HDR", "1080P FULL HD", "720P HD"] },
+        "publishDate": { "type": "string", "format": "date-time", "description": "When this content becomes visible to users." },
+        "isTrending": { "type": "boolean" },
+        "isNew": { "type": "boolean" }
       },
-      "required": [
-        "id",
-        "title",
-        "description",
-        "thumbnailUrl",
-        "videoUrl",
-        "durationMinutes",
-        "releaseDate",
-        "rating",
-        "genreIds",
-        "isFeatured",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "Genre": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Genre",
-      "type": "object",
-      "description": "Represents a specific classification or type of content (e.g., 'Action', 'Sci-Fi'), used for filtering and organization.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Genre entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the genre (e.g., 'Action', 'Comedy', 'Thriller')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the genre."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the genre was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the genre was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Category",
-      "type": "object",
-      "description": "Represents a curated list or browsing section for content (e.g., 'Trending', 'Top Picks', 'New Releases'), distinct from genre classifications.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the category (e.g., 'Trending', 'Top Picks')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the category."
-        },
-        "contentIds": {
-          "type": "array",
-          "description": "References to the Content items included in this curated category. (Relationship: Category N:N Content)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "order": {
-          "type": "number",
-          "description": "A numerical value to determine the display order of categories in the UI."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the category was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the category was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "contentIds",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "title", "videoUrl", "type", "publishDate"]
     },
     "WatchlistItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "WatchlistItem",
       "type": "object",
-      "description": "Represents a content item that a specific user profile has added to their personal watchlist for later viewing.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the WatchlistItem entity."
-        },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to the UserProfile that owns this watchlist item. (Relationship: UserProfile 1:N WatchlistItem)"
-        },
-        "contentId": {
-          "type": "string",
-          "description": "Reference to the Content item that is on the watchlist. (Relationship: Content 1:N WatchlistItem)"
-        },
-        "addedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the content was added to the watchlist.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "contentId": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userProfileId",
-        "contentId",
-        "addedAt"
-      ]
-    },
-    "ContinueWatchingItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ContinueWatchingItem",
-      "type": "object",
-      "description": "Tracks the playback progress for a specific content item by a user profile, enabling seamless resume playback functionality across devices.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ContinueWatchingItem entity."
-        },
-        "userProfileId": {
-          "type": "string",
-          "description": "Reference to the UserProfile whose playback progress is being tracked. (Relationship: UserProfile 1:N ContinueWatchingItem)"
-        },
-        "contentId": {
-          "type": "string",
-          "description": "Reference to the Content item being watched. (Relationship: Content 1:N ContinueWatchingItem)"
-        },
-        "playbackPositionSeconds": {
-          "type": "number",
-          "description": "The last recorded playback position in seconds for the content, allowing playback to resume from this point."
-        },
-        "lastWatchedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the content was last watched and its progress was updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userProfileId",
-        "contentId",
-        "playbackPositionSeconds",
-        "lastWatchedAt"
-      ]
-    },
-    "Person": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Person",
-      "type": "object",
-      "description": "Represents an individual involved in content production, such as an actor or director, with their biographical details.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Person entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the person (e.g., 'Tom Cruise', 'Steven Spielberg')."
-        },
-        "bio": {
-          "type": "string",
-          "description": "A short biographical description of the person."
-        },
-        "profileImageUrl": {
-          "type": "string",
-          "description": "URL to an image or photo of the person.",
-          "format": "uri"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the person's record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the person's record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "contentId", "addedAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous",
-      "phone"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/userAccounts/{userAccountId}",
         "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores core user account data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "entityName": "UserAccount",
+          "schema": { "$ref": "#/backend/entities/UserAccount" },
+          "description": "Root identity node."
         }
       },
       {
-        "path": "/users/{userId}/profiles/{userProfileId}",
+        "path": "/userAccounts/{userAccountId}/userProfiles/{userProfileId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores individual viewing profiles associated with a user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the parent user."
-            },
-            {
-              "name": "userProfileId",
-              "description": "The unique identifier for a specific user profile."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserProfile" },
+          "description": "User-defined identities."
+        }
+      },
+      {
+        "path": "/userAccounts/{userAccountId}/userProfiles/{userProfileId}/watchlistItems/{watchlistItemId}",
+        "definition": {
+          "entityName": "WatchlistItem",
+          "schema": { "$ref": "#/backend/entities/WatchlistItem" },
+          "description": "Personalized queue."
         }
       },
       {
         "path": "/content/{contentId}",
         "definition": {
           "entityName": "Content",
-          "schema": {
-            "$ref": "#/backend/entities/Content"
-          },
-          "description": "Stores metadata for all movies and TV shows.",
-          "params": [
-            {
-              "name": "contentId",
-              "description": "The unique identifier for a piece of content."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Content" },
+          "description": "Global content protocols."
+        }
+      },
+      {
+        "path": "/roles_admin/{adminUid}",
+        "definition": {
+          "entityName": "UserAccount",
+          "schema": { "$ref": "#/backend/entities/UserAccount" },
+          "description": "Admin clearance node."
         }
       }
     ]

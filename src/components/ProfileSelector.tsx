@@ -1,11 +1,11 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Check, X, Loader2, Trash2, UserPlus, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,14 +23,22 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [newProfileName, setNewProfileName] = useState("");
   
-  // Simulated Neural Link Verification
+  // Neural Verification logic
   const [isVerified, setIsVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
+  useEffect(() => {
+    // Persistent verification check
+    if (user) {
+      const skipVerification = localStorage.getItem(`verified_${user.uid}`);
+      if (skipVerification) setIsVerified(true);
+    }
+  }, [user]);
+
   const profilesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, "users", user.uid, "profiles");
+    return collection(firestore, "userAccounts", user.uid, "userProfiles");
   }, [firestore, user]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
@@ -41,33 +49,34 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     setTimeout(() => {
       setIsVerifying(false);
       setIsVerified(true);
+      if (user) localStorage.setItem(`verified_${user.uid}`, "true");
       toast({ title: "Neural Link Active", description: "Identity synchronization authorized." });
-    }, 1200);
+    }, 800);
   };
 
   const handleAddProfile = async () => {
     if (!firestore || !user) return;
     const id = "p-" + Math.random().toString(36).substring(7);
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
     
-    const newName = !profiles || profiles.length === 0 ? "Primary Protocol" : "Sub-Protocol";
+    const count = profiles?.length || 0;
+    const name = count === 0 ? "Primary Protocol" : `Sub-Protocol ${count + 1}`;
     
     await setDoc(profileRef, {
       id,
-      userId: user.uid,
-      name: newName,
+      userAccountId: user.uid,
+      name: name,
       avatarUrl: `https://picsum.photos/seed/${id}/200/200`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date().toISOString()
     });
     
-    toast({ title: "Profile Initialized", description: `${newName} added to your nexus.` });
+    toast({ title: "Profile Initialized", description: `${name} added to your nexus.` });
   };
 
   const handleUpdateProfileName = async (id: string) => {
     if (!firestore || !user) return;
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
-    await setDoc(profileRef, { name: newProfileName, updatedAt: new Date().toISOString() }, { merge: true });
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
+    await setDoc(profileRef, { name: newProfileName }, { merge: true });
     setEditingProfileId(null);
     toast({ title: "Profile Synced", description: "Identity protocol updated." });
   };
@@ -75,7 +84,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const handleDeleteProfile = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!firestore || !user) return;
-    const profileRef = doc(firestore, "users", user.uid, "profiles", id);
+    const profileRef = doc(firestore, "userAccounts", user.uid, "userProfiles", id);
     await deleteDoc(profileRef);
     toast({ title: "Profile Terminated", description: "Identity removed from nexus." });
   };
