@@ -24,14 +24,14 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect to login if not authenticated - Strict starting page logic
+  // Redirect to login if not authenticated - Mandates Login as starting page
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
     }
   }, [user, isAuthLoading, router]);
 
-  // Fetch only published content
+  // Fetch only published content scheduled by the admin
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
     const now = new Date().toISOString();
@@ -54,7 +54,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isAuthLoading && !isContentLoading && user) {
-      const timer = setTimeout(() => setIsLoading(false), 1000);
+      const timer = setTimeout(() => setIsLoading(false), 800);
       return () => clearTimeout(timer);
     }
   }, [isAuthLoading, isContentLoading, user]);
@@ -82,17 +82,16 @@ export default function Home() {
           <div className="w-80 h-1 bg-white/5 rounded-full overflow-hidden relative">
             <motion.div initial={{ x: "-100%" }} animate={{ x: "100%" }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent w-full h-full" />
           </div>
-          <p className="text-white/20 font-bold uppercase tracking-[0.5em] text-[10px] animate-pulse">Initializing Neural Bridge</p>
+          <p className="text-white/20 font-bold uppercase tracking-[0.5em] text-[10px] animate-pulse">Initializing Identity Nexus</p>
         </motion.div>
       </div>
     );
   }
 
-  // If not logged in, we return nothing to avoid showing verification screens (useEffect will redirect)
-  if (!user) {
-    return null;
-  }
+  // Ensure we don't show any partial state if redirecting to login
+  if (!user) return null;
 
+  // Profiles are isolated per unique phone/email ID
   if (!selectedProfileId) {
     return <ProfileSelector onSelect={handleProfileSelect} />;
   }
