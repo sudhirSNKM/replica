@@ -28,6 +28,8 @@ export default function Home() {
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
+    } else if (user?.email === 'admin@replica.com') {
+      router.replace('/admin');
     }
   }, [user, isAuthLoading, router]);
 
