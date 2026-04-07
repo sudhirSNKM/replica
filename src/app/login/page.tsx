@@ -36,13 +36,12 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         uid = userCredential.user.uid;
       } else {
-        // Use the phone number as a deterministic seed for demo/anonymous logic
-        // In a real production app, this would be actual Phone Auth
+        // Use anonymous auth as a placeholder for phone auth in this prototype
         const userCredential = await signInAnonymously(auth);
         uid = userCredential.user.uid;
       }
 
-      // Ensure user account node exists
+      // Ensure persistent user account node exists
       const userRef = doc(firestore, "userAccounts", uid);
       const userDoc = await getDoc(userRef);
       
@@ -54,7 +53,7 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         });
         
-        // Create default profile for the first sync
+        // Create initial profile for the nexus
         const profileId = "primary-" + uid.substring(0, 5);
         await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
           id: profileId,

@@ -23,14 +23,14 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [newProfileName, setNewProfileName] = useState("");
   
-  // Simulated Neural Link Verification for sticky sessions
+  // Neural Verification logic
   const [isVerified, setIsVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    // If the user has a phone number, it's a persistent nexus
-    if (user?.phoneNumber || user?.email) {
+    // Persistent verification check
+    if (user) {
       const skipVerification = localStorage.getItem(`verified_${user.uid}`);
       if (skipVerification) setIsVerified(true);
     }
@@ -51,7 +51,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
       setIsVerified(true);
       if (user) localStorage.setItem(`verified_${user.uid}`, "true");
       toast({ title: "Neural Link Active", description: "Identity synchronization authorized." });
-    }, 1200);
+    }, 800);
   };
 
   const handleAddProfile = async () => {

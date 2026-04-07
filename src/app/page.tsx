@@ -24,7 +24,7 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated - Strict starting page logic
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
@@ -54,7 +54,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isAuthLoading && !isContentLoading && user) {
-      const timer = setTimeout(() => setIsLoading(false), 1500);
+      const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }
   }, [isAuthLoading, isContentLoading, user]);
@@ -88,7 +88,7 @@ export default function Home() {
     );
   }
 
-  // If not logged in, we render nothing (useEffect will redirect)
+  // If not logged in, we return nothing to avoid showing verification screens (useEffect will redirect)
   if (!user) {
     return null;
   }
