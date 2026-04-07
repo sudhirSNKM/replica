@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // High-priority redirect for already authenticated identities
+  // Redirection for already linked nodes
   React.useEffect(() => {
     if (user && !isUserLoading) {
       if (user.email === 'admin@replica.com') {
@@ -47,16 +47,14 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       let uid = "";
-      let isExplicitAdmin = false;
+      const isExplicitAdmin = email === 'admin@replica.com';
 
       if (authMode === 'email') {
-        isExplicitAdmin = email === 'admin@replica.com';
         try {
-          // Attempt standard sync
           const userCredential = await signInWithEmailAndPassword(auth, email, password);
           uid = userCredential.user.uid;
         } catch (err: any) {
-          // Auto-provision admin node if it's the first sync attempt for these credentials
+          // Provision admin node if first sync attempt
           if (isExplicitAdmin && (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential')) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             uid = userCredential.user.uid;
@@ -65,10 +63,9 @@ export default function LoginPage() {
           }
         }
       } else {
-        // "One Number - One Identity" Logic
-        // We simulate a persistent phone link by using a deterministic mock address
+        // Persistent Neural Link logic (Phone)
         const cleanPhone = phone.replace(/\D/g, "");
-        if (cleanPhone.length < 10) throw new Error("Neural link requires a full 10-digit identifier.");
+        if (cleanPhone.length < 10) throw new Error("Full 10-digit identifier required.");
         
         const mockEmail = `phone_${cleanPhone}@replica.nexus`;
         const mockPass = `pass_${cleanPhone}`;
@@ -77,13 +74,12 @@ export default function LoginPage() {
           const userCredential = await signInWithEmailAndPassword(auth, mockEmail, mockPass);
           uid = userCredential.user.uid;
         } catch (err: any) {
-          // Initialize new persistent identity for this number
           const userCredential = await createUserWithEmailAndPassword(auth, mockEmail, mockPass);
           uid = userCredential.user.uid;
         }
       }
 
-      // Ensure persistent user account node exists
+      // Establish persistent account record
       const userRef = doc(firestore, "userAccounts", uid);
       const userDoc = await getDoc(userRef);
       
@@ -96,7 +92,6 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         });
         
-        // Auto-promote seeded admin to roles_admin collection
         if (isExplicitAdmin) {
           await setDoc(doc(firestore, "roles_admin", uid), {
             uid,
@@ -105,17 +100,16 @@ export default function LoginPage() {
           });
         }
 
-        // Create initial profile for the nexus
+        // Initialize primary profile
         const profileId = "primary-" + uid.substring(0, 5);
         await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
           id: profileId,
           userAccountId: uid,
-          name: authMode === 'phone' ? `Nexus ${phone.slice(-4) || 'Alpha'}` : "Primary Node",
+          name: authMode === 'phone' ? `Nexus ${phone.slice(-4)}` : "Primary Node",
           avatarUrl: `https://picsum.photos/seed/${uid}/200/200`,
           createdAt: new Date().toISOString()
         });
       } else if (isExplicitAdmin) {
-        // Ensure roles_admin exists for returning admin
         await setDoc(doc(firestore, "roles_admin", uid), {
           uid,
           email: "admin@replica.com",
@@ -138,16 +132,13 @@ export default function LoginPage() {
       const userCredential = await signInAnonymously(auth);
       const uid = userCredential.user.uid;
       
-      // Auto-promote demo user to admin status in the clearance node
-      const adminRef = doc(firestore, "roles_admin", uid);
-      await setDoc(adminRef, {
+      await setDoc(doc(firestore, "roles_admin", uid), {
         uid,
         email: "demo@replica.nexus",
         isDemo: true,
         promotedAt: new Date().toISOString()
       }, { merge: true });
 
-      // Create dummy user account for demo
       await setDoc(doc(firestore, "userAccounts", uid), {
         id: uid,
         email: "demo@replica.nexus",
@@ -226,26 +217,12 @@ export default function LoginPage() {
                     <Key className="w-3 h-3" />
                     Administrative Nexus
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-white/20 uppercase font-bold">Node Address</span>
-                      <p className="text-[10px] text-white/60 font-mono break-all selection:bg-primary/30">admin@replica.com</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-white/20 uppercase font-bold">Access Key</span>
-                      <p className="text-[10px] text-white/60 font-mono selection:bg-primary/30">replica2024</p>
-                    </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <p className="text-[10px] text-white/60 font-mono break-all">admin@replica.com</p>
+                    <p className="text-[10px] text-white/60 font-mono">replica2024</p>
                   </div>
                 </div>
               </form>
-
-              <div className="text-center pt-4 border-t border-white/5">
-                <Link href="/register">
-                  <Button variant="ghost" className="text-primary font-bold uppercase tracking-widest text-[10px]">
-                    Register Neural Identity
-                  </Button>
-                </Link>
-              </div>
             </div>
           </div>
         </motion.div>

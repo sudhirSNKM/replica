@@ -17,13 +17,11 @@ service cloud.firestore {
 
     // Global Content Library
     match /content/{contentId} {
-      // Allow all signed-in users to read content. 
-      // Launch scheduling is handled by UI filtering and publishDate logic.
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // User Identities and Nexus
+    // User Identities
     match /userAccounts/{userAccountId} {
       allow get, list, create, update: if isOwner(userAccountId);
       
@@ -39,7 +37,6 @@ service cloud.firestore {
     // Admin Clearance
     match /roles_admin/{adminUid} {
       allow get: if isSignedIn();
-      // Allow write for demo/seeding purposes in this prototype
       allow write: if isSignedIn(); 
     }
   }

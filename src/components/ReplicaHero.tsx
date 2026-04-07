@@ -20,7 +20,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Generate unique viewer data for every movie change - Dynamically updates as requested
+  // Dynamic Neural Viewer Data
   const viewerData = useMemo(() => {
     const baseCount = Math.floor((parseFloat(movie.rating) || 8.5) * 10 + Math.random() * 20);
     return {
@@ -80,7 +80,6 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-30" />
         </motion.div>
       </AnimatePresence>
 
@@ -140,57 +139,19 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               <Button 
                 size="lg" 
                 onClick={handleDetailsClick}
-                className="bg-white text-black hover:bg-primary hover:text-white rounded-full px-12 h-16 font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-2xl"
+                className="bg-white text-black hover:bg-primary hover:text-white rounded-full px-12 h-16 font-bold text-xl transition-all shadow-2xl"
               >
                 <Play className="w-6 h-6 mr-3 fill-current" /> Play Protocol
               </Button>
-              <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10" />
+              <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl" />
               <Button 
                 onClick={handleDetailsClick}
                 size="icon" 
                 variant="outline" 
-                className="rounded-full border-white/20 glass hover:bg-white/10 h-16 w-16 transition-transform hover:rotate-90"
+                className="rounded-full border-white/20 glass hover:bg-white/10 h-16 w-16"
               >
                 <Info className="w-8 h-8" />
               </Button>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0, x: 50 }}
-            animate={{ scale: 1, opacity: 1, x: 0 }}
-            transition={{ delay: 0.6, duration: 1.2 }}
-            className="hidden lg:flex lg:col-span-5 flex-col justify-center items-end relative"
-            style={{
-              x: mousePosition.x * 20,
-              y: mousePosition.y * 15
-            }}
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -z-10" />
-            
-            <div 
-              onClick={handleDetailsClick}
-              className="relative w-full max-w-[400px] aspect-[2/3] glass-card rounded-[4rem] p-5 group rotate-3 hover:rotate-0 transition-transform duration-700 cursor-pointer"
-            >
-               <div className="w-full h-full rounded-[3.5rem] overflow-hidden relative">
-                 <img src={movie.thumbnailUrl} className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700 scale-105 group-hover:scale-100" alt={movie.title} />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-                 
-                 <div className="absolute bottom-12 left-10 right-10 space-y-4">
-                    <div className="flex items-center justify-between text-[10px] text-white/60 font-black tracking-widest uppercase">
-                      <span>Sync Details</span>
-                      <ChevronRight className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 1, duration: 1.5 }}
-                        className="h-full bg-primary neon-glow-primary" 
-                      />
-                    </div>
-                 </div>
-               </div>
             </div>
           </motion.div>
         </div>
@@ -205,7 +166,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8 + (i * 0.1) }}
-                className="w-12 h-12 rounded-full border-4 border-background overflow-hidden hover:translate-y-[-5px] transition-transform cursor-pointer"
+                className="w-12 h-12 rounded-full border-4 border-background overflow-hidden"
               >
                 <img 
                   src={`https://picsum.photos/seed/${seed}/50/50`} 
@@ -218,29 +179,20 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.3 }}
-              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black tracking-tighter"
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-4 border-background text-[10px] font-black"
             >
               {viewerData.count}
             </motion.div>
           </div>
-          <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Synchronized Now</div>
+          <div className="text-white/40 text-xs font-bold uppercase tracking-widest">Watching Now</div>
         </div>
         
-        <div className="h-12 w-px bg-white/10 hidden md:block" />
-        
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => setIsMuted(!isMuted)}
-            className="w-14 h-14 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-all hover:scale-110 active:scale-95 group"
-          >
-            {isMuted ? <VolumeX className="w-6 h-6 text-white/60 group-hover:text-white" /> : <Volume2 className="w-6 h-6 text-white group-hover:text-primary" />}
-          </button>
-          <div className="glass px-6 py-2 rounded-2xl font-headline font-black text-2xl tracking-tighter text-white uppercase">18+ Protocol</div>
-        </div>
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="w-14 h-14 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-all"
+        >
+          {isMuted ? <VolumeX className="w-6 h-6 text-white/60" /> : <Volume2 className="w-6 h-6 text-white" />}
+        </button>
       </div>
     </div>
   );

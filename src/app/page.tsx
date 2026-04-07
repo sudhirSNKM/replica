@@ -24,7 +24,7 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect to login if not authenticated - Mandates Login as starting page
+  // Mandatory Login Entry Logic
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
@@ -33,7 +33,7 @@ export default function Home() {
     }
   }, [user, isAuthLoading, router]);
 
-  // Fetch only published content scheduled by the admin - ONLY if user is present to avoid permission errors
+  // Fetch only published content scheduled by the admin
   const contentRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     const now = new Date().toISOString();
@@ -73,7 +73,6 @@ export default function Home() {
     localStorage.setItem('replica_active_profile', id);
   };
 
-  // While checking auth or loading main app data
   if (isAuthLoading || (user && isLoading)) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col items-center justify-center z-[500]">
@@ -90,10 +89,8 @@ export default function Home() {
     );
   }
 
-  // Ensure we don't show any partial state if redirecting to login
   if (!user) return null;
 
-  // Profiles are isolated per unique phone/email ID
   if (!selectedProfileId) {
     return <ProfileSelector onSelect={handleProfileSelect} />;
   }
