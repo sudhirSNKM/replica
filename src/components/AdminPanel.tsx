@@ -32,7 +32,6 @@ export const AdminPanel = () => {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   
-  // Defaulting to 'link' for Video to avoid long upload times
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('upload');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
 
@@ -397,7 +396,6 @@ export const AdminPanel = () => {
                       </Select>
                     </div>
 
-                    {/* Poster Section */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black">Thumbnail Protocol</Label>
@@ -439,7 +437,6 @@ export const AdminPanel = () => {
                       )}
                     </div>
 
-                    {/* Video Section */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black flex items-center gap-2">

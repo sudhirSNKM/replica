@@ -24,7 +24,6 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mandatory Login Entry Logic
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
@@ -33,7 +32,6 @@ export default function Home() {
     }
   }, [user, isAuthLoading, router]);
 
-  // Fetch only published content scheduled by the admin
   const contentRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     const now = new Date().toISOString();
