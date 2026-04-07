@@ -95,10 +95,19 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <DropdownMenuItem onClick={() => { localStorage.removeItem('replica_active_profile'); router.push('/'); }} className="hover:bg-white/10 rounded-2xl py-4 px-5 transition-colors group">
-                    <span className="font-bold text-sm">Neural Profile</span>
+                    <span className="font-bold text-sm text-[10px] uppercase tracking-widest text-white/40">Profile Switcher</span>
                   </DropdownMenuItem>
+                  {user && (
+                    <Link href="/admin">
+                      <DropdownMenuItem className="hover:bg-primary/20 rounded-2xl py-4 px-5 transition-colors group">
+                        <span className="font-bold text-sm text-[10px] uppercase tracking-widest text-primary flex items-center gap-2">
+                          <Zap className="w-4 h-4 fill-primary" /> Admin Nexus
+                        </span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                   <DropdownMenuItem onClick={() => setIsSettingsOpen(true)} className="hover:bg-white/10 rounded-2xl py-4 px-5 transition-colors group">
-                    <span className="font-bold text-sm">Core Settings</span>
+                    <span className="font-bold text-sm text-[10px] uppercase tracking-widest text-white/40">Nexus Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <DropdownMenuItem onClick={handleLogout} className="hover:bg-destructive/10 rounded-2xl py-4 px-5 text-destructive font-bold group">
