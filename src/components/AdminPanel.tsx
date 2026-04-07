@@ -230,7 +230,7 @@ export const AdminPanel = () => {
     if (!firestore || !isAdmin) return;
     try {
       await deleteDoc(doc(firestore, "content", id));
-      setContentList((prev) => prev.filter((c) => c.id !== id));
+      setContentList((prev: any[]) => prev.filter((c: any) => c.id !== id));
       toast({ title: "Node Deinitialized", description: "Content removed from the matrix." });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
@@ -381,7 +381,7 @@ export const AdminPanel = () => {
                   <CardContent className="p-8 pt-0 space-y-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
-                      <Select onValueChange={(v) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
+                      <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
                         <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl">
                           <SelectValue />
                         </SelectTrigger>
@@ -394,7 +394,7 @@ export const AdminPanel = () => {
                     </div>
                     <div className="space-y-4">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Asset (Thumbnail)</Label>
-                      <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
+                      <Input type="file" onChange={(e: any) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
                       <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
                         {isPosterUploading ? (
                           <div className="w-full px-8 space-y-2 text-center">
@@ -413,7 +413,7 @@ export const AdminPanel = () => {
                     </div>
                     <div className="space-y-4">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Stream Protocol (Video)</Label>
-                      <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
+                      <Input type="file" onChange={(e: any) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
                       <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
                         {isVideoUploading ? (
                           <div className="w-full px-8 space-y-2 text-center">
@@ -463,7 +463,7 @@ export const AdminPanel = () => {
                     <div className="flex justify-center p-24"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
                   ) : (
                     <div className="space-y-4">
-                      {contentList.map(item => (
+                      {contentList.map((item: any) => (
                         <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group hover:bg-white/[0.02] transition-all">
                           <div className="flex items-center gap-6">
                             <div className="w-16 h-20 rounded-xl overflow-hidden bg-white/5 border border-white/10">
@@ -491,7 +491,7 @@ export const AdminPanel = () => {
               <Card className="glass border-white/10 rounded-[3rem] p-10">
                 <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Identity Nodes</CardTitle>
                 <div className="space-y-4">
-                  {userList.map(u => (
+                  {userList.map((u: any) => (
                     <div key={u.id} className="p-6 rounded-2xl glass border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <UsersIcon className="w-8 h-8 text-primary/40" />
@@ -511,21 +511,96 @@ export const AdminPanel = () => {
           )}
 
           {activeTab === 'analytics' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-4 gap-6">
-               {[
-                { label: 'Throughput', value: '1.2 PB', icon: Activity, color: 'text-primary' },
-                { label: 'Active Links', value: '42.1K', icon: UsersIcon, color: 'text-accent' },
-                { label: 'Credits', value: '₿ 4.8', icon: Zap, color: 'text-yellow-400' },
-                { label: 'Uptime', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
-              ].map((stat, i) => (
-                <Card key={i} className="glass border-white/5 p-6 space-y-4 rounded-3xl">
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</p>
-                    <p className="text-3xl font-headline font-bold text-white tracking-tighter">{stat.value}</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[
+                  { label: 'Throughput', value: '1.2 PB', icon: Activity, color: 'text-primary' },
+                  { label: 'Active Links', value: '42.1K', icon: UsersIcon, color: 'text-accent' },
+                  { label: 'Credits', value: '₿ 4.8', icon: Zap, color: 'text-yellow-400' },
+                  { label: 'Uptime', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
+                ].map((stat, i) => (
+                  <Card key={i} className="glass border-white/5 p-6 space-y-4 rounded-3xl">
+                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</p>
+                      <p className="text-3xl font-headline font-bold text-white tracking-tighter">{stat.value}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              
+              <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
+                <CardHeader className="p-10 pb-0">
+                  <CardTitle className="text-3xl font-headline font-bold text-white tracking-tight">Node Performance</CardTitle>
+                </CardHeader>
+                <CardContent className="p-10 space-y-8">
+                  <div className="h-64 flex items-end gap-2 border-b border-white/5 pb-2">
+                    {[60, 40, 70, 90, 50, 80, 45, 95, 75, 85, 60, 100].map((h: number, i: number) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%` }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex-1 bg-gradient-to-t from-primary/20 via-primary/60 to-primary rounded-t-lg shadow-[0_0_20px_rgba(255,46,99,0.2)]"
+                      />
+                    ))}
                   </div>
-                </Card>
-              ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
+                    <Monitor className="w-6 h-6 text-primary" /> General Config
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Site Title</Label>
+                    <Input defaultValue="REPLICA | NEXUS" className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Maintenance Mode</Label>
+                    <Select defaultValue="OFF">
+                      <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="glass text-white">
+                        <SelectItem value="OFF">DEACTIVATED</SelectItem>
+                        <SelectItem value="ON">ACTIVATED</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
+                    <Database className="w-6 h-6 text-accent" /> Infrastructure
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-6">
+                  <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60">Firestore Cluster</p>
+                      <p className="text-lg font-bold text-white">Operational</p>
+                    </div>
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_#10B981]" />
+                  </div>
+                  <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/60">Storage Nexus</p>
+                      <p className="text-lg font-bold text-white">Synchronized</p>
+                    </div>
+                    <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_15px_#3B82F6]" />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>
