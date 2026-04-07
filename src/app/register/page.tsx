@@ -34,14 +34,24 @@ export default function RegisterPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const isAdminEmail = email === 'admin@replica.com';
 
       // Create user document in userAccounts
       await setDoc(doc(firestore, "userAccounts", user.uid), {
         id: user.uid,
         email: email,
-        role: email === 'admin@replica.com' ? 'admin' : 'user',
+        role: isAdminEmail ? 'admin' : 'user',
         createdAt: new Date().toISOString()
       });
+
+      // If this is the seeded admin email, add to roles_admin
+      if (isAdminEmail) {
+        await setDoc(doc(firestore, "roles_admin", user.uid), {
+          uid: user.uid,
+          email: email,
+          promotedAt: new Date().toISOString()
+        });
+      }
 
       // Create a default profile in userProfiles subcollection
       const profileId = "primary-" + Math.random().toString(36).substring(7);

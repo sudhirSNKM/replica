@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
+import { LogIn, ShieldCheck, Sparkles, Loader2, Key } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -25,15 +25,17 @@ export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // High-priority redirect for already authenticated identities
   React.useEffect(() => {
     if (user && !isUserLoading) {
       if (user.email === 'admin@replica.com') {
-        router.push('/admin');
+        router.replace('/admin');
       } else {
-        router.push('/');
+        router.replace('/');
       }
     }
   }, [user, isUserLoading, router]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
@@ -41,9 +43,12 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       let uid = "";
+      let isExplicitAdmin = false;
+
       if (authMode === 'email') {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         uid = userCredential.user.uid;
+        isExplicitAdmin = email === 'admin@replica.com';
       } else {
         // Use anonymous auth as a placeholder for phone auth in this prototype
         const userCredential = await signInAnonymously(auth);
@@ -59,9 +64,19 @@ export default function LoginPage() {
           id: uid,
           email: authMode === 'email' ? email : null,
           phoneNumber: authMode === 'phone' ? phone : null,
+          role: isExplicitAdmin ? 'admin' : 'user',
           createdAt: new Date().toISOString()
         });
         
+        // Auto-promote seeded admin to roles_admin collection
+        if (isExplicitAdmin) {
+          await setDoc(doc(firestore, "roles_admin", uid), {
+            uid,
+            email: "admin@replica.com",
+            promotedAt: new Date().toISOString()
+          });
+        }
+
         // Create initial profile for the nexus
         const profileId = "primary-" + uid.substring(0, 5);
         await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
@@ -71,10 +86,17 @@ export default function LoginPage() {
           avatarUrl: `https://picsum.photos/seed/${uid}/200/200`,
           createdAt: new Date().toISOString()
         });
+      } else if (isExplicitAdmin) {
+        // Ensure roles_admin exists for returning admin
+        await setDoc(doc(firestore, "roles_admin", uid), {
+          uid,
+          email: "admin@replica.com",
+          promotedAt: new Date().toISOString()
+        }, { merge: true });
       }
 
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
-      router.push('/');
+      router.push(isExplicitAdmin ? '/admin' : '/');
     } catch (e: any) {
       toast({ title: "Sync Failed", description: e.message, variant: "destructive" });
       setIsLoading(false);
@@ -88,12 +110,21 @@ export default function LoginPage() {
       const userCredential = await signInAnonymously(auth);
       const uid = userCredential.user.uid;
       
-      // Auto-promote demo user to admin if it's a fresh nexus
+      // Auto-promote demo user to admin status in the clearance node
       const adminRef = doc(firestore, "roles_admin", uid);
       await setDoc(adminRef, {
         uid,
         email: "demo@replica.nexus",
+        isDemo: true,
         promotedAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Create dummy user account for demo
+      await setDoc(doc(firestore, "userAccounts", uid), {
+        id: uid,
+        email: "demo@replica.nexus",
+        role: "admin",
+        createdAt: new Date().toISOString()
       }, { merge: true });
 
       toast({ title: "Admin Demo Active", description: "Redirecting to Management Nexus..." });
@@ -164,10 +195,10 @@ export default function LoginPage() {
 
                 <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-3">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                    <div className="w-4 h-[1px] bg-primary" />
+                    <Key className="w-3 h-3" />
                     Administrative Nexus
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1">
                       <span className="text-[10px] text-white/20 uppercase font-bold">Node Address</span>
                       <p className="text-[10px] text-white/60 font-mono break-all selection:bg-primary/30">admin@replica.com</p>

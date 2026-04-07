@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, ShieldAlert } from "lucide-react";
+import { Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, ShieldAlert, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,7 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Settings as SettingsIcon, ShieldAlert, Users as UsersIcon, LayoutGrid } from "lucide-react";
+import { Settings as SettingsIcon, Users as UsersIcon, LayoutGrid } from "lucide-react";
 
 export const AdminPanel = () => {
   const { user, isUserLoading } = useUser();
@@ -262,102 +262,136 @@ export const AdminPanel = () => {
         </div>
 
         {activeTab === 'content' ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2 space-y-8">
+              <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 pb-0">
+                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
+                    <Film className="w-6 h-6 text-primary" /> Content Protocol
+                  </CardTitle>
+                  <CardDescription className="text-white/40">Core parameters for the cinematic library.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Title</Label>
+                      <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Neon Protocol" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Genre</Label>
+                      <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Cyberpunk" required />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Type</Label>
+                      <select {...register("type")} className="w-full h-14 bg-white/5 border border-white/10 text-white rounded-2xl px-4 appearance-none focus:outline-none">
+                        <option value="movie" className="bg-[#0B0B0F]">Movie</option>
+                        <option value="show" className="bg-[#0B0B0F]">Show</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Year</Label>
+                      <Input {...register("releaseYear")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2024" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Duration</Label>
+                      <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2h 15m" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Publish Protocol (Launch Date)</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                      <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Synopsis</Label>
+                    <Textarea {...register("description")} className="min-h-[120px] bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Plot overview..." required />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="p-8 pb-0">
-                <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
-                  <Film className="w-6 h-6 text-primary" /> Content Protocol
-                </CardTitle>
-                <CardDescription className="text-white/40">Core parameters for the cinematic library.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-8">
+              <Card className="glass border-white/10 rounded-[2.5rem]">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-xl font-headline font-bold text-white flex items-center gap-3">
+                    <Monitor className="w-5 h-5 text-accent" /> Quality & Assets
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Title</Label>
-                    <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Neon Protocol" required />
+                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
+                    <Select onValueChange={(v) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
+                      <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl">
+                        <SelectValue placeholder="Select Quality" />
+                      </SelectTrigger>
+                      <SelectContent className="glass text-white">
+                        <SelectItem value="4K ULTRA HDR">4K ULTRA HDR</SelectItem>
+                        <SelectItem value="1080P FULL HD">1080P FULL HD</SelectItem>
+                        <SelectItem value="720P HD">720P HD</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Genre</Label>
-                    <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Cyberpunk" required />
+                  <div className="space-y-4">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Protocol (Poster)</Label>
+                    <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" />
+                    <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/2">
+                      {isPosterUploading ? <Progress value={posterProgress} className="w-2/3 h-1" /> : <><Upload className="w-6 h-6 text-white/20 mb-2" /><span className="text-xs text-white/40">Upload Image</span></>}
+                    </label>
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Type</Label>
-                    <select {...register("type")} className="w-full h-14 bg-white/5 border border-white/10 text-white rounded-2xl px-4 appearance-none focus:outline-none">
-                      <option value="movie" className="bg-[#0B0B0F]">Movie</option>
-                      <option value="show" className="bg-[#0B0B0F]">Show</option>
-                    </select>
+                  <div className="space-y-4">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Stream Protocol (Video)</Label>
+                    <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" />
+                    <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/2">
+                      {isVideoUploading ? <Progress value={videoProgress} className="w-2/3 h-1" /> : <><Film className="w-6 h-6 text-white/20 mb-2" /><span className="text-xs text-white/40">Upload Video</span></>}
+                    </label>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Year</Label>
-                    <Input {...register("releaseYear")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2024" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/30">Duration</Label>
-                    <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2h 15m" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest text-white/30">Publish Protocol (Launch Date)</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                    <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest text-white/30">Synopsis</Label>
-                  <Textarea {...register("description")} className="min-h-[120px] bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Plot overview..." required />
-                </div>
-              </CardContent>
-            </Card>
+                  <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all">
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />}
+                    Finalize Broadcast
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </form>
+        ) : activeTab === 'users' ? (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
+                    <UsersIcon className="w-6 h-6 text-primary" /> Neural Identities
+                  </CardTitle>
+                  <CardDescription className="text-white/40">Connected nodes in the matrix.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 pt-0">
+                  {isUsersLoading ? (
+                    <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userList.map(u => (
+                        <div key={u.id} className="p-6 rounded-2xl glass border-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                              <span className="text-xs font-black text-primary">{u.role?.charAt(0).toUpperCase() || 'U'}</span>
+                            </div>
+                            <div>
+                              <p className="text-white font-bold">{u.email || u.phoneNumber || "Anonymous Node"}</p>
+                              <p className="text-[10px] text-white/40 uppercase tracking-widest">{u.id}</p>
+                            </div>
+                          </div>
+                          <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${u.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-white/10 text-white/40'}`}>
+                            {u.role || 'user'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+             </Card>
           </div>
-
-          <div className="space-y-8">
-            <Card className="glass border-white/10 rounded-[2.5rem]">
-              <CardHeader className="p-8">
-                <CardTitle className="text-xl font-headline font-bold text-white flex items-center gap-3">
-                  <Monitor className="w-5 h-5 text-accent" /> Quality & Assets
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 pt-0 space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
-                  <Select onValueChange={(v) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
-                    <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl">
-                      <SelectValue placeholder="Select Quality" />
-                    </SelectTrigger>
-                    <SelectContent className="glass text-white">
-                      <SelectItem value="4K ULTRA HDR">4K ULTRA HDR</SelectItem>
-                      <SelectItem value="1080P FULL HD">1080P FULL HD</SelectItem>
-                      <SelectItem value="720P HD">720P HD</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Protocol (Poster)</Label>
-                  <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" />
-                  <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/2">
-                    {isPosterUploading ? <Progress value={posterProgress} className="w-2/3 h-1" /> : <><Upload className="w-6 h-6 text-white/20 mb-2" /><span className="text-xs text-white/40">Upload Image</span></>}
-                  </label>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] uppercase tracking-widest text-white/30">Stream Protocol (Video)</Label>
-                  <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" />
-                  <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/2">
-                    {isVideoUploading ? <Progress value={videoProgress} className="w-2/3 h-1" /> : <><Film className="w-6 h-6 text-white/20 mb-2" /><span className="text-xs text-white/40">Upload Video</span></>}
-                  </label>
-                </div>
-                <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all">
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />}
-                  Finalize Broadcast
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </form>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
@@ -417,12 +451,12 @@ export const AdminPanel = () => {
                   </div>
                   <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_15px_#3B82F6]" />
                 </div>
-                <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10 flex items-center justify-between group/status opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-not-allowed">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 group-hover/status:text-primary transition-colors">AI Processing Node</p>
-                    <p className="text-lg font-bold text-white">Edge Integration Pending</p>
+                <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10 flex items-center justify-between group/status">
+                   <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 group-hover/status:text-primary transition-colors">Admin Identity</p>
+                    <p className="text-sm font-bold text-white truncate max-w-[200px]">{user?.email || user?.uid}</p>
                   </div>
-                  <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                  <Key className="w-5 h-5 text-primary" />
                 </div>
               </CardContent>
             </Card>
