@@ -5,7 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
-  ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon 
+  ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
+  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,6 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Settings as SettingsIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,7 @@ export const AdminPanel = () => {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   
+  // Defaulting to 'link' for Video to avoid long upload times
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('upload');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
 
@@ -109,7 +110,7 @@ export const AdminPanel = () => {
       
       toast({
         title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`,
-        description: "Media has been added to the decentralized storage cluster.",
+        description: "Media added to storage cluster.",
       });
     } catch (err: any) {
       toast({
@@ -122,12 +123,12 @@ export const AdminPanel = () => {
 
   const onSubmit = async (data: any) => {
     if (!firestore || !isAdmin) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Authorization required to broadcast content." });
+      toast({ variant: "destructive", title: "Access Denied", description: "Authorization required." });
       return;
     }
 
     if (!data.thumbnailUrl || !data.videoUrl) {
-      toast({ variant: "destructive", title: "Missing Protocols", description: "You must provide both visual and stream assets." });
+      toast({ variant: "destructive", title: "Missing Protocols", description: "Visual and stream assets required." });
       return;
     }
 
@@ -151,8 +152,8 @@ export const AdminPanel = () => {
     try {
       await setDoc(contentRef, payload);
       toast({
-        title: "Broadcast Protocol Established",
-        description: `${data.title} has been scheduled for launch.`,
+        title: "Broadcast Finalized",
+        description: `${data.title} scheduled for launch.`,
       });
       reset();
     } catch (e: any) {
@@ -183,7 +184,7 @@ export const AdminPanel = () => {
       }
       toast({
         title: "Neural Sync Complete",
-        description: `${MOCK_MOVIES.length} cinematic protocols synchronized.`,
+        description: `${MOCK_MOVIES.length} protocols synchronized.`,
       });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Sync Error", description: e.message });
@@ -204,7 +205,7 @@ export const AdminPanel = () => {
           }));
           setUserList(usersData);
         } catch (error: any) {
-          toast({ variant: "destructive", title: "Identity Retrieval Failed", description: error.message });
+          toast({ variant: "destructive", title: "Retrieval Failed", description: error.message });
         } finally {
           setIsUsersLoading(false);
         }
@@ -259,11 +260,11 @@ export const AdminPanel = () => {
             <ShieldAlert className="w-10 h-10 text-primary" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Identity Clearance</h2>
-            <p className="text-white/40 font-medium leading-relaxed">Your identity node requires authorized promotion to access broadcast controls.</p>
+            <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Clearance Required</h2>
+            <p className="text-white/40 font-medium">Your node requires administrative promotion.</p>
           </div>
           <Button onClick={handlePromote} disabled={isPromoting} className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold text-lg">
-            {isPromoting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Authorize Broadcast Identity"}
+            {isPromoting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Authorize Node"}
           </Button>
         </Card>
       </div>
@@ -272,29 +273,28 @@ export const AdminPanel = () => {
 
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">
-      <div className="max-w-5xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
               <div className="w-8 h-[1px] bg-primary" />
-              Administrative Nexus 1.4
+              Administrative Nexus 2.0
             </div>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tighter">
-              Nexus <span className="text-primary text-glow">Control</span>
+              Broadcast <span className="text-primary text-glow">Control</span>
             </h1>
             
             <div className="flex flex-wrap gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit mt-6">
               {[
-                { id: 'analytics', icon: Zap, label: 'Analytics' },
                 { id: 'content', icon: Upload, label: 'Broadcast' },
                 { id: 'library', icon: Film, label: 'Library' },
                 { id: 'users', icon: UsersIcon, label: 'Identities' },
-                { id: 'settings', icon: SettingsIcon, label: 'Settings' }
+                { id: 'analytics', icon: Zap, label: 'Stats' }
               ].map((tab) => (
                 <button 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 >
                   <tab.icon className="w-4 h-4" /> {tab.label}
                 </button>
@@ -303,17 +303,15 @@ export const AdminPanel = () => {
           </div>
           
           {activeTab === 'content' && (
-            <div className="flex gap-4">
-              <Button 
-                onClick={seedDatabase} 
-                disabled={isSeeding}
-                variant="outline" 
-                className="h-14 px-8 rounded-2xl border-white/5 glass hover:border-primary/50 text-white/60 hover:text-white transition-all font-bold group"
-              >
-                {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <Database className="w-4 h-4 mr-3 group-hover:text-primary transition-colors" />}
-                Seed Nexus
-              </Button>
-            </div>
+            <Button 
+              onClick={seedDatabase} 
+              disabled={isSeeding}
+              variant="outline" 
+              className="h-14 px-8 rounded-2xl border-white/5 glass hover:border-primary/50 text-white/60 hover:text-white transition-all font-bold"
+            >
+              {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <Database className="w-4 h-4 mr-3" />}
+              Seed Nexus Data
+            </Button>
           )}
         </div>
 
@@ -324,67 +322,67 @@ export const AdminPanel = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               onSubmit={handleSubmit(onSubmit)} 
-              className="grid grid-cols-1 lg:grid-cols-3 gap-12"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-12"
             >
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
-                  <CardHeader className="p-8 pb-0">
-                    <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
-                      <Film className="w-6 h-6 text-primary" /> Content Protocol
+              <div className="lg:col-span-7 space-y-8">
+                <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
+                  <CardHeader className="p-10 pb-0">
+                    <CardTitle className="text-3xl font-headline font-bold text-white flex items-center gap-3">
+                      <Sparkles className="w-8 h-8 text-primary" /> Core Protocol
                     </CardTitle>
-                    <CardDescription className="text-white/40">Core parameters for the cinematic library.</CardDescription>
+                    <CardDescription className="text-white/40">Define the metadata for the cinematic experience.</CardDescription>
                   </CardHeader>
-                  <CardContent className="p-8 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Protocol Title</Label>
-                        <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Neon Protocol" required />
+                  <CardContent className="p-10 space-y-8">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Title</Label>
+                        <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Enter Movie Title" required />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Genre Tag</Label>
-                        <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk" required />
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Genre</Label>
+                        <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="e.g. Cyberpunk" required />
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Protocol Type</Label>
-                        <select {...register("type")} className="w-full h-14 bg-white/5 border border-white/10 text-white rounded-2xl px-4 appearance-none focus:outline-none">
-                          <option value="movie" className="bg-[#0B0B0F]">Cinematic</option>
+                    <div className="grid grid-cols-3 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Type</Label>
+                        <select {...register("type")} className="w-full h-14 bg-white/5 border border-white/10 text-white rounded-2xl px-6 appearance-none focus:outline-none">
+                          <option value="movie" className="bg-[#0B0B0F]">Movie</option>
                           <option value="show" className="bg-[#0B0B0F]">Series</option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Cycle (Year)</Label>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Year</Label>
                         <Input {...register("releaseYear")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2024" />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Duration</Label>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Duration</Label>
                         <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2h 15m" />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Launch Protocol (Publish Date)</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                        <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" required />
-                      </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center gap-2">
+                        <Clock className="w-3 h-3" /> Scheduled Launch (Publish Date)
+                      </Label>
+                      <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" required />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Neural Synopsis</Label>
-                      <Textarea {...register("description")} className="min-h-[120px] bg-white/5 border-white/10 text-white rounded-2xl p-6" placeholder="Enter cinematic summary..." required />
+                    <div className="space-y-3">
+                      <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Synopsis</Label>
+                      <Textarea {...register("description")} className="min-h-[140px] bg-white/5 border-white/10 text-white rounded-[2rem] p-6 text-base" placeholder="Describe the cinematic journey..." required />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              <div className="space-y-8">
-                <Card className="glass border-white/10 rounded-[2.5rem]">
-                  <CardHeader className="p-8">
-                    <CardTitle className="text-xl font-headline font-bold text-white flex items-center gap-3">
-                      <Monitor className="w-5 h-5 text-accent" /> Uplink Protocols
+              <div className="lg:col-span-5 space-y-8">
+                <Card className="glass border-white/10 rounded-[3rem]">
+                  <CardHeader className="p-10">
+                    <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
+                      <Zap className="w-6 h-6 text-accent" /> Media Uplink
                     </CardTitle>
+                    <CardDescription className="text-white/40">Choose between Direct Upload or Instant Sync.</CardDescription>
                   </CardHeader>
-                  <CardContent className="p-8 pt-0 space-y-10">
+                  <CardContent className="p-10 pt-0 space-y-12">
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
                       <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
@@ -399,9 +397,10 @@ export const AdminPanel = () => {
                       </Select>
                     </div>
 
-                    <div className="space-y-4">
+                    {/* Poster Section */}
+                    <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Asset (Thumbnail)</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black">Thumbnail Protocol</Label>
                         <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
                           <button type="button" onClick={() => setPosterMode('upload')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", posterMode === 'upload' ? 'bg-primary text-white' : 'text-white/30')}>Upload</button>
                           <button type="button" onClick={() => setPosterMode('link')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", posterMode === 'link' ? 'bg-primary text-white' : 'text-white/30')}>Link</button>
@@ -409,11 +408,11 @@ export const AdminPanel = () => {
                       </div>
 
                       {posterMode === 'upload' ? (
-                        <div className="space-y-4">
+                        <div className="relative">
                           <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
                           <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
                             {isPosterUploading ? (
-                              <div className="w-full px-8 space-y-4 text-center">
+                              <div className="w-full px-10 space-y-4 text-center">
                                 <Progress value={posterProgress} className="h-1.5 bg-white/5" />
                                 <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black animate-pulse">Syncing Visuals</span>
                               </div>
@@ -434,13 +433,14 @@ export const AdminPanel = () => {
                         </div>
                       ) : (
                         <div className="relative group">
-                          <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                          <Input {...register("thumbnailUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12 pr-6" placeholder="https://..." />
+                          <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary" />
+                          <Input {...register("thumbnailUrl")} className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" placeholder="Instant Link (https://...)" />
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-4">
+                    {/* Video Section */}
+                    <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black flex items-center gap-2">
                           Stream Protocol <Badge variant="outline" className="text-[7px] py-0 px-1 border-accent/40 text-accent">FAST SYNC RECOMMENDED</Badge>
@@ -456,14 +456,14 @@ export const AdminPanel = () => {
                           <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
                           <label htmlFor="video-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
                             {isVideoUploading ? (
-                              <div className="w-full px-8 space-y-4 text-center">
+                              <div className="w-full px-10 space-y-4 text-center">
                                 <Progress value={videoProgress} className="h-1.5 bg-white/5" />
                                 <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-black animate-pulse">Syncing Stream</span>
                               </div>
                             ) : videoUrl ? (
                               <div className="flex flex-col items-center gap-2">
                                 <Check className="w-10 h-10 text-emerald-500" />
-                                <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em]">Protocol Locked</span>
+                                <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Protocol Stored</span>
                               </div>
                             ) : (
                               <>
@@ -472,18 +472,22 @@ export const AdminPanel = () => {
                               </>
                             )}
                           </label>
+                          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                            <AlertTriangle className="w-5 h-5 flex-none" />
+                            <p className="text-[10px] font-bold leading-relaxed uppercase tracking-tight">Large media may take several minutes to synchronize. Use Link for instant results.</p>
+                          </div>
                         </div>
                       ) : (
                         <div className="relative group">
-                          <Monitor className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-accent transition-colors" />
-                          <Input {...register("videoUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12 pr-6" placeholder="https://..." />
+                          <Monitor className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-accent" />
+                          <Input {...register("videoUrl")} className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" placeholder="Instant Link (https://...)" />
                         </div>
                       )}
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all shadow-xl">
-                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />}
-                      Finalize Broadcast
+                    <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
+                      {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6 mr-3" />}
+                      Establish Broadcast
                     </Button>
                   </CardContent>
                 </Card>
@@ -492,44 +496,34 @@ export const AdminPanel = () => {
           )}
 
           {activeTab === 'library' && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-8"
-            >
-              <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
-                <CardHeader className="p-10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-3xl font-headline font-bold text-white tracking-tight">Broadcast Library</CardTitle>
-                      <CardDescription className="text-white/40">Synchronized cinematic protocols across the nexus.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-10 pt-0">
-                  {isContentLoading ? (
-                    <div className="flex justify-center p-24"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
-                  ) : (
-                    <div className="space-y-4">
-                      {contentList.map((item: any) => (
-                        <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group hover:bg-white/[0.02] transition-all">
-                          <div className="flex items-center gap-6">
-                            <div className="w-16 h-20 rounded-xl overflow-hidden bg-white/5 border border-white/10">
-                              <img src={item.thumbnailUrl} className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                              <p className="text-[10px] text-white/40 uppercase tracking-widest">{item.genre} • {item.quality}</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+              <Card className="glass border-white/10 rounded-[3rem] p-10">
+                <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Synchronized Library</CardTitle>
+                {isContentLoading ? (
+                  <div className="flex justify-center p-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {contentList.map(item => (
+                      <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
+                        <div className="flex items-center gap-6">
+                          <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
+                            <img src={item.thumbnailUrl} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="space-y-1">
+                            <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                            <p className="text-[10px] text-white/40 uppercase tracking-widest">{item.genre} • {item.type}</p>
+                            <div className="pt-2">
+                              <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
                             </div>
                           </div>
-                          <Button onClick={() => handleDeleteContent(item.id)} variant="ghost" className="text-destructive hover:bg-destructive/10">
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
+                        <Button onClick={() => handleDeleteContent(item.id)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
+                          <Trash2 className="w-6 h-6" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             </motion.div>
           )}
@@ -537,20 +531,20 @@ export const AdminPanel = () => {
           {activeTab === 'users' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="glass border-white/10 rounded-[3rem] p-10">
-                <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Identity Nodes</CardTitle>
-                <div className="space-y-4">
-                  {userList.map((u: any) => (
-                    <div key={u.id} className="p-6 rounded-2xl glass border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <UsersIcon className="w-8 h-8 text-primary/40" />
+                <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Active Identity Nodes</CardTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {userList.map(u => (
+                    <div key={u.id} className="p-8 rounded-[2rem] glass border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                          <UsersIcon className="w-6 h-6 text-primary" />
+                        </div>
                         <div>
-                          <p className="text-white font-bold">{u.email || u.phoneNumber || "Anonymous Node"}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">{u.id}</p>
+                          <p className="text-white font-bold text-xl">{u.email || u.phoneNumber || "Guest Node"}</p>
+                          <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">ID: {u.id.slice(0, 12)}...</p>
                         </div>
                       </div>
-                      <div className="px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
-                        {u.role || 'user'}
-                      </div>
+                      <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">{u.role || 'user'}</Badge>
                     </div>
                   ))}
                 </div>
@@ -559,46 +553,27 @@ export const AdminPanel = () => {
           )}
 
           {activeTab === 'analytics' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[
-                  { label: 'Throughput', value: '1.2 PB', icon: Activity, color: 'text-primary' },
-                  { label: 'Active Links', value: '42.1K', icon: UsersIcon, color: 'text-accent' },
-                  { label: 'Credits', value: '₿ 4.8', icon: Zap, color: 'text-yellow-400' },
-                  { label: 'Uptime', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
-                ].map((stat, i) => (
-                  <Card key={i} className="glass border-white/5 p-6 space-y-4 rounded-3xl">
-                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</p>
-                      <p className="text-3xl font-headline font-bold text-white tracking-tighter">{stat.value}</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              
-              <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
-                <CardHeader className="p-10 pb-0">
-                  <CardTitle className="text-3xl font-headline font-bold text-white tracking-tight">Node Performance</CardTitle>
-                </CardHeader>
-                <CardContent className="p-10 space-y-8">
-                  <div className="h-64 flex items-end gap-2 border-b border-white/5 pb-2">
-                    {[60, 40, 70, 90, 50, 80, 45, 95, 75, 85, 60, 100].map((h: number, i: number) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${h}%` }}
-                        transition={{ delay: i * 0.05 }}
-                        className="flex-1 bg-gradient-to-t from-primary/20 via-primary/60 to-primary rounded-t-lg shadow-[0_0_20px_rgba(255,46,99,0.2)]"
-                      />
-                    ))}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-4 gap-8">
+               {[
+                { label: 'Throughput', value: '1.2 PB', icon: Activity, color: 'text-primary' },
+                { label: 'Neural Links', value: '42.1K', icon: UsersIcon, color: 'text-accent' },
+                { label: 'Matrix Credits', value: '₿ 4.8', icon: Zap, color: 'text-yellow-400' },
+                { label: 'Node Uptime', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
+              ].map((stat, i) => (
+                <Card key={i} className="glass border-white/5 p-10 space-y-6 rounded-[3rem]">
+                  <div className={cn("w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10", stat.color)}>
+                    <stat.icon className="w-7 h-7" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/30 font-black">{stat.label}</p>
+                    <p className="text-4xl font-headline font-bold text-white tracking-tighter mt-1">{stat.value}</p>
+                  </div>
+                </Card>
+              ))}
             </motion.div>
           )}
 
-          {activeTab === 'settings' && (activeTab === 'settings' && (
+          {activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
                 <CardHeader className="p-8">
@@ -650,7 +625,7 @@ export const AdminPanel = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          )}
         </AnimatePresence>
       </div>
     </div>

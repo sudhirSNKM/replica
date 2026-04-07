@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, ShieldCheck, Sparkles, Loader2, Key } from "lucide-react";
+import { LogIn, ShieldCheck, Sparkles, Loader2, Key, Info } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { 
   signInWithEmailAndPassword, 
@@ -156,7 +156,7 @@ export default function LoginPage() {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#050507] flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     );
@@ -212,14 +212,26 @@ export default function LoginPage() {
                   <Sparkles className="w-4 h-4 text-primary" /> Administrative Demo Protocol
                 </Button>
 
-                <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-3">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                    <Key className="w-3 h-3" />
-                    Administrative Nexus
+                <div className="p-8 rounded-[2.5rem] bg-primary/[0.03] border border-primary/20 space-y-4 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                    <Key className="w-12 h-12 text-primary" />
                   </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <p className="text-[10px] text-white/60 font-mono break-all">admin@replica.com</p>
-                    <p className="text-[10px] text-white/60 font-mono">replica2024</p>
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                    <Sparkles className="w-3 h-3" />
+                    Admin Access Node
+                  </div>
+                  <div className="space-y-2 relative z-10">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-white/30 font-bold uppercase tracking-widest">Address:</span>
+                      <span className="text-white font-mono bg-white/5 px-2 py-0.5 rounded">admin@replica.com</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-white/30 font-bold uppercase tracking-widest">Secret:</span>
+                      <span className="text-white font-mono bg-white/5 px-2 py-0.5 rounded">replica2024</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[9px] text-primary/40 font-bold uppercase pt-2 italic">
+                    <Info className="w-3 h-3" /> Use "Matrix Addr" mode to login manually
                   </div>
                 </div>
               </form>
