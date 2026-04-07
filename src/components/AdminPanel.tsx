@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
-  ShieldAlert, Key, Activity, BarChart3, Trash2, Edit3, Users as UsersIcon 
+  ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
 import { Settings as SettingsIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export const AdminPanel = () => {
   const { user, isUserLoading } = useUser();
@@ -29,6 +32,9 @@ export const AdminPanel = () => {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   
+  const [posterMode, setPosterMode] = useState<'upload' | 'link'>('upload');
+  const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link'); // Default to link for speed
+
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
       title: "",
@@ -52,7 +58,6 @@ export const AdminPanel = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
 
-  const selectedQuality = watch("quality");
   const thumbnailUrl = watch("thumbnailUrl");
   const videoUrl = watch("videoUrl");
 
@@ -378,7 +383,7 @@ export const AdminPanel = () => {
                       <Monitor className="w-5 h-5 text-accent" /> Uplink Protocols
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8 pt-0 space-y-6">
+                  <CardContent className="p-8 pt-0 space-y-10">
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
                       <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
@@ -392,47 +397,86 @@ export const AdminPanel = () => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Visual Asset Section */}
                     <div className="space-y-4">
-                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Asset (Thumbnail)</Label>
-                      <Input type="file" onChange={(e: any) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
-                      <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
-                        {isPosterUploading ? (
-                          <div className="w-full px-8 space-y-2 text-center">
-                            <Progress value={posterProgress} className="h-1" />
-                            <span className="text-[8px] uppercase tracking-widest text-primary font-black">Syncing Visuals</span>
-                          </div>
-                        ) : thumbnailUrl ? (
-                          <img src={thumbnailUrl} className="w-full h-full object-cover opacity-60" alt="Thumbnail Preview" />
-                        ) : (
-                          <>
-                            <Upload className="w-6 h-6 text-white/20 mb-2 group-hover:text-primary transition-colors" />
-                            <span className="text-xs text-white/40">Upload Asset</span>
-                          </>
-                        )}
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Asset (Thumbnail)</Label>
+                        <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/5">
+                          <button type="button" onClick={() => setPosterMode('upload')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${posterMode === 'upload' ? 'bg-primary text-white' : 'text-white/40'}`}>Upload</button>
+                          <button type="button" onClick={() => setPosterMode('link')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${posterMode === 'link' ? 'bg-primary text-white' : 'text-white/40'}`}>Link</button>
+                        </div>
+                      </div>
+
+                      {posterMode === 'upload' ? (
+                        <>
+                          <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
+                          <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
+                            {isPosterUploading ? (
+                              <div className="w-full px-8 space-y-2 text-center">
+                                <Progress value={posterProgress} className="h-1" />
+                                <span className="text-[8px] uppercase tracking-widest text-primary font-black animate-pulse">Syncing Visuals</span>
+                              </div>
+                            ) : thumbnailUrl ? (
+                              <img src={thumbnailUrl} className="w-full h-full object-cover opacity-60" alt="Thumbnail Preview" />
+                            ) : (
+                              <>
+                                <Upload className="w-6 h-6 text-white/20 mb-2 group-hover:text-primary transition-colors" />
+                                <span className="text-xs text-white/40">Upload Asset</span>
+                              </>
+                            )}
+                          </label>
+                        </>
+                      ) : (
+                        <div className="relative group">
+                          <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                          <Input {...register("thumbnailUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" placeholder="https://..." />
+                        </div>
+                      )}
                     </div>
+
+                    {/* Stream Protocol Section */}
                     <div className="space-y-4">
-                      <Label className="text-[10px] uppercase tracking-widest text-white/30">Stream Protocol (Video)</Label>
-                      <Input type="file" onChange={(e: any) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
-                      <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
-                        {isVideoUploading ? (
-                          <div className="w-full px-8 space-y-2 text-center">
-                            <Progress value={videoProgress} className="h-1" />
-                            <span className="text-[8px] uppercase tracking-widest text-accent font-black">Syncing Stream</span>
-                          </div>
-                        ) : videoUrl ? (
-                          <div className="flex flex-col items-center">
-                            <Check className="w-8 h-8 text-emerald-500 mb-2" />
-                            <span className="text-xs text-white/60">Stream Synchronized</span>
-                          </div>
-                        ) : (
-                          <>
-                            <Film className="w-6 h-6 text-white/20 mb-2 group-hover:text-accent transition-colors" />
-                            <span className="text-xs text-white/40">Upload Protocol</span>
-                          </>
-                        )}
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black flex items-center gap-2">
+                          Stream Protocol <Badge variant="outline" className="text-[7px] py-0 px-1 border-accent/40 text-accent">FAST SYNC RECOMMENDED</Badge>
+                        </Label>
+                        <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/5">
+                          <button type="button" onClick={() => setVideoMode('upload')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${videoMode === 'upload' ? 'bg-accent text-white' : 'text-white/40'}`}>Upload</button>
+                          <button type="button" onClick={() => setVideoMode('link')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${videoMode === 'link' ? 'bg-accent text-white' : 'text-white/40'}`}>Link</button>
+                        </div>
+                      </div>
+
+                      {videoMode === 'upload' ? (
+                        <>
+                          <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
+                          <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
+                            {isVideoUploading ? (
+                              <div className="w-full px-8 space-y-2 text-center">
+                                <Progress value={videoProgress} className="h-1" />
+                                <span className="text-[8px] uppercase tracking-widest text-accent font-black animate-pulse">Syncing Stream</span>
+                              </div>
+                            ) : videoUrl ? (
+                              <div className="flex flex-col items-center">
+                                <Check className="w-8 h-8 text-emerald-500 mb-2" />
+                                <span className="text-xs text-white/60 font-bold uppercase tracking-widest">Synchronized</span>
+                              </div>
+                            ) : (
+                              <>
+                                <Film className="w-6 h-6 text-white/20 mb-2 group-hover:text-accent transition-colors" />
+                                <span className="text-xs text-white/40">Upload Protocol</span>
+                              </>
+                            )}
+                          </label>
+                        </>
+                      ) : (
+                        <div className="relative group">
+                          <Monitor className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-accent transition-colors" />
+                          <Input {...register("videoUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" placeholder="https://..." />
+                        </div>
+                      )}
                     </div>
+
                     <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all">
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />}
                       Finalize Broadcast
