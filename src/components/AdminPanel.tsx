@@ -33,7 +33,7 @@ export const AdminPanel = () => {
   const [isContentLoading, setIsContentLoading] = useState(false);
   
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('upload');
-  const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link'); // Default to link for speed
+  const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
 
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
@@ -100,6 +100,7 @@ export const AdminPanel = () => {
     try {
       const timestamp = Date.now();
       const path = `broadcasts/${timestamp}_${file.name}`;
+      
       const url = type === 'poster' 
         ? await uploadPoster(file, path) 
         : await uploadVideo(file, path);
@@ -337,11 +338,11 @@ export const AdminPanel = () => {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-widest text-white/30">Protocol Title</Label>
-                        <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Neon Protocol" required />
+                        <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Neon Protocol" required />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-widest text-white/30">Genre Tag</Label>
-                        <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Cyberpunk" required />
+                        <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk" required />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-6">
@@ -354,11 +355,11 @@ export const AdminPanel = () => {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-widest text-white/30">Cycle (Year)</Label>
-                        <Input {...register("releaseYear")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2024" />
+                        <Input {...register("releaseYear")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2024" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-widest text-white/30">Duration</Label>
-                        <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="2h 15m" />
+                        <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2h 15m" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -370,7 +371,7 @@ export const AdminPanel = () => {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Neural Synopsis</Label>
-                      <Textarea {...register("description")} className="min-h-[120px] bg-white/5 border-white/10 text-white rounded-2xl" placeholder="Enter cinematic summary..." required />
+                      <Textarea {...register("description")} className="min-h-[120px] bg-white/5 border-white/10 text-white rounded-2xl p-6" placeholder="Enter cinematic summary..." required />
                     </div>
                   </CardContent>
                 </Card>
@@ -387,7 +388,7 @@ export const AdminPanel = () => {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
                       <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
-                        <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl">
+                        <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl px-6">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="glass text-white">
@@ -398,86 +399,89 @@ export const AdminPanel = () => {
                       </Select>
                     </div>
 
-                    {/* Visual Asset Section */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/30">Visual Asset (Thumbnail)</Label>
-                        <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/5">
-                          <button type="button" onClick={() => setPosterMode('upload')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${posterMode === 'upload' ? 'bg-primary text-white' : 'text-white/40'}`}>Upload</button>
-                          <button type="button" onClick={() => setPosterMode('link')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${posterMode === 'link' ? 'bg-primary text-white' : 'text-white/40'}`}>Link</button>
+                        <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
+                          <button type="button" onClick={() => setPosterMode('upload')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", posterMode === 'upload' ? 'bg-primary text-white' : 'text-white/30')}>Upload</button>
+                          <button type="button" onClick={() => setPosterMode('link')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", posterMode === 'link' ? 'bg-primary text-white' : 'text-white/30')}>Link</button>
                         </div>
                       </div>
 
                       {posterMode === 'upload' ? (
-                        <>
+                        <div className="space-y-4">
                           <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
-                          <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
+                          <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
                             {isPosterUploading ? (
-                              <div className="w-full px-8 space-y-2 text-center">
-                                <Progress value={posterProgress} className="h-1" />
-                                <span className="text-[8px] uppercase tracking-widest text-primary font-black animate-pulse">Syncing Visuals</span>
+                              <div className="w-full px-8 space-y-4 text-center">
+                                <Progress value={posterProgress} className="h-1.5 bg-white/5" />
+                                <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black animate-pulse">Syncing Visuals</span>
                               </div>
                             ) : thumbnailUrl ? (
-                              <img src={thumbnailUrl} className="w-full h-full object-cover opacity-60" alt="Thumbnail Preview" />
+                              <div className="relative w-full h-full">
+                                <img src={thumbnailUrl} className="w-full h-full object-cover opacity-60" alt="Thumbnail Preview" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                   <Check className="w-8 h-8 text-white" />
+                                </div>
+                              </div>
                             ) : (
                               <>
-                                <Upload className="w-6 h-6 text-white/20 mb-2 group-hover:text-primary transition-colors" />
-                                <span className="text-xs text-white/40">Upload Asset</span>
+                                <Upload className="w-8 h-8 text-white/20 mb-3 group-hover:text-primary transition-colors" />
+                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Upload Static Asset</span>
                               </>
                             )}
                           </label>
-                        </>
+                        </div>
                       ) : (
                         <div className="relative group">
                           <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                          <Input {...register("thumbnailUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" placeholder="https://..." />
+                          <Input {...register("thumbnailUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12 pr-6" placeholder="https://..." />
                         </div>
                       )}
                     </div>
 
-                    {/* Stream Protocol Section */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black flex items-center gap-2">
                           Stream Protocol <Badge variant="outline" className="text-[7px] py-0 px-1 border-accent/40 text-accent">FAST SYNC RECOMMENDED</Badge>
                         </Label>
-                        <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/5">
-                          <button type="button" onClick={() => setVideoMode('upload')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${videoMode === 'upload' ? 'bg-accent text-white' : 'text-white/40'}`}>Upload</button>
-                          <button type="button" onClick={() => setVideoMode('link')} className={`px-3 py-1 text-[8px] font-black uppercase rounded ${videoMode === 'link' ? 'bg-accent text-white' : 'text-white/40'}`}>Link</button>
+                        <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
+                          <button type="button" onClick={() => setVideoMode('upload')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", videoMode === 'upload' ? 'bg-accent text-white' : 'text-white/30')}>Upload</button>
+                          <button type="button" onClick={() => setVideoMode('link')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", videoMode === 'link' ? 'bg-accent text-white' : 'text-white/30')}>Link</button>
                         </div>
                       </div>
 
                       {videoMode === 'upload' ? (
-                        <>
+                        <div className="space-y-4">
                           <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
-                          <label htmlFor="video-up" className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
+                          <label htmlFor="video-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
                             {isVideoUploading ? (
-                              <div className="w-full px-8 space-y-2 text-center">
-                                <Progress value={videoProgress} className="h-1" />
-                                <span className="text-[8px] uppercase tracking-widest text-accent font-black animate-pulse">Syncing Stream</span>
+                              <div className="w-full px-8 space-y-4 text-center">
+                                <Progress value={videoProgress} className="h-1.5 bg-white/5" />
+                                <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-black animate-pulse">Syncing Stream</span>
                               </div>
                             ) : videoUrl ? (
-                              <div className="flex flex-col items-center">
-                                <Check className="w-8 h-8 text-emerald-500 mb-2" />
-                                <span className="text-xs text-white/60 font-bold uppercase tracking-widest">Synchronized</span>
+                              <div className="flex flex-col items-center gap-2">
+                                <Check className="w-10 h-10 text-emerald-500" />
+                                <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em]">Protocol Locked</span>
                               </div>
                             ) : (
                               <>
-                                <Film className="w-6 h-6 text-white/20 mb-2 group-hover:text-accent transition-colors" />
-                                <span className="text-xs text-white/40">Upload Protocol</span>
+                                <Film className="w-8 h-8 text-white/20 mb-3 group-hover:text-accent transition-colors" />
+                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Upload Dynamic Protocol</span>
                               </>
                             )}
                           </label>
-                        </>
+                        </div>
                       ) : (
                         <div className="relative group">
                           <Monitor className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-accent transition-colors" />
-                          <Input {...register("videoUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12" placeholder="https://..." />
+                          <Input {...register("videoUrl")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pl-12 pr-6" placeholder="https://..." />
                         </div>
                       )}
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all">
+                    <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-16 bg-primary text-white font-bold rounded-2xl text-lg hover:neon-glow-primary transition-all shadow-xl">
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />}
                       Finalize Broadcast
                     </Button>
@@ -594,7 +598,7 @@ export const AdminPanel = () => {
             </motion.div>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && (activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
                 <CardHeader className="p-8">
@@ -605,12 +609,12 @@ export const AdminPanel = () => {
                 <CardContent className="p-8 pt-0 space-y-6">
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Site Title</Label>
-                    <Input defaultValue="REPLICA | NEXUS" className="h-14 bg-white/5 border-white/10 text-white rounded-2xl" />
+                    <Input defaultValue="REPLICA | NEXUS" className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" />
                   </div>
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Maintenance Mode</Label>
                     <Select defaultValue="OFF">
-                      <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl">
+                      <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="glass text-white">
@@ -646,7 +650,7 @@ export const AdminPanel = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+          ))}
         </AnimatePresence>
       </div>
     </div>

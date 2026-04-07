@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -19,6 +20,13 @@ export function useUpload() {
         return;
       }
 
+      if (!file || file.size === 0) {
+        const err = new Error("Invalid file protocol detected.");
+        setError(err);
+        reject(err);
+        return;
+      }
+
       setIsUploading(true);
       setProgress(0);
       setError(null);
@@ -29,7 +37,9 @@ export function useUpload() {
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const p = snapshot.totalBytes > 0 
+            ? (snapshot.bytesTransferred / snapshot.totalBytes) * 100 
+            : 0;
           setProgress(p);
         },
         (err) => {
@@ -42,6 +52,7 @@ export function useUpload() {
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             setIsUploading(false);
+            setProgress(100);
             resolve(downloadURL);
           } catch (err: any) {
             console.error("URL Retrieval Error:", err);
