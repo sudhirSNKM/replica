@@ -192,6 +192,13 @@ export default function LoginPage() {
           <div className="glass p-12 rounded-[4rem] border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.8)]">
             <div className="space-y-10">
               <div className="text-center space-y-4">
+                <div className="lg:hidden text-center mb-6">
+                  <div className="text-5xl font-headline font-bold text-white tracking-tighter">
+                    <span className="text-primary text-glow">RE</span><span>PLICA</span>
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 mt-2">Identity Nexus</div>
+                </div>
+
                 <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/10">
                   <ShieldCheck className="w-8 h-8 text-primary" />
                 </div>

@@ -1,0 +1,125 @@
+.scroll-stack-scroller {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: visible;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* Hide scrollbar but keep functionality */
+.scroll-stack-scroller::-webkit-scrollbar {
+  display: none;
+}
+.scroll-stack-scroller {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scroll-stack-inner {
+  padding: 5vh 2rem 10rem;
+  min-height: 70vh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.scroll-stack-card-wrapper {
+  position: relative;
+}
+
+.scroll-stack-card {
+  transform-origin: top center;
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  height: auto;
+  min-height: 15rem;
+  width: 100%;
+  margin: 30px 0;
+  padding: 3rem;
+  border-radius: 40px;
+  box-sizing: border-box;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.scroll-stack-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  backdrop-filter: blur(20px);
+  z-index: -1;
+}
+
+/* Multi-color variants */
+.scroll-stack-card.color-1 { border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 30px rgba(59, 130, 246, 0.1); }
+.scroll-stack-card.color-2 { border-color: rgba(168, 85, 247, 0.3); box-shadow: 0 0 30px rgba(168, 85, 247, 0.1); }
+.scroll-stack-card.color-3 { border-color: rgba(236, 72, 153, 0.3); box-shadow: 0 0 30px rgba(236, 72, 153, 0.1); }
+.scroll-stack-card.color-4 { border-color: rgba(246, 173, 85, 0.3); box-shadow: 0 0 30px rgba(246, 173, 85, 0.1); }
+.scroll-stack-card.color-5 { border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 30px rgba(16, 185, 129, 0.1); }
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .scroll-stack-inner {
+    padding: 5vh 1rem 30rem;
+  }
+  
+  .scroll-stack-card {
+    min-height: 10rem;
+    padding: 2rem;
+    border-radius: 25px;
+    margin: 20px 0;
+  }
+
+  .scroll-stack-card h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
+.scroll-stack-end {
+  width: 100%;
+  height: 1px;
+}
+
+/* Expanded list content */
+.scroll-stack-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.content-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.content-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  border-color: var(--card-color, #3b82f6);
+}

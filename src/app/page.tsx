@@ -16,6 +16,7 @@ import { collection, query, limit, orderBy, where } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
+import { ScrollStackShowcase } from "@/components/ScrollStackShowcase";
 
 export default function Home() {
   const router = useRouter();
@@ -113,20 +114,48 @@ export default function Home() {
       <div className="relative z-30 -mt-16 md:-mt-32 space-y-16 md:space-y-32 pb-48">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[1000px] pointer-events-none" />
         
-        {/* Mobile-Friendly Rows */}
-        <section className="relative pt-8 md:pt-24">
-          <MovieRow title="Global Trending" movies={allContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
+        {/* Continue Watching / Trending */}
+        <section className="relative pt-12 md:pt-24">
+          <MovieRow title="Continue Watching" movies={allContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
         </section>
 
+        {/* Newly Added Series */}
         <section className="relative">
-          <ShowRow title="Top Series" shows={allContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
+          <ShowRow title="Newly Added Protocols" shows={allContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
         </section>
 
-        <section className="relative">
+        {/* Recent Movies */}
+        <section className="relative px-6 md:px-12 lg:px-24">
           <MovieRow title="Recent Protocols" movies={allContent.filter(m => m.isNew).slice(0, 12)} onMovieHover={setFeaturedMovie} />
         </section>
 
-        <section className="relative py-12 md:py-24 bg-white/[0.01] border-y border-white/[0.05]">
+        {/* Explore Stack */}
+        <section className="relative bg-white/[0.01] border-y border-white/[0.05]">
+          <ScrollStackShowcase />
+        </section>
+
+        {/* Language Selection */}
+        <section className="relative px-6 md:px-12 lg:px-24">
+          <div className="max-w-[1600px] mx-auto space-y-12">
+            <h3 className="text-3xl md:text-5xl font-headline font-bold text-white tracking-tighter">Language <span className="text-primary text-glow">Protocols</span></h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {['English', 'Hindi', 'Tamil', 'Telugu', 'Spanish', 'French'].map((lang) => (
+                <button 
+                  key={lang} 
+                  onClick={() => router.push(`/movies?lang=${lang}`)}
+                  className="h-32 rounded-2xl glass border-white/5 flex flex-col items-center justify-center gap-4 hover:border-primary/50 hover:bg-white/5 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    {lang.charAt(0)}
+                  </div>
+                  <span className="text-sm font-bold text-white/60 tracking-widest uppercase">{lang}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative">
           <AIRecommendations />
         </section>
       </div>

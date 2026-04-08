@@ -18,6 +18,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, auth } = useFirebase();
@@ -77,50 +78,63 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
             </div>
           </div>
 
-          <div className="flex items-center gap-3 md:gap-6">
-            <button onClick={() => setIsSearchOpen(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all">
-              <Search className="w-5 h-5" />
-            </button>
-            <NotificationsDropdown />
-            
+          <div className="flex items-center gap-6">
+            <button onClick={() => setIsSearchOpen(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all"><Search className="w-5 h-5" /></button>
+            <div className="hidden md:block">
+              <NotificationsDropdown />
+            </div>
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="outline-none">
-                  <div className="flex items-center gap-2 group">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5">
-                      <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" />
+              <div className="flex items-center gap-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="outline-none">
+                    <div className="flex items-center gap-3 group">
+                      <div className="w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5 shadow-xl">
+                        <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" />
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white hidden md:block" />
                     </div>
-                    <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-white/40 group-hover:text-white" />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="glass border-white/10 text-white w-64 md:w-72 mt-4 p-2 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl" align="end">
-                  <DropdownMenuLabel className="px-5 py-4 flex flex-col">
-                    <span className="font-headline font-bold text-lg md:text-xl uppercase tracking-tighter">My Matrix</span>
-                    <span className="text-[9px] md:text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Node: {profile?.name || "Active"}</span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/10 mx-2" />
-                  <DropdownMenuItem onClick={() => { localStorage.removeItem('replica_active_profile'); router.push('/'); }} className="hover:bg-white/10 rounded-2xl py-3 md:py-4 px-5 transition-colors group">
-                    <span className="font-bold text-[10px] uppercase tracking-widest text-white/40">Switch Profile</span>
-                  </DropdownMenuItem>
-                  {user && (
-                    <Link href="/admin">
-                      <DropdownMenuItem className="hover:bg-primary/20 rounded-2xl py-3 md:py-4 px-5 transition-colors group">
-                        <span className="font-bold text-[10px] uppercase tracking-widest text-primary flex items-center gap-2">
-                          <Zap className="w-4 h-4 fill-primary" /> Admin Nexus
-                        </span>
-                      </DropdownMenuItem>
-                    </Link>
-                  )}
-                  <DropdownMenuItem onClick={() => setIsSettingsOpen(true)} className="hover:bg-white/10 rounded-2xl py-3 md:py-4 px-5 transition-colors group">
-                    <span className="font-bold text-[10px] uppercase tracking-widest text-white/40">Nexus Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/10 mx-2" />
-                  <DropdownMenuItem onClick={handleLogout} className="hover:bg-destructive/10 rounded-2xl py-3 md:py-4 px-5 text-destructive font-bold group">
-                    <LogOut className="w-4 h-4 mr-3" /> Terminate Session
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-black/80 backdrop-blur-3xl border border-white/10 text-white w-72 mt-6 p-2 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),auto,0_0_20px_rgba(var(--primary),0.2)]" align="end">
+                    <DropdownMenuLabel className="px-5 py-4 flex flex-col">
+                      <span className="font-headline font-bold text-xl uppercase tracking-tighter">My Matrix</span>
+                      <span className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Node: {profile?.name || "Active"}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2" />
+                    <DropdownMenuItem onClick={() => { localStorage.removeItem('replica_active_profile'); router.push('/'); }} className="hover:bg-white/5 rounded-2xl py-4 px-5 transition-colors group cursor-pointer border border-transparent hover:border-white/5">
+                      <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors">Profile Switcher</span>
+                    </DropdownMenuItem>
+                    {user && (
+                      <Link href="/admin">
+                        <DropdownMenuItem className="hover:bg-primary/10 rounded-2xl py-4 px-5 transition-colors cursor-pointer group relative overflow-hidden border border-transparent hover:border-primary/20">
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                          <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-primary flex items-center gap-3 relative z-10">
+                            <div className="p-1.5 rounded-lg bg-primary/20">
+                              <Zap className="w-3.5 h-3.5 fill-primary drop-shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
+                            </div>
+                            Admin Nexus
+                          </span>
+                        </DropdownMenuItem>
+                      </Link>
+                    )}
+                    <DropdownMenuItem onClick={() => setIsSettingsOpen(true)} className="hover:bg-white/5 rounded-2xl py-4 px-5 transition-colors group cursor-pointer border border-transparent hover:border-white/5">
+                      <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors">Nexus Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2 my-1" />
+                    <DropdownMenuItem onClick={handleLogout} className="hover:bg-destructive/10 rounded-2xl py-4 px-5 text-destructive font-bold group cursor-pointer border border-transparent hover:border-destructive/20 mt-1">
+                      <span className="flex items-center text-[10px] uppercase tracking-[0.2em]">
+                        <LogOut className="w-4 h-4 mr-3" /> Terminate Session
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                  className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all bg-white/5 border border-white/10"
+                >
+                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              </div>            ) : (
               <Link href="/login">
                 <button className="px-4 md:px-6 py-2 bg-primary text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-full">Link</button>
               </Link>
@@ -128,6 +142,49 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
           </div>
         </nav>
       </div>
+
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[140] bg-black/95 backdrop-blur-3xl lg:hidden pt-48 px-12 pb-24 flex flex-col justify-between"
+          >
+            <div className="space-y-12">
+              <div className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Main Matrix Protocol</div>
+              <div className="flex flex-col gap-8">
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.href} 
+                    href={link.href} 
+                    onClick={() => setIsMenuOpen(false)}
+                    className={cn("text-4xl font-headline font-bold tracking-tighter uppercase", pathname === link.href ? "text-primary text-glow" : "text-white/40")}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-12">
+              <div className="h-[1px] bg-gradient-to-r from-primary/40 via-transparent to-transparent" />
+              <div className="grid grid-cols-2 gap-6">
+                <button onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }} className="flex flex-col gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 text-left">
+                  <Settings className="w-6 h-6 text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Settings</span>
+                </button>
+                <button onClick={handleLogout} className="flex flex-col gap-3 p-6 rounded-3xl bg-destructive/10 border border-destructive/20 text-left">
+                  <LogOut className="w-6 h-6 text-destructive" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-destructive">Logout</span>
+                </button>
+              </div>
+              <div className="text-center text-[10px] font-black uppercase tracking-[0.5em] text-white/10 italic">Secure Identity Nexus v2.4</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

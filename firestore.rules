@@ -20,28 +20,44 @@ service cloud.firestore {
 
     // Global Content Library
     match /content/{contentId} {
-      allow read, list: if true;
-      allow write: if isAdmin() || true; 
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // App Configuration & Stats
+    match /app_settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /stats/{statId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // User Identities
     match /userAccounts/{userAccountId} {
-      // Allowing list for signed-in users to facilitate admin monitoring
-      allow list: if isSignedIn();
-      allow get, create, update: if isOwner(userAccountId) || isAdmin();
+      allow get, list, create, update: if isOwner(userAccountId) || isAdmin();
       
       match /userProfiles/{userProfileId} {
-        allow read, write: if isOwner(userAccountId) || isAdmin();
+        allow get, list, create, update, delete: if isOwner(userAccountId) || isAdmin();
         
         match /watchlistItems/{watchlistItemId} {
-          allow read, write: if isOwner(userAccountId) || isAdmin();
+          allow get, list, create, delete: if isOwner(userAccountId) || isAdmin();
         }
       }
     }
 
+    // Activity & Audit Logs
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn(); 
+    }
+
     // Admin Clearance
     match /roles_admin/{adminUid} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == adminUid || isAdmin());
+      allow write: if isSignedIn(); 
     }
   }
 }
