@@ -32,7 +32,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
   };
 
   return (
-    <div className="relative min-h-[85vh] md:h-[85vh] w-full overflow-hidden bg-background">
+    <div className="relative min-h-[85vh] md:h-[90vh] w-full overflow-hidden bg-background">
       {/* Visual Protocol Background */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -69,8 +69,8 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Content Layer */}
-      <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-12 lg:px-24 pb-12 md:pb-20 pt-32 md:pt-0">
+      {/* Content Layer - Unified Alignment Max-Width [1600px] */}
+      <div className="relative z-30 h-full flex flex-col justify-end px-6 md:px-12 lg:px-24 pb-16 md:pb-32 lg:pb-40 pt-32 md:pt-0">
         <div className="max-w-[1600px] mx-auto w-full">
           <motion.div
             initial={{ x: -80, opacity: 0 }}
@@ -93,7 +93,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               </div>
             </div>
 
-            {/* Title */}
+            {/* Title - Responsive Scaling */}
             <h1 
               onClick={handleDetailsClick}
               className="text-4xl md:text-7xl lg:text-8xl font-headline font-bold text-white leading-[1.1] md:leading-[0.85] tracking-tighter drop-shadow-2xl cursor-pointer hover:text-primary transition-all duration-500 break-words"
@@ -145,7 +145,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               </div>
             </div>
 
-            {/* Mobile Status Bar (Inside content flow) */}
+            {/* Mobile Status Bar - In-flow to prevent overlap */}
             <div className="md:hidden flex items-center justify-between pt-8 border-t border-white/5">
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
@@ -170,9 +170,9 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </div>
       </div>
 
-      {/* Desktop Bottom Bar (Absolute) */}
+      {/* Desktop Bottom Bar - Absolute Positioned with High Clearance */}
       <div className="hidden md:flex absolute bottom-12 left-6 md:left-12 lg:left-24 right-6 md:right-12 lg:right-24 z-20 items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-6 pointer-events-auto">
+        <div className="flex items-center gap-6 pointer-events-auto bg-black/20 backdrop-blur-md px-6 py-3 rounded-full border border-white/5">
           <div className="flex -space-x-4">
             {viewerData.seeds.map((seed, i) => (
               <div key={i} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden shadow-xl">
