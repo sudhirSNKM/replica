@@ -56,6 +56,7 @@ export const AdminPanel = () => {
       quality: "4K ULTRA HDR",
       thumbnailUrl: "",
       videoUrl: "",
+      audioUrl: "",
       trendingNumber: "",
       imdbRating: "",
       trailerUrl: "",
