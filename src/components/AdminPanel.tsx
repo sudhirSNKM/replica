@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
-  Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus
+  Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus,
+  BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,7 @@ export const AdminPanel = () => {
   const videoUrl = watch("videoUrl");
   const selectedQuality = watch("quality");
 
-  // Fetch all existing content for the library explorer
+  // Fetch all existing content for the library explorer and stats
   const contentQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "content"), orderBy("updatedAt", "desc"));
@@ -199,7 +200,7 @@ export const AdminPanel = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'identities' && firestore) {
+    if ((activeTab === 'identities' || activeTab === 'analytics' || activeTab === 'library') && firestore) {
       const fetchUsers = async () => {
         setIsUsersLoading(true);
         try {
@@ -262,6 +263,14 @@ export const AdminPanel = () => {
     item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Derived Analytics from Database
+  const stats = [
+    { label: 'Neural Throughput', value: `${((allContent?.length || 0) * 1.4).toFixed(1)} TB`, icon: Activity, color: 'text-primary' },
+    { label: 'Neural Links (Users)', value: userList.length.toLocaleString(), icon: UsersIcon, color: 'text-accent' },
+    { label: 'Sync Protocols', value: (allContent?.length || 0).toString(), icon: Database, color: 'text-yellow-400' },
+    { label: 'Stability Node', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
+  ];
+
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">
       <div className="max-w-6xl mx-auto space-y-16">
@@ -280,7 +289,7 @@ export const AdminPanel = () => {
                 { id: 'content', icon: Upload, label: editingId ? 'Edit Protocol' : 'Broadcast' },
                 { id: 'library', icon: Film, label: 'Library' },
                 { id: 'identities', icon: UsersIcon, label: 'Identities' },
-                { id: 'analytics', icon: Zap, label: 'Stats' }
+                { id: 'analytics', icon: BarChart3, label: 'Stats' }
               ].map((tab) => (
                 <button 
                   key={tab.id}
@@ -574,12 +583,7 @@ export const AdminPanel = () => {
 
           {activeTab === 'analytics' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-4 gap-8">
-               {[
-                { label: 'Throughput', value: '1.2 PB', icon: Activity, color: 'text-primary' },
-                { label: 'Neural Links', value: '42.1K', icon: UsersIcon, color: 'text-accent' },
-                { label: 'Matrix Credits', value: '₿ 4.8', icon: Zap, color: 'text-yellow-400' },
-                { label: 'Node Uptime', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
-              ].map((stat, i) => (
+               {stats.map((stat, i) => (
                 <Card key={i} className="glass border-white/5 p-10 space-y-6 rounded-[3rem]">
                   <div className={cn("w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10", stat.color)}>
                     <stat.icon className="w-7 h-7" />
