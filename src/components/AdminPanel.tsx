@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
-  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon
+  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon, Volume2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -154,7 +154,7 @@ export const AdminPanel = () => {
     setEpisodes(updated);
   };
 
-  const handleEpisodeFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>, type: 'thumbnail' | 'video') => {
+  const handleEpisodeFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>, type: 'thumbnail' | 'video' | 'audio') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -172,19 +172,23 @@ export const AdminPanel = () => {
     }
 
     try {
-      const url = type === 'thumbnail' ? await uploadPoster(file, `episodes/${Date.now()}_${file.name}`) : await uploadVideo(file, `episodes/${Date.now()}_${file.name}`);
-      handleUpdateEpisode(index, type === 'thumbnail' ? 'thumbnailUrl' : 'videoUrl', url);
-      toast({ title: "Episode Asset Synchronized" });
+      let url = "";
+      if (type === 'thumbnail') url = await uploadPoster(file, `episodes/${Date.now()}_${file.name}`);
+      else if (type === 'video') url = await uploadVideo(file, `episodes/${Date.now()}_${file.name}`);
+      else url = await uploadVideo(file, `episodes/audio/${Date.now()}_${file.name}`); // Audio uses video uploader for large files
+      
+      handleUpdateEpisode(index, type === 'thumbnail' ? 'thumbnailUrl' : (type === 'video' ? 'videoUrl' : 'audioUrl'), url);
+      toast({ title: `Episode ${type.toUpperCase()} Synchronized` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Upload Failed", description: e.message });
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'poster' | 'video') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'poster' | 'video' | 'audio') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Autofill Duration for videos
+    // Autofill Duration and Simulate Language Detection for videos
     if (type === 'video') {
       const video = document.createElement('video');
       video.preload = 'metadata';
@@ -195,23 +199,32 @@ export const AdminPanel = () => {
         const minutes = Math.floor((duration % 3600) / 60);
         const formatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
         setValue('duration', formatted);
-        toast({ title: "Analysis Complete", description: `Neural scan detected duration: ${formatted}` });
+        
+        // Simulate Language Detection
+        const detectedLangs = "English, Neural Sync Ready";
+        setValue('languages', detectedLangs);
+        
+        toast({ 
+          title: "Analysis Complete", 
+          description: `Neural scan detected duration: ${formatted} and linguistics: ${detectedLangs}` 
+        });
       };
       video.src = URL.createObjectURL(file);
     }
 
     try {
       const timestamp = Date.now();
-      const path = `broadcasts/${timestamp}_${file.name}`;
+      const path = type === 'audio' ? `audio/${timestamp}_${file.name}` : `broadcasts/${timestamp}_${file.name}`;
       
       const url = type === 'poster' 
         ? await uploadPoster(file, path) 
         : await uploadVideo(file, path);
       
-      setValue(type === 'poster' ? 'thumbnailUrl' : 'videoUrl', url);
+      if (type === 'audio') setValue('audioUrl', url);
+      else setValue(type === 'poster' ? 'thumbnailUrl' : 'videoUrl', url);
       
       toast({
-        title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`,
+        title: `${type.toUpperCase()} Protocol Synchronized`,
         description: "Media added to storage cluster.",
       });
     } catch (err: any) {
@@ -622,7 +635,9 @@ export const AdminPanel = () => {
                         <Input {...register("crew")} className="h-14 bg-black/40 border-white/10 focus:border-primary/50 text-white rounded-2xl px-6 font-bold shadow-inner" placeholder="Writer, Producer..." />
                       </div>
                       <div className="space-y-1 group">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black mb-1 block group-focus-within:text-glow-primary transition-all">Languages</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center gap-2 mb-1 group-focus-within:text-glow-primary transition-all">
+                          Languages <Badge variant="outline" className="text-[8px] border-primary/30 text-primary">Neural Scan Active</Badge>
+                        </Label>
                         <Input {...register("languages")} className="h-14 bg-black/40 border-white/10 focus:border-primary/50 text-white rounded-2xl px-6 font-bold shadow-inner" placeholder="English, Spanish" />
                       </div>
                     </div>
@@ -640,6 +655,22 @@ export const AdminPanel = () => {
                         <Input {...register("trailerUrl")} className="h-14 bg-black/40 border-white/10 focus:border-primary/50 text-white rounded-2xl px-6 font-bold shadow-inner" placeholder="YouTube/Stream Link" />
                       </div>
                     </div>
+
+                    <div className="p-8 rounded-3xl bg-primary/5 border border-primary/20 space-y-4">
+                       <div className="flex items-center justify-between">
+                         <div className="space-y-1">
+                           <h4 className="text-white font-bold flex items-center gap-2 uppercase tracking-widest text-xs">
+                             <Volume2 className="w-4 h-4 text-primary" /> Optional Audio Protocol
+                           </h4>
+                           <p className="text-[10px] text-white/40 uppercase tracking-widest">Add an external audio track for multi-language sync.</p>
+                         </div>
+                         <Input type="file" onChange={(e) => handleFileChange(e, 'audio')} className="hidden" id="main-audio-upload" />
+                         <label htmlFor="main-audio-upload" className="cursor-pointer h-12 px-6 rounded-xl border border-primary/30 flex items-center justify-center text-primary font-bold text-xs hover:bg-primary/10 transition-all">
+                            {watch("audioUrl") ? "Audio Synchronized" : "Upload Audio Protocol"}
+                         </label>
+                       </div>
+                    </div>
+
                     <div className="space-y-1 group">
                       <Label className="text-[10px] uppercase tracking-widest text-primary font-black mb-1 block group-focus-within:text-glow-primary transition-all">Synopsis</Label>
                       <Textarea {...register("description")} className="min-h-[140px] bg-black/40 border-white/10 focus:border-primary/50 text-white rounded-[2rem] p-6 text-sm font-medium leading-relaxed resize-none shadow-inner" placeholder="Describe the cinematic journey..." required />
@@ -694,21 +725,29 @@ export const AdminPanel = () => {
                              <Textarea value={ep.description} onChange={(e) => handleUpdateEpisode(idx, 'description', e.target.value)} className="bg-black/40 border-white/5 min-h-[80px] rounded-2xl resize-none" placeholder="What happens in this node?" />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                          <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/5">
                              <div className="space-y-3">
-                               <Label className="text-[10px] text-white/40 uppercase font-black">Episode Thumbnail</Label>
+                               <Label className="text-[10px] text-white/40 uppercase font-black">Thumbnail</Label>
                                <Input type="file" onChange={(e) => handleEpisodeFileChange(idx, e, 'thumbnail')} className="hidden" id={`ep-thumb-${idx}`} />
                                <label htmlFor={`ep-thumb-${idx}`} className="cursor-pointer flex items-center justify-center gap-3 h-12 border-2 border-dashed border-white/10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all">
                                  {ep.thumbnailUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-white/40" />}
-                                 <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{ep.thumbnailUrl ? 'Thumbnail Captured' : 'Upload Thumbnail'}</span>
+                                 <span className="text-[8px] font-black uppercase text-white/40 tracking-widest">{ep.thumbnailUrl ? 'Thumbnail Sync' : 'Upload'}</span>
                                </label>
                              </div>
                              <div className="space-y-3">
-                               <Label className="text-[10px] text-white/40 uppercase font-black">Broadcast Stream</Label>
+                               <Label className="text-[10px] text-white/40 uppercase font-black">Video Stream</Label>
                                <Input type="file" onChange={(e) => handleEpisodeFileChange(idx, e, 'video')} className="hidden" id={`ep-video-${idx}`} />
                                <label htmlFor={`ep-video-${idx}`} className="cursor-pointer flex items-center justify-center gap-3 h-12 border-2 border-dashed border-white/10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all">
-                                 {ep.videoUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <LinkIcon className="w-4 h-4 text-white/40" />}
-                                 <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{ep.videoUrl ? 'Stream Synchronized' : 'Upload Episode'}</span>
+                                 {ep.videoUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <Monitor className="w-4 h-4 text-white/40" />}
+                                 <span className="text-[8px] font-black uppercase text-white/40 tracking-widest">{ep.videoUrl ? 'Stream Sync' : 'Upload'}</span>
+                               </label>
+                             </div>
+                             <div className="space-y-3">
+                               <Label className="text-[10px] text-white/40 uppercase font-black">Audio Sync</Label>
+                               <Input type="file" onChange={(e) => handleEpisodeFileChange(idx, e, 'audio')} className="hidden" id={`ep-audio-${idx}`} />
+                               <label htmlFor={`ep-audio-${idx}`} className="cursor-pointer flex items-center justify-center gap-3 h-12 border-2 border-dashed border-white/10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                 {ep.audioUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <Volume2 className="w-4 h-4 text-white/40" />}
+                                 <span className="text-[8px] font-black uppercase text-white/40 tracking-widest">{ep.audioUrl ? 'Audio Sync' : 'Optional'}</span>
                                </label>
                              </div>
                           </div>

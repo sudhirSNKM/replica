@@ -10,6 +10,7 @@ export interface Episode {
   description: string;
   thumbnailUrl: string;
   videoUrl: string;
+  audioUrl?: string;
   duration: string;
   views?: number;
 }
@@ -20,6 +21,7 @@ export interface Movie {
   description: string;
   thumbnailUrl: string;
   videoUrl: string;
+  audioUrl?: string;
   genres: string[];
   rating: string;
   duration: string;
