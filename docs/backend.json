@@ -11,9 +11,10 @@
         "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "user"] },
+        "subscriptionTier": { "type": "string", "enum": ["free", "pro"], "default": "free" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "createdAt"]
+      "required": ["id", "createdAt", "subscriptionTier"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",

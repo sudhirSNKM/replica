@@ -5,7 +5,7 @@ import React from "react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { MovieCard } from "@/components/MovieCard";
 import { motion } from "framer-motion";
-import { Ghost, Loader2, CreditCard, ShieldCheck, Zap, User, PlusCircle } from "lucide-react";
+import { Ghost, Loader2, CreditCard, ShieldCheck, Zap, User, PlusCircle, AlertCircle } from "lucide-react";
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,13 @@ export default function WatchlistPage() {
   const { user, isUserLoading } = useUser();
   const activeProfileId = typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null;
 
+  const accountRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "userAccounts", user.uid);
+  }, [firestore, user]);
+
+  const { data: accountData } = useDoc(accountRef);
+
   const watchlistRef = useMemoFirebase(() => {
     if (!firestore || !user || !activeProfileId) return null;
     return collection(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems");
@@ -58,6 +65,9 @@ export default function WatchlistPage() {
     );
   }
 
+  const isFree = accountData?.subscriptionTier === 'free';
+  const slotsRemaining = isFree ? Math.max(0, 2 - (watchlist?.length || 0)) : Infinity;
+
   return (
     <main className="min-h-screen bg-background text-foreground pt-36 pb-32">
       <ReplicaNavbar />
@@ -68,33 +78,41 @@ export default function WatchlistPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
               <div className="w-8 h-[1px] bg-primary" />
-              User Protocol 8.2
+              Identity Tier: {isFree ? "Free Node" : "Pro Core"}
             </div>
             <h1 className="text-6xl md:text-8xl font-headline font-bold text-white tracking-tighter leading-none">
               Account <span className="text-primary text-glow">Nexus</span>
             </h1>
-            <p className="text-white/40 text-xl max-w-2xl font-medium">Manage your synchronized experiences, neural viewing history, and core subscription protocols.</p>
+            <p className="text-white/40 text-xl max-w-2xl font-medium">Manage your synchronized experiences and neural subscription protocols.</p>
           </div>
           
           <div className="flex gap-6">
             <div className="p-8 rounded-[2.5rem] glass border border-white/5 text-center min-w-[160px] space-y-2 hover:border-primary/50 transition-colors">
               <div className="text-primary font-black text-4xl font-headline">{watchlist?.length || 0}</div>
-              <div className="text-[10px] text-white/40 uppercase font-black tracking-widest">In List</div>
+              <div className="text-[10px] text-white/40 uppercase font-black tracking-widest">Linked Syncs</div>
             </div>
-            <div className="p-8 rounded-[2.5rem] glass border border-primary/20 text-center min-w-[160px] bg-primary/5 space-y-2">
-              <div className="text-white font-black text-4xl font-headline italic">PRO</div>
-              <div className="text-[10px] text-primary uppercase font-black tracking-widest">Active Tier</div>
+            <div className={`p-8 rounded-[2.5rem] glass border ${isFree ? 'border-white/5' : 'border-primary/20 bg-primary/5'} text-center min-w-[160px] space-y-2`}>
+              <div className={`text-white font-black text-4xl font-headline italic ${!isFree && 'text-glow'}`}>{isFree ? 'FREE' : 'PRO'}</div>
+              <div className="text-[10px] text-primary uppercase font-black tracking-widest">Active Plan</div>
             </div>
           </div>
         </div>
 
         {/* Watchlist Section */}
         <div className="space-y-12">
-          <div className="flex items-center gap-6">
-            <div className="w-2 h-10 bg-primary rounded-full neon-glow-primary" />
-            <h2 className="text-4xl font-headline font-bold text-white tracking-tight">
-              Synchronized <span className="text-white/30">Watchlist</span>
-            </h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <div className="w-2 h-10 bg-primary rounded-full neon-glow-primary" />
+              <h2 className="text-4xl font-headline font-bold text-white tracking-tight">
+                Synchronized <span className="text-white/30">Watchlist</span>
+              </h2>
+            </div>
+            
+            {isFree && (
+              <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest">
+                <AlertCircle className="w-4 h-4" /> {slotsRemaining} Slots Remaining in Free Matrix
+              </div>
+            )}
           </div>
           
           {watchlist && watchlist.length > 0 ? (

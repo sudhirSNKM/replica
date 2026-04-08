@@ -31,14 +31,25 @@ export default function LoginPage() {
 
   // Redirection for already linked nodes
   React.useEffect(() => {
-    if (user && !isUserLoading) {
-      if (user.email === 'admin@replica.com') {
-        router.replace('/admin');
-      } else {
-        router.replace('/');
+    if (user && !isUserLoading && firestore) {
+      async function checkPath() {
+        const isExplicitAdmin = user.email === 'admin@replica.com';
+        if (isExplicitAdmin) {
+          router.replace('/admin');
+          return;
+        }
+        
+        const accountSnap = await getDoc(doc(firestore!, "userAccounts", user.uid));
+        const data = accountSnap.data();
+        if (data?.role === 'admin') {
+          router.replace('/admin');
+        } else {
+          router.replace('/');
+        }
       }
+      checkPath();
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, firestore]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +65,6 @@ export default function LoginPage() {
           const userCredential = await signInWithEmailAndPassword(auth, email, password);
           uid = userCredential.user.uid;
         } catch (err: any) {
-          // Provision admin node if first sync attempt
           if (isExplicitAdmin && (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential')) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             uid = userCredential.user.uid;
@@ -63,7 +73,6 @@ export default function LoginPage() {
           }
         }
       } else {
-        // Persistent Neural Link logic (Phone)
         const cleanPhone = phone.replace(/\D/g, "");
         if (cleanPhone.length < 10) throw new Error("Full 10-digit identifier required.");
         
@@ -79,7 +88,6 @@ export default function LoginPage() {
         }
       }
 
-      // Establish persistent account record
       const userRef = doc(firestore, "userAccounts", uid);
       const userDoc = await getDoc(userRef);
       
@@ -89,6 +97,7 @@ export default function LoginPage() {
           email: authMode === 'email' ? email : null,
           phoneNumber: authMode === 'phone' ? phone : null,
           role: isExplicitAdmin ? 'admin' : 'user',
+          subscriptionTier: 'free',
           createdAt: new Date().toISOString()
         });
         
@@ -100,7 +109,6 @@ export default function LoginPage() {
           });
         }
 
-        // Initialize primary profile
         const profileId = "primary-" + uid.substring(0, 5);
         await setDoc(doc(firestore, "userAccounts", uid, "userProfiles", profileId), {
           id: profileId,
@@ -109,16 +117,16 @@ export default function LoginPage() {
           avatarUrl: `https://picsum.photos/seed/${uid}/200/200`,
           createdAt: new Date().toISOString()
         });
-      } else if (isExplicitAdmin) {
-        await setDoc(doc(firestore, "roles_admin", uid), {
-          uid,
-          email: "admin@replica.com",
-          promotedAt: new Date().toISOString()
-        }, { merge: true });
       }
 
       toast({ title: "Neural Link Established", description: "Identity verified. Welcome to the Nexus." });
-      router.push(isExplicitAdmin ? '/admin' : '/');
+      
+      // Explicit Routing after record establishment
+      if (isExplicitAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     } catch (e: any) {
       toast({ title: "Sync Failed", description: e.message, variant: "destructive" });
       setIsLoading(false);
@@ -143,6 +151,7 @@ export default function LoginPage() {
         id: uid,
         email: "demo@replica.nexus",
         role: "admin",
+        subscriptionTier: 'pro',
         createdAt: new Date().toISOString()
       }, { merge: true });
 
