@@ -7,7 +7,8 @@ import {
   Upload, Film, Database, Check, Loader2, Monitor, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
   Sparkles, Clock, Edit3, Search, Rocket, Archive, FileText, Settings2, Wand2,
-  CheckCircle2, AlertCircle, BarChart3, Eye, Info, ChevronRight, X, Square, CheckSquare
+  CheckCircle2, AlertCircle, BarChart3, Eye, Info, ChevronRight, X, Square, CheckSquare,
+  Ban, ShieldCheck, UserMinus, UserCheck, ShieldX
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,14 +19,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, getDoc, collection, deleteDoc, query, orderBy, writeBatch } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, deleteDoc, query, orderBy, writeBatch, updateDoc } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Movie, ContentStatus } from "@/lib/types";
+import { Movie, ContentStatus, UserAccount } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const SUGGESTED_GENRES = ["Sci-Fi", "Cyberpunk", "Noir", "Thriller", "Action", "Drama", "Mystery", "Horror"];
 const SUGGESTED_CAST = ["Kaelen Voss", "Lyra Thorne", "Jax Mercer", "Sora Nakano", "Marcus Reed", "Elena Sol"];
@@ -38,6 +38,7 @@ export const AdminPanel = () => {
   const [isPromoting, setIsPromoting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userSearch, setUserSearch] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Bulk Operations State
@@ -89,7 +90,7 @@ export const AdminPanel = () => {
     return collection(firestore, "userAccounts");
   }, [firestore]);
 
-  const { data: userList, isLoading: isUsersLoading } = useCollection(usersQuery);
+  const { data: userList, isLoading: isUsersLoading } = useCollection<UserAccount>(usersQuery);
 
   const { uploadFile: uploadPoster, progress: posterProgress, isUploading: isPosterUploading } = useUpload();
   const { uploadFile: uploadVideo, progress: videoProgress, isUploading: isVideoUploading } = useUpload();
@@ -273,6 +274,44 @@ export const AdminPanel = () => {
     }
   };
 
+  // User Management Actions
+  const handleUserTier = async (userId: string, tier: 'free' | 'pro') => {
+    if (!firestore) return;
+    try {
+      await updateDoc(doc(firestore, "userAccounts", userId), { 
+        subscriptionTier: tier,
+        isUpgradePending: false 
+      });
+      toast({ title: "Tier Synchronized", description: `Identity node updated to ${tier.toUpperCase()} protocol.` });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: e.message });
+    }
+  };
+
+  const handleUserBan = async (userId: string, isBanned: boolean) => {
+    if (!firestore) return;
+    try {
+      await updateDoc(doc(firestore, "userAccounts", userId), { isBanned });
+      toast({ 
+        title: isBanned ? "Node Terminated" : "Node Restored", 
+        description: `Identity link ${isBanned ? 'severed' : 'restored'} in the matrix.` 
+      });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Ban Protocol Failed", description: e.message });
+    }
+  };
+
+  const handleUserDelete = async (userId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this identity node and all sub-profiles?")) return;
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, "userAccounts", userId));
+      toast({ title: "Identity Purged", description: "Node and associated data removed from matrix." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Purge Failed", description: e.message });
+    }
+  };
+
   const toggleTag = (type: 'genres' | 'cast', value: string) => {
     const current = watch(type);
     const parts = current ? (current as string).split(',').map(p => p.trim()) : [];
@@ -391,6 +430,12 @@ export const AdminPanel = () => {
   const filteredContent = allContent?.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (Array.isArray(item.genres) && item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase())))
+  );
+
+  const filteredUsers = userList?.filter(u => 
+    (u.email || "").toLowerCase().includes(userSearch.toLowerCase()) ||
+    (u.phoneNumber || "").toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.id.toLowerCase().includes(userSearch.toLowerCase())
   );
 
   const stats = [
@@ -885,28 +930,95 @@ export const AdminPanel = () => {
           )}
 
           {activeTab === 'identities' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <Card className="glass border-white/10 rounded-[3rem] p-10">
-                <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Active Identity Nodes</CardTitle>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                  <CardTitle className="text-3xl font-headline font-bold text-white">Management Nexus: Identities</CardTitle>
+                  <div className="relative w-full md:w-72">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                    <Input value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="h-12 bg-white/5 border-white/10 text-white rounded-xl pl-10" placeholder="Filter identity nodes..." />
+                  </div>
+                </div>
                 
                 {isUsersLoading ? (
                   <div className="flex justify-center p-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
-                ) : userList?.length === 0 ? (
+                ) : filteredUsers?.length === 0 ? (
                   <div className="text-center py-20 opacity-40 font-headline font-bold uppercase tracking-widest">No Identity Nodes Detected</div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {userList?.map(u => (
-                      <div key={u.id} className="p-8 rounded-[2rem] glass border-white/5 flex items-center justify-between">
+                  <div className="grid grid-cols-1 gap-6">
+                    {filteredUsers?.map(u => (
+                      <div key={u.id} className={cn(
+                        "p-8 rounded-[2.5rem] glass border-white/5 flex flex-col lg:flex-row lg:items-center justify-between gap-8 group transition-all",
+                        u.isBanned ? "opacity-50 grayscale" : "hover:border-primary/20"
+                      )}>
                         <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <UsersIcon className="w-6 h-6 text-primary" />
+                          <div className={cn(
+                            "w-16 h-16 rounded-2xl flex items-center justify-center border transition-all",
+                            u.isBanned ? "bg-destructive/10 border-destructive/20 text-destructive" : "bg-primary/10 border-primary/20 text-primary"
+                          )}>
+                            {u.isBanned ? <Ban className="w-8 h-8" /> : <UsersIcon className="w-8 h-8" />}
                           </div>
-                          <div>
-                            <p className="text-white font-bold text-xl">{u.email || u.phoneNumber || "Guest Node"}</p>
-                            <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">ID: {u.id.slice(0, 12)}...</p>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                              <p className="text-white font-bold text-2xl tracking-tight">{u.email || u.phoneNumber || "Guest Node"}</p>
+                              <Badge className={cn("text-[10px] px-3 py-0.5 uppercase tracking-widest rounded-full", 
+                                u.subscriptionTier === 'pro' ? 'bg-primary text-white' : 'bg-white/10 text-white/40'
+                              )}>
+                                {u.subscriptionTier} Tier
+                              </Badge>
+                              {u.isUpgradePending && (
+                                <Badge className="bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest px-3 py-0.5 animate-pulse">Upgrade Requested</Badge>
+                              )}
+                              {u.isBanned && (
+                                <Badge className="bg-destructive text-white text-[10px] font-black uppercase tracking-widest px-3 py-0.5">Banned</Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-white/20 uppercase tracking-widest font-black">Link ID: {u.id}</p>
                           </div>
                         </div>
-                        <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">{(u as any).role || 'user'}</Badge>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                          {u.subscriptionTier === 'free' && (
+                            <Button 
+                              onClick={() => handleUserTier(u.id, 'pro')} 
+                              className={cn(
+                                "bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-xl",
+                                u.isUpgradePending && "neon-glow-primary border-primary/40 bg-primary/20"
+                              )}
+                            >
+                              <UserCheck className="w-4 h-4 mr-2" /> {u.isUpgradePending ? 'Approve Upgrade' : 'Promote to Pro'}
+                            </Button>
+                          )}
+                          {u.subscriptionTier === 'pro' && (
+                            <Button 
+                              onClick={() => handleUserTier(u.id, 'free')} 
+                              variant="outline" 
+                              className="border-white/10 text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-xl"
+                            >
+                              <UserMinus className="w-4 h-4 mr-2" /> Downgrade
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            onClick={() => handleUserBan(u.id, !u.isBanned)} 
+                            variant="ghost" 
+                            className={cn(
+                              "text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-xl",
+                              u.isBanned ? "text-emerald-500 hover:bg-emerald-500/10" : "text-amber-500 hover:bg-amber-500/10"
+                            )}
+                          >
+                            {u.isBanned ? <ShieldCheck className="w-4 h-4 mr-2" /> : <Ban className="w-4 h-4 mr-2" />}
+                            {u.isBanned ? 'Unban Node' : 'Ban Node'}
+                          </Button>
+
+                          <Button 
+                            onClick={() => handleUserDelete(u.id)} 
+                            variant="ghost" 
+                            className="text-destructive hover:bg-destructive/10 text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-xl"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Purge
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

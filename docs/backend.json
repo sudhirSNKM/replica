@@ -12,6 +12,8 @@
         "phoneNumber": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "user"] },
         "subscriptionTier": { "type": "string", "enum": ["free", "pro"], "default": "free" },
+        "isUpgradePending": { "type": "boolean", "default": false },
+        "isBanned": { "type": "boolean", "default": false },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "createdAt", "subscriptionTier"]

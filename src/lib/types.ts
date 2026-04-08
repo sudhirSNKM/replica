@@ -28,6 +28,8 @@ export interface UserAccount {
   phoneNumber: string | null;
   role: 'admin' | 'user';
   subscriptionTier: SubscriptionTier;
+  isUpgradePending?: boolean;
+  isBanned?: boolean;
   createdAt: string;
 }
 

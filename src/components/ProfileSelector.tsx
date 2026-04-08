@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Check, Loader2, Trash2, Sparkles, ShieldCheck, ArrowRight, Zap, X } from "lucide-react";
+import { Plus, Check, Loader2, Sparkles, ShieldCheck, ArrowRight, Zap, X, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -46,6 +47,23 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   }, [firestore, user]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
+
+  if (accountData?.isBanned) {
+    return (
+      <div className="fixed inset-0 z-[600] bg-black flex items-center justify-center p-6">
+        <div className="glass p-12 rounded-[4rem] border-destructive/20 text-center space-y-8 max-w-md w-full">
+          <div className="w-20 h-20 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto border border-destructive/20">
+            <ShieldAlert className="w-10 h-10 text-destructive" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-4xl font-headline font-bold text-white">Access Denied</h2>
+            <p className="text-white/40">This identity node has been terminated from the matrix for policy violations.</p>
+          </div>
+          <Button variant="outline" onClick={() => window.location.reload()} className="w-full h-16 rounded-2xl glass border-white/5 text-white">Synchronize Identity</Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleVerify = () => {
     if (verificationCode.length !== 6) return;
@@ -75,7 +93,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     await setDoc(profileRef, {
       id,
       userAccountId: user.uid,
-      name: `Sub-Protocol ${profiles?.length ? profiles.length + 1 : 1}`,
+      name: `Nexus ${profiles?.length ? profiles.length + 1 : 1}`,
       avatarUrl: `https://picsum.photos/seed/${id}/200/200`,
       createdAt: new Date().toISOString()
     });
@@ -83,12 +101,19 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     toast({ title: "Profile Initialized" });
   };
 
-  const handleUpgrade = async () => {
+  const handleRequestUpgrade = async () => {
     if (!firestore || !user) return;
-    const accountRef = doc(firestore, "userAccounts", user.uid);
-    await updateDoc(accountRef, { subscriptionTier: 'pro' });
-    toast({ title: "Neural Tier Upgraded", description: "Identity authorized for 10 profiles." });
-    setShowUpgradeModal(false);
+    setIsRequesting(true);
+    try {
+      const accountRef = doc(firestore, "userAccounts", user.uid);
+      await updateDoc(accountRef, { isUpgradePending: true });
+      toast({ title: "Signal Sent", description: "Your upgrade request has been queued for admin verification." });
+      setShowUpgradeModal(false);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Sync Error", description: e.message });
+    } finally {
+      setIsRequesting(false);
+    }
   };
 
   if (!isVerified) {
@@ -123,12 +148,12 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
           <h1 className="text-6xl md:text-8xl font-headline font-bold text-white tracking-tighter">
             Who's watching <span className="text-primary text-glow">Replica</span>?
           </h1>
-          <p className="text-white/20 uppercase tracking-[0.5em] font-black text-xs flex items-center justify-center gap-4">
+          <div className="text-white/20 uppercase tracking-[0.5em] font-black text-xs flex items-center justify-center gap-4">
             <Sparkles className="w-4 h-4 text-primary" /> Neural Synchronization Active
-            <Badge variant="outline" className="ml-4 border-primary text-primary px-4 py-1">
+            <Badge variant="outline" className="ml-4 border-primary text-primary px-4 py-1 rounded-full">
               Tier: {accountData?.subscriptionTier?.toUpperCase() || 'FREE'}
             </Badge>
-          </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap justify-center gap-10 md:gap-16">
@@ -171,7 +196,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
               onClick={() => setShowUpgradeModal(true)}
               className="rounded-full bg-accent hover:neon-glow-accent px-16 h-16 text-white font-black uppercase tracking-[0.3em] text-[10px]"
             >
-              <Zap className="w-4 h-4 mr-2" /> Upgrade to Pro
+              <Zap className="w-4 h-4 mr-2" /> {accountData.isUpgradePending ? "Upgrade Pending" : "Request Pro Upgrade"}
             </Button>
           )}
         </div>
@@ -196,7 +221,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-headline font-bold text-white tracking-tighter">Expand Your Matrix</h3>
-                <p className="text-white/40">The Free plan is limited to 3 neural profiles and 2 synchronized movies. Upgrade to Pro for 10 profiles and unlimited cinematic protocols.</p>
+                <p className="text-white/40">The Free plan is limited to 3 neural profiles and 2 synchronized movies. Request an upgrade to authorize 10 profiles and unlimited cinematic protocols.</p>
               </div>
               <div className="space-y-4">
                 <div className="p-6 rounded-3xl bg-white/5 border border-white/10 text-left space-y-3">
@@ -210,9 +235,15 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 4K Ultra Stream Bitrate</li>
                   </ul>
                 </div>
-                <Button onClick={handleUpgrade} className="w-full h-16 rounded-2xl bg-primary text-white font-bold text-lg hover:neon-glow-primary">
-                  Establish Pro Link
-                </Button>
+                {accountData?.isUpgradePending ? (
+                  <div className="bg-primary/10 border border-primary/20 p-6 rounded-2xl text-primary font-bold">
+                    Upgrade Request Sent
+                  </div>
+                ) : (
+                  <Button onClick={handleRequestUpgrade} disabled={isRequesting} className="w-full h-16 rounded-2xl bg-primary text-white font-bold text-lg hover:neon-glow-primary">
+                    {isRequesting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Request Pro Link"}
+                  </Button>
+                )}
               </div>
             </motion.div>
           </div>
