@@ -1,4 +1,3 @@
-
 import { Movie, UserProfile } from "@/lib/types";
 
 export const MOCK_MOVIES: Movie[] = [
@@ -14,6 +13,7 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "2h 15m",
     releaseYear: "2024",
     type: "movie",
+    status: "published",
     isTrending: true,
     isNew: true,
     cast: ["Kaelen Voss", "Lyra Thorne", "Jax Mercer"],
@@ -31,6 +31,7 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "1h 55m",
     releaseYear: "2023",
     type: "movie",
+    status: "published",
     isNew: true,
     cast: ["Sora Nakano", "Marcus Reed", "Elena Sol"],
     director: "Kenji Sato"
@@ -47,6 +48,7 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "2h 05m",
     releaseYear: "2024",
     type: "movie",
+    status: "published",
     cast: ["Unit 734", "Sarah Jenkins", "Dr. Aris Thorne"],
     director: "Lana Wachowski"
   },
@@ -62,6 +64,7 @@ export const MOCK_MOVIES: Movie[] = [
     duration: "Season 2",
     releaseYear: "2024",
     type: "show",
+    status: "published",
     isTrending: true,
     cast: ["David Tennant", "Jodie Whittaker", "Tom Baker"],
     director: "Russell T. Davies"
@@ -71,13 +74,14 @@ export const MOCK_MOVIES: Movie[] = [
     title: "SYNAPSE",
     tagline: "Connected to the end.",
     description: "A detective with a neural link to the victim's last memories must solve a murder before his own brain fries. The closer he gets to the truth, the more his own identity dissolves.",
-    thumbnailUrl: "/images/synapse_poster.png",
+    thumbnailUrl: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&q=80&w=2560",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     genres: ["Noir", "Cyberpunk"],
     rating: "9.1",
     duration: "2h 10m",
     releaseYear: "2024",
     type: "movie",
+    status: "published",
     isTrending: true,
     cast: ["Ryan Gosling", "Ana de Armas", "Harrison Ford"],
     director: "Denis Villeneuve"
@@ -85,7 +89,7 @@ export const MOCK_MOVIES: Movie[] = [
 ];
 
 export const MOCK_PROFILES: UserProfile[] = [
-  { id: "1", name: "Guest User", avatarUrl: "https://picsum.photos/seed/avatar1/200/200" },
-  { id: "2", name: "Cyberpunk", avatarUrl: "https://picsum.photos/seed/avatar2/200/200" },
-  { id: "3", name: "The Collector", avatarUrl: "https://picsum.photos/seed/avatar3/200/200" }
+  { id: "1", userAccountId: "acc-1", name: "Guest User", avatarUrl: "https://picsum.photos/seed/avatar1/200/200", createdAt: new Date().toISOString() },
+  { id: "2", userAccountId: "acc-1", name: "Cyberpunk", avatarUrl: "https://picsum.photos/seed/avatar2/200/200", createdAt: new Date().toISOString() },
+  { id: "3", userAccountId: "acc-1", name: "The Collector", avatarUrl: "https://picsum.photos/seed/avatar3/200/200", createdAt: new Date().toISOString() }
 ];

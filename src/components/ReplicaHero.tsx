@@ -150,23 +150,27 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
         </div>
       </div>
 
-      <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 z-20 hidden md:flex items-center gap-10">
+      <div className="absolute bottom-12 left-6 md:left-12 lg:left-24 right-6 md:right-12 lg:right-24 z-20 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex -space-x-4">
             {viewerData.seeds.map((seed, i) => (
-              <div key={i} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden">
-                <img src={`https://picsum.photos/seed/${seed}/40/40`} className="w-full h-full object-cover" alt="Node" />
+              <div key={i} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden shadow-xl">
+                <img src={`https://picsum.photos/seed/${seed}/100/100`} className="w-full h-full object-cover" alt="Node" />
               </div>
             ))}
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Watching: {viewerData.count}</span>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Status: Active</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-primary text-glow">Streaming: {viewerData.count}</span>
+          </div>
         </div>
         
         <button 
           onClick={() => setIsMuted(!isMuted)}
-          className="w-12 h-12 md:w-14 md:h-14 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all"
+          className="w-14 h-14 rounded-full glass border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group relative"
         >
-          {isMuted ? <VolumeX className="w-5 h-5 text-white/40" /> : <Volume2 className="w-5 h-5 text-white" />}
+          <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 blur-md transition-opacity" />
+          {isMuted ? <VolumeX className="w-6 h-6 text-white/40" /> : <Volume2 className="w-6 h-6 text-white" />}
         </button>
       </div>
     </div>
