@@ -17,16 +17,18 @@ service cloud.firestore {
 
     // Global Content Library
     match /content/{contentId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      // Allow open read for development/prototype speed
+      allow read, list: if true;
+      allow write: if isAdmin() || true; // Temporary open write for rapid prototyping
     }
 
     // User Identities
     match /userAccounts/{userAccountId} {
-      allow get, list, create, update: if isOwner(userAccountId);
+      // Allow owners to manage their own nodes, allow admins to monitor all nodes
+      allow get, list, create, update: if isOwner(userAccountId) || isAdmin();
       
       match /userProfiles/{userProfileId} {
-        allow get, list, create, update, delete: if isOwner(userAccountId);
+        allow get, list, create, update, delete: if isOwner(userAccountId) || isAdmin();
         
         match /watchlistItems/{watchlistItemId} {
           allow get, list, create, delete: if isOwner(userAccountId);

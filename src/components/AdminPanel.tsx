@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, deleteDoc, query, orderBy } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
@@ -29,8 +29,6 @@ import { cn } from "@/lib/utils";
 export const AdminPanel = () => {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'content' | 'library' | 'identities' | 'analytics'>('content');
-  const [userList, setUserList] = useState<any[]>([]);
-  const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
@@ -66,13 +64,20 @@ export const AdminPanel = () => {
   const videoUrl = watch("videoUrl");
   const selectedQuality = watch("quality");
 
-  // Fetch all existing content for the library explorer and stats
+  // Reactive Data Queries
   const contentQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "content"), orderBy("updatedAt", "desc"));
   }, [firestore]);
 
   const { data: allContent, isLoading: isContentLoading } = useCollection<Movie>(contentQuery);
+
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "userAccounts");
+  }, [firestore]);
+
+  const { data: userList, isLoading: isUsersLoading } = useCollection(usersQuery);
 
   const { uploadFile: uploadPoster, progress: posterProgress, isUploading: isPosterUploading } = useUpload();
   const { uploadFile: uploadVideo, progress: videoProgress, isUploading: isVideoUploading } = useUpload();
@@ -137,7 +142,7 @@ export const AdminPanel = () => {
     setValue("videoUrl", movie.videoUrl);
     setValue("quality", (movie as any).quality || "4K ULTRA HDR");
     setValue("publishDate", (movie as any).publishDate?.substring(0, 16) || new Date().toISOString().substring(0, 16));
-    setValue("cast", Array.isArray(movie.cast) ? movie.cast.join(", ") : movie.cast || "");
+    setValue("cast", Array.isArray(movie.cast) ? movie.cast.join(", ") : (movie as any).cast || "");
     setValue("director", movie.director || "");
     
     setPosterMode('link');
@@ -199,24 +204,6 @@ export const AdminPanel = () => {
     }
   };
 
-  useEffect(() => {
-    if ((activeTab === 'identities' || activeTab === 'analytics' || activeTab === 'library') && firestore) {
-      const fetchUsers = async () => {
-        setIsUsersLoading(true);
-        try {
-          const querySnapshot = await getDocs(collection(firestore, "userAccounts"));
-          const usersData = querySnapshot.docs.map((doc: any) => ({ ...doc.data(), id: doc.id }));
-          setUserList(usersData);
-        } catch (error: any) {
-          toast({ variant: "destructive", title: "Retrieval Failed", description: error.message });
-        } finally {
-          setIsUsersLoading(false);
-        }
-      };
-      fetchUsers();
-    }
-  }, [activeTab, firestore]);
-
   const seedDatabase = async () => {
     if (!firestore || !isAdmin) return;
     setIsSeeding(true);
@@ -263,10 +250,9 @@ export const AdminPanel = () => {
     item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Derived Analytics from Database
   const stats = [
     { label: 'Neural Throughput', value: `${((allContent?.length || 0) * 1.4).toFixed(1)} TB`, icon: Activity, color: 'text-primary' },
-    { label: 'Neural Links (Users)', value: userList.length.toLocaleString(), icon: UsersIcon, color: 'text-accent' },
+    { label: 'Neural Links (Users)', value: (userList?.length || 0).toLocaleString(), icon: UsersIcon, color: 'text-accent' },
     { label: 'Sync Protocols', value: (allContent?.length || 0).toString(), icon: Database, color: 'text-yellow-400' },
     { label: 'Stability Node', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
   ];
@@ -524,6 +510,8 @@ export const AdminPanel = () => {
                 
                 {isContentLoading ? (
                   <div className="flex justify-center p-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
+                ) : filteredContent?.length === 0 ? (
+                  <div className="text-center py-20 opacity-40 font-headline font-bold uppercase tracking-widest">Global Library Empty</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredContent?.map(item => (
@@ -537,7 +525,7 @@ export const AdminPanel = () => {
                             <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
                             <div className="flex items-center gap-2 pt-2">
                               <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
-                              <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {item.cast?.length || 0} Nodes</div>
+                              <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {(item as any).cast?.length || 0} Nodes</div>
                             </div>
                           </div>
                         </div>
@@ -561,22 +549,29 @@ export const AdminPanel = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="glass border-white/10 rounded-[3rem] p-10">
                 <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Active Identity Nodes</CardTitle>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userList.map(u => (
-                    <div key={u.id} className="p-8 rounded-[2rem] glass border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                          <UsersIcon className="w-6 h-6 text-primary" />
+                
+                {isUsersLoading ? (
+                  <div className="flex justify-center p-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
+                ) : userList?.length === 0 ? (
+                  <div className="text-center py-20 opacity-40 font-headline font-bold uppercase tracking-widest">No Identity Nodes Detected</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {userList?.map(u => (
+                      <div key={u.id} className="p-8 rounded-[2rem] glass border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                            <UsersIcon className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-white font-bold text-xl">{u.email || u.phoneNumber || "Guest Node"}</p>
+                            <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">ID: {u.id.slice(0, 12)}...</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-white font-bold text-xl">{u.email || u.phoneNumber || "Guest Node"}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">ID: {u.id.slice(0, 12)}...</p>
-                        </div>
+                        <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">{(u as any).role || 'user'}</Badge>
                       </div>
-                      <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">{u.role || 'user'}</Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             </motion.div>
           )}
