@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -27,8 +26,6 @@ export default function Home() {
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace('/login');
-    } else if (user?.email === 'admin@replica.com') {
-      router.replace('/admin');
     }
   }, [user, isAuthLoading, router]);
 
@@ -45,7 +42,7 @@ export default function Home() {
   const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
 
-  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES.filter(m => m.status === 'published' || !m.status);
+  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('replica_active_profile');
@@ -96,25 +93,42 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <ReplicaNavbar activeProfileId={selectedProfileId} />
+      
       <AnimatePresence mode="wait">
         {featuredMovie && (
-          <motion.div key={featuredMovie.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}>
+          <motion.div 
+            key={featuredMovie.id} 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 1 }}
+          >
             <ReplicaHero movie={featuredMovie} />
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="relative z-30 -mt-24 md:-mt-32 space-y-32 pb-48">
+
+      <div className="relative z-30 -mt-16 md:-mt-32 space-y-16 md:space-y-32 pb-48">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[1000px] pointer-events-none" />
-        <section className="relative pt-12 md:pt-24">
-          <MovieRow title="Global Trending Now" movies={allContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
+        
+        {/* Mobile-Friendly Rows */}
+        <section className="relative pt-8 md:pt-24">
+          <MovieRow title="Global Trending" movies={allContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
         </section>
+
         <section className="relative">
-          <ShowRow title="Top Series for You" shows={allContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
+          <ShowRow title="Top Series" shows={allContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
         </section>
-        <section className="relative py-24 bg-white/[0.01] border-y border-white/[0.05]">
+
+        <section className="relative">
+          <MovieRow title="Recent Protocols" movies={allContent.filter(m => m.isNew).slice(0, 12)} onMovieHover={setFeaturedMovie} />
+        </section>
+
+        <section className="relative py-12 md:py-24 bg-white/[0.01] border-y border-white/[0.05]">
           <AIRecommendations />
         </section>
       </div>
+
       <ReplicaFooter />
       <Toaster />
     </main>
