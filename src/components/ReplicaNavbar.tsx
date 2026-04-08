@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bell, Menu, X, LogOut, ChevronDown, Zap, UserCircle } from "lucide-react";
+import { Search, Bell, Menu, X, LogOut, ChevronDown, Zap, UserCircle, ListVideo, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
 import { NotificationsDropdown } from "./NotificationsDropdown";
@@ -124,7 +124,9 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
 
                     <Link href="/watchlist">
                       <DropdownMenuItem className="hover:bg-white/5 rounded-2xl py-4 px-5 transition-colors group cursor-pointer border border-transparent hover:border-white/5 lg:hidden">
-                        <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors">My List</span>
+                        <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors flex items-center gap-3">
+                          <ListVideo className="w-4 h-4" /> My List
+                        </span>
                       </DropdownMenuItem>
                     </Link>
 
@@ -143,14 +145,16 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                     )}
                     
                     <DropdownMenuItem onClick={() => setIsSettingsOpen(true)} className="hover:bg-white/5 rounded-2xl py-4 px-5 transition-colors group cursor-pointer border border-transparent hover:border-white/5">
-                      <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors">Nexus Settings</span>
+                      <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-white/50 group-hover:text-white transition-colors flex items-center gap-3">
+                        <Settings className="w-4 h-4" /> Nexus Settings
+                      </span>
                     </DropdownMenuItem>
                     
                     <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2 my-1" />
                     
                     <DropdownMenuItem onClick={handleLogout} className="hover:bg-destructive/10 rounded-2xl py-4 px-5 text-destructive font-bold group cursor-pointer border border-transparent hover:border-destructive/20 mt-1">
-                      <span className="flex items-center text-[10px] uppercase tracking-[0.2em]">
-                        <LogOut className="w-4 h-4 mr-3" /> Terminate Session
+                      <span className="flex items-center text-[10px] uppercase tracking-[0.2em] gap-3">
+                        <LogOut className="w-4 h-4" /> Terminate Session
                       </span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
