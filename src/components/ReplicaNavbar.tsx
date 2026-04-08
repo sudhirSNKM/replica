@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bell, User, Menu, X, Settings, LogOut, ChevronDown, Sparkles, Zap } from "lucide-react";
+import { Search, Bell, Menu, X, LogOut, ChevronDown, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchOverlay } from "./SearchOverlay";
 import { NotificationsDropdown } from "./NotificationsDropdown";
@@ -58,9 +58,9 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-[150] px-4 md:px-6 py-4 md:py-6 pointer-events-none">
+      <div className="fixed top-0 left-0 right-0 z-[150] py-4 md:py-6 pointer-events-none">
         <nav className={cn(
-          "max-w-[1600px] mx-auto flex items-center justify-between transition-all duration-700 px-4 md:px-8 pointer-events-auto", 
+          "max-w-[1600px] mx-auto flex items-center justify-between transition-all duration-700 px-6 md:px-12 lg:px-24 pointer-events-auto", 
           isScrolled ? "py-3 md:py-4 rounded-[1.5rem] md:rounded-[2.5rem] bg-background/60 backdrop-blur-2xl border border-white/10" : "py-4 md:py-6 rounded-none bg-transparent"
         )}>
           <div className="flex items-center gap-6 md:gap-12">
@@ -89,7 +89,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                   <DropdownMenuTrigger className="outline-none">
                     <div className="flex items-center gap-3 group">
                       <div className="w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5 shadow-xl">
-                        <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" />
+                        <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" alt="Profile" />
                       </div>
                       <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white hidden md:block" />
                     </div>
@@ -134,7 +134,8 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                 >
                   {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
-              </div>            ) : (
+              </div>
+            ) : (
               <Link href="/login">
                 <button className="px-4 md:px-6 py-2 bg-primary text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-full">Link</button>
               </Link>
@@ -172,7 +173,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
               <div className="h-[1px] bg-gradient-to-r from-primary/40 via-transparent to-transparent" />
               <div className="grid grid-cols-2 gap-6">
                 <button onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }} className="flex flex-col gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 text-left">
-                  <Settings className="w-6 h-6 text-primary" />
+                  <Zap className="w-6 h-6 text-primary" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Settings</span>
                 </button>
                 <button onClick={handleLogout} className="flex flex-col gap-3 p-6 rounded-3xl bg-destructive/10 border border-destructive/20 text-left">

@@ -5,7 +5,7 @@ import React from "react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { MovieCard } from "@/components/MovieCard";
 import { motion } from "framer-motion";
-import { Ghost, Loader2, CreditCard, ShieldCheck, Zap, User, PlusCircle, AlertCircle } from "lucide-react";
+import { Ghost, Loader2, PlusCircle, AlertCircle } from "lucide-react";
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export default function WatchlistPage() {
     <main className="min-h-screen bg-background text-foreground pt-36 pb-32">
       <ReplicaNavbar />
       
-      <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-24">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 space-y-24">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-white/5 pb-16">
           <div className="space-y-6">
