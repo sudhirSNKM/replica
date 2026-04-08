@@ -10,6 +10,7 @@
         "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "createdAt"]
@@ -44,11 +45,12 @@
         "releaseYear": { "type": "string" },
         "type": { "type": "string", "enum": ["movie", "show"] },
         "quality": { "type": "string", "enum": ["4K ULTRA HDR", "1080P FULL HD", "720P HD"] },
-        "publishDate": { "type": "string", "format": "date-time", "description": "When this content becomes visible to users." },
+        "status": { "type": "string", "enum": ["draft", "processing", "published", "archived"], "default": "draft" },
+        "publishDate": { "type": "string", "format": "date-time" },
         "isTrending": { "type": "boolean" },
         "isNew": { "type": "boolean" }
       },
-      "required": ["id", "title", "videoUrl", "type", "publishDate"]
+      "required": ["id", "title", "videoUrl", "type", "publishDate", "status"]
     },
     "WatchlistItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",

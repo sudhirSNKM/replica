@@ -7,7 +7,7 @@ import {
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
   Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus,
-  BarChart3
+  BarChart3, Globe, Rocket, Archive, FileText, Settings2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Movie } from "@/lib/types";
+import { Movie, ContentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const AdminPanel = () => {
@@ -51,6 +51,7 @@ export const AdminPanel = () => {
       cast: "",
       director: "",
       quality: "4K ULTRA HDR",
+      status: "draft" as ContentStatus,
       thumbnailUrl: "",
       videoUrl: ""
     }
@@ -63,6 +64,7 @@ export const AdminPanel = () => {
   const thumbnailUrl = watch("thumbnailUrl");
   const videoUrl = watch("videoUrl");
   const selectedQuality = watch("quality");
+  const selectedStatus = watch("status");
 
   // Reactive Data Queries
   const contentQuery = useMemoFirebase(() => {
@@ -141,6 +143,7 @@ export const AdminPanel = () => {
     setValue("thumbnailUrl", movie.thumbnailUrl);
     setValue("videoUrl", movie.videoUrl);
     setValue("quality", (movie as any).quality || "4K ULTRA HDR");
+    setValue("status", movie.status || "draft");
     setValue("publishDate", (movie as any).publishDate?.substring(0, 16) || new Date().toISOString().substring(0, 16));
     setValue("cast", Array.isArray(movie.cast) ? movie.cast.join(", ") : (movie as any).cast || "");
     setValue("director", movie.director || "");
@@ -161,6 +164,17 @@ export const AdminPanel = () => {
       toast({ title: "Protocol Terminated", description: `${title} has been removed from the nexus.` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+    }
+  };
+
+  const handleQuickPublish = async (movie: Movie) => {
+    if (!firestore) return;
+    const contentRef = doc(firestore, "content", movie.id);
+    try {
+      await setDoc(contentRef, { status: 'published', updatedAt: new Date().toISOString() }, { merge: true });
+      toast({ title: "Broadcast Live", description: `${movie.title} is now visible to all nodes.` });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Quick Publish Failed", description: e.message });
     }
   };
 
@@ -193,7 +207,7 @@ export const AdminPanel = () => {
 
     try {
       await setDoc(contentRef, payload, { merge: true });
-      toast({ title: editingId ? "Protocol Updated" : "Broadcast Finalized", description: `${data.title} is now synchronized.` });
+      toast({ title: editingId ? "Protocol Updated" : "Broadcast Finalized", description: `${data.title} is now in the ${data.status} state.` });
       reset();
       setEditingId(null);
       setActiveTab('library');
@@ -213,6 +227,7 @@ export const AdminPanel = () => {
         await setDoc(contentRef, {
           ...movie,
           quality: "4K ULTRA HDR",
+          status: "published",
           publishDate: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -223,6 +238,26 @@ export const AdminPanel = () => {
       toast({ variant: "destructive", title: "Sync Error", description: e.message });
     } finally {
       setIsSeeding(false);
+    }
+  };
+
+  const getStatusIcon = (status: ContentStatus) => {
+    switch (status) {
+      case 'draft': return FileText;
+      case 'processing': return Settings2;
+      case 'published': return Rocket;
+      case 'archived': return Archive;
+      default: return FileText;
+    }
+  };
+
+  const getStatusColor = (status: ContentStatus) => {
+    switch (status) {
+      case 'draft': return 'bg-white/10 text-white/40 border-white/10';
+      case 'processing': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      case 'published': return 'bg-primary/10 text-primary border-primary/20';
+      case 'archived': return 'bg-accent/10 text-accent border-accent/20';
+      default: return 'bg-white/10 text-white/40 border-white/10';
     }
   };
 
@@ -357,12 +392,24 @@ export const AdminPanel = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center gap-2">
-                        <Clock className="w-3 h-3" /> Scheduled Launch (Publish Date)
-                      </Label>
-                      <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" required />
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center gap-2">
+                          <Clock className="w-3 h-3" /> Scheduled Launch
+                        </Label>
+                        <Input type="datetime-local" {...register("publishDate")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" required />
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Initial Status</Label>
+                        <select {...register("status")} className="w-full h-14 bg-white/5 border border-white/10 text-white rounded-2xl px-6 appearance-none focus:outline-none">
+                          <option value="draft" className="bg-[#0B0B0F]">Draft</option>
+                          <option value="processing" className="bg-[#0B0B0F]">Processing</option>
+                          <option value="published" className="bg-[#0B0B0F]">Published</option>
+                          <option value="archived" className="bg-[#0B0B0F]">Archived</option>
+                        </select>
+                      </div>
                     </div>
+
                     <div className="space-y-3">
                       <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Synopsis</Label>
                       <Textarea {...register("description")} className="min-h-[140px] bg-white/5 border-white/10 text-white rounded-[2rem] p-6 text-base" placeholder="Describe the cinematic journey..." required />
@@ -467,10 +514,6 @@ export const AdminPanel = () => {
                               </>
                             )}
                           </label>
-                          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
-                            <AlertTriangle className="w-5 h-5 flex-none" />
-                            <p className="text-[10px] font-bold leading-relaxed uppercase tracking-tight">Large media may take several minutes to synchronize.</p>
-                          </div>
                         </div>
                       ) : (
                         <div className="relative group">
@@ -482,13 +525,13 @@ export const AdminPanel = () => {
 
                     <div className="flex gap-4">
                       {editingId && (
-                        <Button type="button" onClick={() => { setEditingId(null); reset(); }} variant="ghost" className="h-20 flex-1 text-white/40 uppercase font-black tracking-widest rounded-3xl">
+                        <button type="button" onClick={() => { setEditingId(null); reset(); }} className="h-20 flex-1 text-white/40 uppercase font-black tracking-widest rounded-3xl hover:bg-white/5 transition-all">
                           Cancel
-                        </Button>
+                        </button>
                       )}
                       <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="flex-[2] h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
-                        {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : editingId ? <Edit3 className="w-6 h-6 mr-3" /> : <Sparkles className="w-6 h-6 mr-3" />}
-                        {editingId ? "Update Metadata" : "Establish Broadcast"}
+                        {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : editingId ? <Edit3 className="w-6 h-6 mr-3" /> : <Rocket className="w-6 h-6 mr-3" />}
+                        {editingId ? "Update Meta" : "Establish Broadcast"}
                       </Button>
                     </div>
                   </CardContent>
@@ -514,31 +557,44 @@ export const AdminPanel = () => {
                   <div className="text-center py-20 opacity-40 font-headline font-bold uppercase tracking-widest">Global Library Empty</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {filteredContent?.map(item => (
-                      <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
-                        <div className="flex items-center gap-6">
-                          <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                            <img src={item.thumbnailUrl} className="w-full h-full object-cover" alt={item.title} />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                            <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
-                            <div className="flex items-center gap-2 pt-2">
-                              <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
-                              <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {(item as any).cast?.length || 0} Nodes</div>
+                    {filteredContent?.map(item => {
+                      const StatusIcon = getStatusIcon(item.status);
+                      return (
+                        <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
+                          <div className="flex items-center gap-6">
+                            <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
+                              <img src={item.thumbnailUrl} className="w-full h-full object-cover" alt={item.title} />
+                            </div>
+                            <div className="space-y-2">
+                              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                {item.title}
+                                <Badge className={cn("text-[8px] px-2 py-0.5 uppercase tracking-widest", getStatusColor(item.status))}>
+                                  <StatusIcon className="w-2 h-2 mr-1" /> {item.status}
+                                </Badge>
+                              </h3>
+                              <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
+                              <div className="flex items-center gap-2 pt-1">
+                                <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
+                                <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {(item as any).cast?.length || 0} Nodes</div>
+                              </div>
                             </div>
                           </div>
+                          <div className="flex gap-2">
+                            {item.status !== 'published' && (
+                              <Button onClick={() => handleQuickPublish(item)} variant="ghost" title="Quick Publish" className="w-10 h-10 rounded-full text-primary hover:bg-primary/10">
+                                <Rocket className="w-5 h-5" />
+                              </Button>
+                            )}
+                            <Button onClick={() => onEdit(item)} variant="ghost" className="w-10 h-10 rounded-full text-white/40 hover:text-primary hover:bg-primary/10">
+                              <Edit3 className="w-5 h-5" />
+                            </Button>
+                            <Button onClick={() => onDelete(item.id, item.title)} variant="ghost" className="w-10 h-10 rounded-full text-destructive hover:bg-destructive/10">
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button onClick={() => onEdit(item)} variant="ghost" className="w-12 h-12 rounded-full text-white/40 hover:text-primary hover:bg-primary/10">
-                            <Edit3 className="w-6 h-6" />
-                          </Button>
-                          <Button onClick={() => onDelete(item.id, item.title)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
-                            <Trash2 className="w-6 h-6" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Card>

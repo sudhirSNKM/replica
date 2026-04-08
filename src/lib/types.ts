@@ -1,4 +1,6 @@
 
+export type ContentStatus = 'draft' | 'processing' | 'published' | 'archived';
+
 export interface Movie {
   id: string;
   title: string;
@@ -10,6 +12,7 @@ export interface Movie {
   duration: string;
   releaseYear: string;
   type: 'movie' | 'show';
+  status: ContentStatus;
   isTrending?: boolean;
   isNew?: boolean;
   cast?: string[];

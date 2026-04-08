@@ -12,7 +12,7 @@ import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, limit, orderBy } from "firebase/firestore";
+import { collection, query, limit, orderBy, where } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
@@ -36,6 +36,7 @@ export default function Home() {
     if (!firestore) return null;
     return query(
       collection(firestore, "content"),
+      where("status", "==", "published"),
       orderBy("updatedAt", "desc"),
       limit(60)
     );
@@ -44,7 +45,7 @@ export default function Home() {
   const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
 
-  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
+  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES.filter(m => m.status === 'published' || !m.status);
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('replica_active_profile');
