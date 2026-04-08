@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Loader2, Sparkles, ShieldCheck, ArrowRight, Zap, X, ShieldAlert } from "lucide-react";
+import { Plus, Check, Loader2, Sparkles, ShieldCheck, ArrowRight, Zap, X, ShieldAlert, ArrowLeft } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface ProfileSelectorProps {
   onSelect: (profileId: string) => void;
@@ -21,6 +22,14 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [hasSelectedBefore, setHasSelectedBefore] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const current = localStorage.getItem('replica_active_profile');
+      if (current) setHasSelectedBefore(true);
+    }
+  }, [user]);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -95,20 +104,28 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
 
   return (
     <div className="fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center px-6">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-20 max-w-6xl w-full">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-16 max-w-6xl w-full">
+        {hasSelectedBefore && (
+          <Link href="/" className="absolute top-12 left-12 flex items-center gap-2 text-white/40 hover:text-white uppercase font-black text-[10px] tracking-[0.3em] transition-all">
+            <ArrowLeft className="w-4 h-4" /> Back to Matrix
+          </Link>
+        )}
+
         <div className="space-y-6">
           <h1 className="text-6xl md:text-8xl font-headline font-bold text-white tracking-tighter">
             Who's watching <span className="text-primary text-glow">Replica</span>?
           </h1>
-          <div className="text-white/20 uppercase tracking-[0.5em] font-black text-xs flex items-center justify-center gap-4">
-            <Sparkles className="w-4 h-4 text-primary" /> Neural Synchronization Active
-            <Badge variant="outline" className="ml-4 border-primary text-primary px-4 py-1 rounded-full">
+          <div className="text-white/20 uppercase tracking-[0.5em] font-black text-xs flex flex-wrap items-center justify-center gap-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" /> Neural Synchronization Active
+            </div>
+            <Badge variant="outline" className="border-primary text-primary px-4 py-1 rounded-full text-[10px]">
               Tier: {(accountData as any)?.subscriptionTier?.toUpperCase() || 'FREE'}
             </Badge>
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-10 md:gap-16">
+        <div className="flex flex-wrap justify-center gap-10 md:gap-16 max-h-[50vh] overflow-y-auto px-4 py-8 scrollbar-hide">
           {(profiles as any[])?.map((profile) => (
             <motion.div key={profile.id} className="group flex flex-col items-center gap-6">
               <div 
@@ -118,7 +135,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                 <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                 {isEditMode && (
                   <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4">
-                    <button onClick={(e) => { e.stopPropagation(); deleteDoc(doc(firestore!, "userAccounts", user!.uid, "userProfiles", profile.id)); }} className="w-full py-3 rounded-xl bg-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest">Delete</button>
+                    <button onClick={(e) => { e.stopPropagation(); deleteDoc(doc(firestore!, "userAccounts", user!.uid, "userProfiles", profile.id)); }} className="w-full py-3 rounded-xl bg-destructive/20 text-destructive text-[10px] font-black uppercase tracking-widest hover:bg-destructive hover:text-white transition-all">Delete</button>
                   </div>
                 )}
               </div>
@@ -127,18 +144,18 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
           ))}
 
           <div onClick={handleAddProfile} className="group flex flex-col items-center gap-6 cursor-pointer">
-            <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] border-2 border-dashed border-white/10 flex items-center justify-center group-hover:border-primary bg-white/5">
-              <Plus className="w-14 h-14 text-white/10 group-hover:text-primary" />
+            <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] border-2 border-dashed border-white/10 flex items-center justify-center group-hover:border-primary bg-white/5 hover:bg-primary/5 transition-all">
+              <Plus className="w-14 h-14 text-white/10 group-hover:text-primary transition-all" />
             </div>
             <span className="text-white/10 group-hover:text-white font-bold text-2xl transition-all">Add Profile</span>
           </div>
         </div>
 
-        <div className="flex gap-6 justify-center">
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <Button 
             variant="outline"
             onClick={() => setIsEditMode(!isEditMode)}
-            className="rounded-full border-white/10 px-16 h-16 glass text-white/40 hover:text-white uppercase tracking-[0.3em] text-[10px]"
+            className="rounded-full border-white/10 px-16 h-16 glass text-white/40 hover:text-white uppercase tracking-[0.3em] text-[10px] w-full sm:w-auto"
           >
             {isEditMode ? "Finalize Changes" : "Manage Neural Identities"}
           </Button>
@@ -146,7 +163,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
           {(accountData as any)?.subscriptionTier === 'free' && (
             <Button 
               onClick={() => setShowUpgradeModal(true)}
-              className="rounded-full bg-accent hover:neon-glow-accent px-16 h-16 text-white font-black uppercase tracking-[0.3em] text-[10px]"
+              className="rounded-full bg-accent hover:neon-glow-accent px-16 h-16 text-white font-black uppercase tracking-[0.3em] text-[10px] w-full sm:w-auto"
             >
               <Zap className="w-4 h-4 mr-2" /> {(accountData as any).isUpgradePending ? "Upgrade Pending" : "Request Pro Upgrade"}
             </Button>
@@ -165,9 +182,9 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="relative glass p-12 rounded-[4rem] border-primary/20 max-w-lg w-full text-center space-y-8"
+              className="relative glass p-12 rounded-[4rem] border-primary/20 max-w-lg w-full text-center space-y-8 shadow-[0_0_100px_rgba(var(--primary),0.1)]"
             >
-              <button onClick={() => setShowUpgradeModal(false)} className="absolute top-8 right-8 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
+              <button onClick={() => setShowUpgradeModal(false)} className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
               <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
                 <Zap className="w-10 h-10 text-primary" />
               </div>
@@ -192,7 +209,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                     Upgrade Request Sent
                   </div>
                 ) : (
-                  <Button onClick={handleRequestUpgrade} disabled={isRequesting} className="w-full h-16 rounded-2xl bg-primary text-white font-bold text-lg hover:neon-glow-primary">
+                  <Button onClick={handleRequestUpgrade} disabled={isRequesting} className="w-full h-16 rounded-2xl bg-primary text-white font-bold text-lg hover:neon-glow-primary transition-all">
                     {isRequesting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Request Pro Link"}
                   </Button>
                 )}

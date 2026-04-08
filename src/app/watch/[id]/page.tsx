@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { 
-  ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings, Loader2, Info, RotateCcw, RotateCw, Subtitles, Activity, Check 
+  ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings, Loader2, Info, RotateCcw, RotateCw, Subtitles, Activity, Check, AlertTriangle 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ export default function VideoPlayer() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [quality, setQuality] = useState(movie?.quality || "4K ULTRA HDR");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{title: string, detail: string} | null>(null);
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
 
   useEffect(() => {
@@ -97,11 +97,15 @@ export default function VideoPlayer() {
   const togglePlay = () => {
     if (videoRef.current) {
       if (videoRef.current.paused) {
-        videoRef.current.play().catch(err => {
-          console.error("Playback Error:", err);
-          setError("Codec Sync Failed");
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(err => {
+          console.error("Playback Authorization Denied:", err);
+          setError({
+            title: "NEURAL LINK INTERRUPTED",
+            detail: "Browser restricted automatic synchronization. Manual override required."
+          });
         });
-        setIsPlaying(true);
       } else {
         videoRef.current.pause();
         setIsPlaying(false);
@@ -139,6 +143,20 @@ export default function VideoPlayer() {
     }
   };
 
+  const handleVideoError = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    let detail = "The cinematic protocol failed to initialize.";
+    if (video.error?.code === 4) detail = "Media source unreachable or codec protocol unsupported.";
+    else if (video.error?.code === 3) detail = "Decoding pipeline failed during transmission.";
+    
+    setError({
+      title: "HARDWARE DECRYPTION ERROR",
+      detail: detail
+    });
+  };
+
   if (isMovieLoading) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] gap-6">
@@ -150,10 +168,38 @@ export default function VideoPlayer() {
 
   if (!movie || error) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white p-6">
-        <Activity className="w-20 h-20 text-destructive mb-8 animate-pulse" />
-        <p className="text-2xl font-headline font-bold uppercase tracking-widest">{error || "Signal Interrupted"}</p>
-        <Button onClick={() => router.push("/")} className="mt-12 bg-primary px-12 h-16 rounded-2xl font-bold">Return to Nexus</Button>
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[500] text-white p-8 text-center">
+        <div className="relative mb-12">
+          <Activity className="w-24 h-24 text-destructive animate-pulse" />
+          <div className="absolute inset-0 bg-destructive/20 blur-3xl rounded-full" />
+        </div>
+        <div className="space-y-4 max-w-md">
+          <h2 className="text-3xl md:text-4xl font-headline font-bold uppercase tracking-tighter text-glow-destructive">
+            {error?.title || "Signal Interrupted"}
+          </h2>
+          <p className="text-white/40 font-medium leading-relaxed">
+            {error?.detail || "The requested identifier is not synchronized with the nexus."}
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 mt-16 w-full max-w-sm">
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="flex-1 bg-white text-black hover:bg-primary hover:text-white h-16 rounded-2xl font-bold uppercase tracking-widest text-xs"
+          >
+            Retry Sequence
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => router.push("/")} 
+            className="flex-1 glass border-white/10 text-white h-16 rounded-2xl font-bold uppercase tracking-widest text-xs"
+          >
+            Return to Nexus
+          </Button>
+        </div>
+        <div className="mt-12 p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3 text-white/20 text-[10px] font-black uppercase tracking-widest">
+          <AlertTriangle className="w-4 h-4" />
+          Neural Diagnostic: Source_Code_{videoRef.current?.error?.code || 'Null'}
+        </div>
       </div>
     );
   }
@@ -164,32 +210,36 @@ export default function VideoPlayer() {
         ref={videoRef}
         src={movie.videoUrl}
         className="w-full h-full"
-        autoPlay
         onTimeUpdate={handleTimeUpdate}
         onClick={togglePlay}
-        onError={() => setError("Hardware Decryption Error")}
+        onError={handleVideoError}
+        playsInline
       />
 
       <AnimatePresence>
-        {showControls && (
+        {(!isPlaying || showControls) && (
           <>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/70 pointer-events-none" />
-            <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute top-0 left-0 right-0 p-8 flex items-center justify-between">
-              <button onClick={() => router.back()} className="flex items-center gap-6 text-white">
-                <div className="w-14 h-14 rounded-full glass flex items-center justify-center"><ArrowLeft className="w-7 h-7" /></div>
-                <span className="text-3xl font-headline font-bold text-glow">{movie.title}</span>
+            
+            {/* Header Controls */}
+            <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute top-0 left-0 right-0 p-8 flex items-center justify-between z-50">
+              <button onClick={() => router.back()} className="flex items-center gap-6 text-white group">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full glass flex items-center justify-center group-hover:scale-110 transition-all">
+                  <ArrowLeft className="w-6 h-6 md:w-7 md:h-7" />
+                </div>
+                <span className="text-xl md:text-3xl font-headline font-bold text-glow hidden sm:block">{movie.title}</span>
               </button>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 md:gap-6">
                 <button 
                   onClick={() => router.push(`/content/${movie.id}`)}
-                  className="w-12 h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all"
                 >
-                  <Info className="w-6 h-6" />
+                  <Info className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="w-12 h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all">
-                      <Settings className="w-6 h-6" />
+                    <button className="w-10 h-10 md:w-12 md:h-12 rounded-full glass flex items-center justify-center text-white/60 hover:text-white transition-all">
+                      <Settings className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="glass border-white/10 text-white w-56" align="end">
@@ -227,29 +277,44 @@ export default function VideoPlayer() {
               </div>
             </motion.div>
 
-            <div className="absolute inset-0 flex items-center justify-center gap-24 pointer-events-none">
+            {/* Central Play Button (Initial/Paused State) */}
+            <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
               {!isPlaying && (
-                <button onClick={togglePlay} className="pointer-events-auto w-32 h-32 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-2xl">
-                  <Play className="w-14 h-14 fill-current ml-2" />
+                <button 
+                  onClick={togglePlay} 
+                  className="pointer-events-auto w-24 h-24 md:w-32 md:h-32 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-2xl transition-transform active:scale-95"
+                >
+                  <Play className="w-10 h-10 md:w-14 md:h-14 fill-current ml-2" />
                 </button>
               )}
             </div>
 
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute bottom-0 left-0 right-0 p-12 pt-24">
-              <Slider value={[progress]} max={100} step={0.01} onValueChange={(v) => { if (videoRef.current) videoRef.current.currentTime = (v[0] / 100) * videoRef.current.duration; }} className="h-2 mb-6" />
+            {/* Footer Controls */}
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="absolute bottom-0 left-0 right-0 p-6 md:p-12 pt-24 z-50">
+              <Slider 
+                value={[progress]} 
+                max={100} 
+                step={0.01} 
+                onValueChange={(v) => { if (videoRef.current) videoRef.current.currentTime = (v[0] / 100) * videoRef.current.duration; }} 
+                className="h-1.5 mb-6 md:mb-8 cursor-pointer" 
+              />
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-8">
-                  <button onClick={togglePlay} className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-xl">
-                    {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1.5" />}
+                <div className="flex items-center gap-4 md:gap-8">
+                  <button onClick={togglePlay} className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-xl transition-transform">
+                    {isPlaying ? <Pause className="w-6 h-6 md:w-10 md:h-10 fill-current" /> : <Play className="w-6 h-6 md:w-10 md:h-10 fill-current ml-1.5" />}
                   </button>
-                  <div className="flex items-center gap-6 text-white/40 font-black text-[10px] tracking-widest uppercase">
+                  <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-6 text-white/40 font-black text-[10px] tracking-widest uppercase">
                     <span>{currentTime} / {duration}</span>
+                    <span className="hidden md:block w-1 h-1 rounded-full bg-white/10" />
+                    <span className="text-primary/60">{quality}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-8">
-                  <button onClick={() => handleSkip(-10)} className="text-white/40 hover:text-white"><RotateCcw className="w-8 h-8" /></button>
-                  <button onClick={() => handleSkip(10)} className="text-white/40 hover:text-white"><RotateCw className="w-8 h-8" /></button>
-                  <button onClick={toggleFullScreen} className="text-white/40 hover:text-white">{isFullscreen ? <Minimize className="w-8 h-8" /> : <Maximize className="w-8 h-8" />}</button>
+                <div className="flex items-center gap-4 md:gap-8">
+                  <button onClick={() => handleSkip(-10)} className="text-white/40 hover:text-white transition-colors"><RotateCcw className="w-6 h-6 md:w-8 md:h-8" /></button>
+                  <button onClick={() => handleSkip(10)} className="text-white/40 hover:text-white transition-colors"><RotateCw className="w-6 h-6 md:w-8 md:h-8" /></button>
+                  <button onClick={toggleFullScreen} className="text-white/40 hover:text-white transition-colors">
+                    {isFullscreen ? <Minimize className="w-6 h-6 md:w-8 md:h-8" /> : <Maximize className="w-6 h-6 md:w-8 md:h-8" />}
+                  </button>
                 </div>
               </div>
             </motion.div>

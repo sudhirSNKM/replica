@@ -80,7 +80,7 @@ export default function ContentDetailsPage() {
       <ReplicaNavbar />
       
       {/* Hero Backdrop Section */}
-      <div className="relative h-[85vh] w-full overflow-hidden">
+      <div className="relative min-h-[100vh] w-full overflow-hidden">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -92,26 +92,26 @@ export default function ContentDetailsPage() {
             alt={movie.title}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent hidden md:block" />
         </motion.div>
 
-        <div className="absolute top-32 left-6 md:left-12 lg:left-24 z-20">
-          <button 
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/40 hover:text-white transition-colors uppercase font-black text-[10px] tracking-[0.3em] group"
-          >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Nexus
-          </button>
-        </div>
-
-        <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-12 lg:px-24 pb-20 max-w-[1600px] mx-auto w-full">
+        <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-12 lg:px-24 pb-20 pt-32 max-w-[1600px] mx-auto w-full">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="space-y-8 max-w-4xl"
           >
-            <div className="flex items-center gap-4">
+            {/* Navigation Element */}
+            <button 
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-white/40 hover:text-white transition-colors uppercase font-black text-[10px] tracking-[0.3em] group mb-4 w-fit"
+            >
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Nexus
+            </button>
+
+            <div className="flex flex-wrap items-center gap-4">
               <Badge className="bg-primary text-white font-black uppercase tracking-widest px-3 py-1 rounded shadow-[0_0_15px_rgba(var(--primary),0.5)]">
                 {movie.type === 'movie' ? 'Cinematic' : 'Series'}
               </Badge>
@@ -121,17 +121,17 @@ export default function ContentDetailsPage() {
               </div>
             </div>
 
-            <h1 className="text-6xl md:text-8xl font-headline font-bold text-white tracking-tighter leading-none drop-shadow-2xl">
+            <h1 className="text-5xl md:text-8xl font-headline font-bold text-white tracking-tighter leading-none drop-shadow-2xl">
               {movie.title}
             </h1>
 
             {movie.tagline && (
-              <p className="text-2xl md:text-3xl font-headline text-primary/80 italic font-medium">
+              <p className="text-xl md:text-3xl font-headline text-primary/80 italic font-medium">
                 "{movie.tagline}"
               </p>
             )}
 
-            <div className="flex items-center gap-8 text-white/40 text-sm font-bold uppercase tracking-widest">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-white/40 text-[10px] md:text-sm font-bold uppercase tracking-widest">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> {movie.releaseYear}
               </div>
@@ -143,25 +143,31 @@ export default function ContentDetailsPage() {
               </div>
             </div>
 
-            <p className="text-xl md:text-2xl text-white/60 max-w-3xl leading-relaxed">
+            <p className="text-lg md:text-2xl text-white/60 max-w-3xl leading-relaxed line-clamp-4 md:line-clamp-none">
               {movie.description}
             </p>
 
-            <div className="flex flex-wrap items-center gap-6 pt-6">
+            <div className="flex flex-wrap items-center gap-4 pt-6">
               <Button 
                 onClick={() => router.push(`/watch/${movie.id}`)}
-                className="h-16 px-12 rounded-full bg-white text-black hover:bg-primary hover:text-white font-black text-xl transition-all shadow-2xl hover:scale-105 active:scale-95"
+                className="h-14 md:h-16 w-full md:w-auto px-12 rounded-full bg-white text-black hover:bg-primary hover:text-white font-black text-lg md:text-xl transition-all shadow-2xl active:scale-95"
               >
                 <Play className="w-6 h-6 mr-3 fill-current" /> Play Protocol
               </Button>
-              <WatchlistButton movieId={movie.id} className="h-16 px-10 text-xl font-bold bg-white/5 backdrop-blur-xl" />
-              <Button 
-                onClick={handleShare}
-                variant="outline" 
-                className="w-16 h-16 rounded-full glass border-white/10 hover:bg-white/10"
-              >
-                <Share2 className="w-6 h-6" />
-              </Button>
+              
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <WatchlistButton 
+                  movieId={movie.id} 
+                  className="h-14 md:h-16 flex-1 md:flex-none px-10 text-lg md:text-xl font-bold bg-white/5 backdrop-blur-xl" 
+                />
+                <Button 
+                  onClick={handleShare}
+                  variant="outline" 
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-full glass border-white/10 hover:bg-white/10 shrink-0"
+                >
+                  <Share2 className="w-6 h-6" />
+                </Button>
+              </div>
             </div>
           </motion.div>
         </div>
