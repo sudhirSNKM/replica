@@ -45,6 +45,27 @@ export default function VideoPlayer() {
   const [quality, setQuality] = useState(movie?.quality || "4K ULTRA HDR");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasIncrementedView, setHasIncrementedView] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying && !hasIncrementedView && firestore && id) {
+      setHasIncrementedView(true);
+      const incrementView = async () => {
+        try {
+          const { increment, updateDoc } = await import("firebase/firestore");
+          const ref = doc(firestore, "content", id as string);
+          await updateDoc(ref, {
+            views: increment(1),
+            weeklyViews: increment(1),
+            updatedAt: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn("View Sync Failed:", e);
+        }
+      };
+      incrementView();
+    }
+  }, [isPlaying, hasIncrementedView, firestore, id]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -185,7 +206,7 @@ export default function VideoPlayer() {
                     
                     <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-white/40">Stream Quality</DropdownMenuLabel>
-                    {["4K ULTRA HDR", "1080P FULL HD", "720P HD"].map((q) => (
+                    {["1080P FULL HD", "720P HD", "480P SD", "360P MOBILE"].map((q) => (
                       <DropdownMenuItem 
                         key={q} 
                         className={`hover:bg-white/10 cursor-pointer flex justify-between group/q ${quality === q ? 'text-primary' : 'text-white/70'}`}

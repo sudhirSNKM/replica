@@ -20,6 +20,13 @@ export interface Movie {
   cast?: string[];
   director?: string;
   tagline?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  uploaderId?: string;
+  views?: number;
+  weeklyViews?: number;
+  trendingScore?: number;
+  qualityOptions?: string[];
 }
 
 export interface UserAccount {

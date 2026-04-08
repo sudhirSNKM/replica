@@ -17,6 +17,7 @@ import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
 import { ScrollStackShowcase } from "@/components/ScrollStackShowcase";
+import { TrendingRow } from "@/components/TrendingRow";
 
 export default function Home() {
   const router = useRouter();
@@ -33,11 +34,8 @@ export default function Home() {
 
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // We remove the complex ordering for development to avoid index-creation requirements
-    // while keeping the published filter for regular nodes.
     return query(
       collection(firestore, "content"),
-      where("status", "==", "published"),
       limit(60)
     );
   }, [firestore]);
@@ -45,7 +43,7 @@ export default function Home() {
   const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
 
-  const allContent = (firestoreContent && firestoreContent.length > 0) ? firestoreContent : MOCK_MOVIES;
+  const allContent = firestoreContent || [];
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('replica_active_profile');
@@ -70,6 +68,16 @@ export default function Home() {
     setSelectedProfileId(id);
     localStorage.setItem('replica_active_profile', id);
   };
+
+  const sortedContent = [...allContent].sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+
+  const trendingTop10 = [...allContent]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 10);
 
   if (isAuthLoading || (user && isLoading)) {
     return (
@@ -116,17 +124,22 @@ export default function Home() {
         
         {/* Continue Watching / Trending */}
         <section className="relative pt-12 md:pt-24">
-          <MovieRow title="Continue Watching" movies={allContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
+          <MovieRow title="Continue Watching" movies={sortedContent.filter(m => m.isTrending).slice(0, 15)} onMovieHover={setFeaturedMovie} />
+        </section>
+
+        {/* Global Top 10 */}
+        <section className="relative">
+          <TrendingRow title="Top 10 Global Protocols" movies={trendingTop10} />
         </section>
 
         {/* Newly Added Series */}
         <section className="relative">
-          <ShowRow title="Newly Added Protocols" shows={allContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
+          <ShowRow title="Newly Added Protocols" shows={sortedContent.filter(m => m.type === 'show').slice(0, 12)} onHover={setFeaturedMovie} />
         </section>
 
         {/* Recent Movies */}
         <section className="relative px-6 md:px-12 lg:px-24">
-          <MovieRow title="Recent Protocols" movies={allContent.filter(m => m.isNew).slice(0, 12)} onMovieHover={setFeaturedMovie} />
+          <MovieRow title="Recent Protocols" movies={sortedContent.slice(0, 12)} onMovieHover={setFeaturedMovie} />
         </section>
 
         {/* Explore Stack */}

@@ -136,6 +136,22 @@ export const AdminPanel = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Autofill Duration for videos
+    if (type === 'video') {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        const duration = video.duration;
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        const formatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        setValue('duration', formatted);
+        toast({ title: "Analysis Complete", description: `Neural scan detected duration: ${formatted}` });
+      };
+      video.src = URL.createObjectURL(file);
+    }
+
     try {
       const timestamp = Date.now();
       const path = `broadcasts/${timestamp}_${file.name}`;
@@ -189,6 +205,11 @@ export const AdminPanel = () => {
       crew: data.crew ? data.crew.split(",").map((s: string) => s.trim()) : [],
       languages: data.languages ? data.languages.split(",").map((s: string) => s.trim()) : [],
       isNew: true,
+      status: "published",
+      views: 0,
+      weeklyViews: 0,
+      trendingScore: 0,
+      qualityOptions: ["1080p", "720p", "480p", "360p"],
       publishDate: new Date(data.publishDate).toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
