@@ -1,14 +1,12 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check, Loader2, Sparkles, ShieldCheck, ArrowRight, Zap, X, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 interface ProfileSelectorProps {
@@ -21,18 +19,8 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
   const { toast } = useToast();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      const skip = localStorage.getItem(`verified_${user.uid}`);
-      if (skip) setIsVerified(true);
-    }
-  }, [user]);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -65,24 +53,13 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     );
   }
 
-  const handleVerify = () => {
-    if (verificationCode.length !== 6) return;
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      setIsVerified(true);
-      if (user) localStorage.setItem(`verified_${user.uid}`, "true");
-      toast({ title: "Neural Link Active", description: "Identity authorized." });
-    }, 800);
-  };
-
   const handleAddProfile = async () => {
     if (!firestore || !user || !accountData) return;
 
     const tier = accountData.subscriptionTier || 'free';
     const limit = tier === 'pro' ? 10 : 3;
 
-    if (profiles && profiles.length >= limit) {
+    if (profiles && (profiles as any[]).length >= limit) {
       setShowUpgradeModal(true);
       return;
     }
@@ -116,31 +93,6 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
     }
   };
 
-  if (!isVerified) {
-    return (
-      <div className="fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center px-6">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass p-12 rounded-[4rem] border-white/5 w-full max-w-md text-center space-y-10">
-          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
-            <ShieldCheck className="w-10 h-10 text-primary" />
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-4xl font-headline font-bold text-white">Verification</h2>
-            <p className="text-white/40 text-sm">Enter the 6-digit sync code to initialize the library.</p>
-          </div>
-          <Input 
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder="000000"
-            className="h-20 bg-white/5 border-white/10 text-white text-center text-4xl font-headline font-bold tracking-[0.5em] rounded-3xl"
-          />
-          <Button onClick={handleVerify} disabled={verificationCode.length !== 6 || isVerifying} className="w-full h-16 rounded-2xl bg-primary text-white font-bold text-lg">
-            {isVerifying ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Verify Link <ArrowRight className="w-5 h-5 ml-2" /></>}
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-[500] bg-[#050507] flex items-center justify-center px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-20 max-w-6xl w-full">
@@ -151,13 +103,13 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
           <div className="text-white/20 uppercase tracking-[0.5em] font-black text-xs flex items-center justify-center gap-4">
             <Sparkles className="w-4 h-4 text-primary" /> Neural Synchronization Active
             <Badge variant="outline" className="ml-4 border-primary text-primary px-4 py-1 rounded-full">
-              Tier: {accountData?.subscriptionTier?.toUpperCase() || 'FREE'}
+              Tier: {(accountData as any)?.subscriptionTier?.toUpperCase() || 'FREE'}
             </Badge>
           </div>
         </div>
 
         <div className="flex flex-wrap justify-center gap-10 md:gap-16">
-          {profiles?.map((profile) => (
+          {(profiles as any[])?.map((profile) => (
             <motion.div key={profile.id} className="group flex flex-col items-center gap-6">
               <div 
                 onClick={() => !isEditMode && onSelect(profile.id)}
@@ -191,12 +143,12 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
             {isEditMode ? "Finalize Changes" : "Manage Neural Identities"}
           </Button>
           
-          {accountData?.subscriptionTier === 'free' && (
+          {(accountData as any)?.subscriptionTier === 'free' && (
             <Button 
               onClick={() => setShowUpgradeModal(true)}
               className="rounded-full bg-accent hover:neon-glow-accent px-16 h-16 text-white font-black uppercase tracking-[0.3em] text-[10px]"
             >
-              <Zap className="w-4 h-4 mr-2" /> {accountData.isUpgradePending ? "Upgrade Pending" : "Request Pro Upgrade"}
+              <Zap className="w-4 h-4 mr-2" /> {(accountData as any).isUpgradePending ? "Upgrade Pending" : "Request Pro Upgrade"}
             </Button>
           )}
         </div>
@@ -235,7 +187,7 @@ export const ProfileSelector = ({ onSelect }: ProfileSelectorProps) => {
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 4K Ultra Stream Bitrate</li>
                   </ul>
                 </div>
-                {accountData?.isUpgradePending ? (
+                {(accountData as any)?.isUpgradePending ? (
                   <div className="bg-primary/10 border border-primary/20 p-6 rounded-2xl text-primary font-bold">
                     Upgrade Request Sent
                   </div>

@@ -132,6 +132,54 @@ export const AdminPanel = () => {
     }
   };
 
+  const [episodes, setEpisodes] = useState<any[]>([]);
+
+  const handleAddEpisode = () => {
+    const id = "e-" + Math.random().toString(36).substring(7);
+    setEpisodes([...episodes, {
+      id,
+      title: "",
+      description: "",
+      episodeNumber: episodes.length + 1,
+      seasonNumber: 1,
+      duration: "0m",
+      thumbnailUrl: "",
+      videoUrl: ""
+    }]);
+  };
+
+  const handleUpdateEpisode = (index: number, field: string, value: any) => {
+    const updated = [...episodes];
+    updated[index] = { ...updated[index], [field]: value };
+    setEpisodes(updated);
+  };
+
+  const handleEpisodeFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>, type: 'thumbnail' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'video') {
+       const video = document.createElement('video');
+       video.preload = 'metadata';
+       video.onloadedmetadata = () => {
+         window.URL.revokeObjectURL(video.src);
+         const duration = video.duration;
+         const hours = Math.floor(duration / 3600);
+         const minutes = Math.floor((duration % 3600) / 60);
+         handleUpdateEpisode(index, 'duration', hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`);
+       };
+       video.src = URL.createObjectURL(file);
+    }
+
+    try {
+      const url = type === 'thumbnail' ? await uploadPoster(file, `episodes/${Date.now()}_${file.name}`) : await uploadVideo(file, `episodes/${Date.now()}_${file.name}`);
+      handleUpdateEpisode(index, type === 'thumbnail' ? 'thumbnailUrl' : 'videoUrl', url);
+      toast({ title: "Episode Asset Synchronized" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Upload Failed", description: e.message });
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'poster' | 'video') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -209,6 +257,7 @@ export const AdminPanel = () => {
       views: 0,
       weeklyViews: 0,
       trendingScore: 0,
+      episodes: data.type === 'show' ? episodes : [],
       qualityOptions: ["1080p", "720p", "480p", "360p"],
       publishDate: new Date(data.publishDate).toISOString(),
       createdAt: new Date().toISOString(),
@@ -223,6 +272,7 @@ export const AdminPanel = () => {
       });
       await logActivity("CONTENT_CREATED", `Admin scheduled broadcast: ${data.title}`);
       reset();
+      setEpisodes([]);
     } catch (e: any) {
       console.error("FIRESTORE ERROR:", e);
       toast({
@@ -596,6 +646,83 @@ export const AdminPanel = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {watch("type") === 'show' && (
+                  <Card className="glass-panel border-white/5 bg-black/40 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+                    <CardHeader className="p-10 pb-6 border-b border-white/5">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-2xl font-headline font-black text-white flex items-center gap-4 uppercase tracking-tight">
+                          <Film className="w-5 h-5 text-primary" /> Episodic Hierarchy
+                        </CardTitle>
+                        <Button type="button" onClick={handleAddEpisode} variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/10 text-primary uppercase text-[10px] font-black tracking-widest h-10 px-6">
+                          Add Episode Node
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-10 space-y-6">
+                      {episodes.map((ep, idx) => (
+                        <div key={ep.id} className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-6">
+                          <div className="flex items-center justify-between mb-2">
+                             <div className="flex items-center gap-4">
+                               <Badge className="bg-primary text-white font-black">EP {ep.episodeNumber}</Badge>
+                               <span className="text-white font-bold opacity-40 uppercase tracking-widest text-[10px]">Neural Episode Component</span>
+                             </div>
+                             <button type="button" onClick={() => setEpisodes(episodes.filter(e => e.id !== ep.id))} className="text-destructive/40 hover:text-destructive transition-colors">
+                               <Trash2 className="w-4 h-4" />
+                             </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] text-white/40 uppercase font-black">Title</Label>
+                              <Input value={ep.title} onChange={(e) => handleUpdateEpisode(idx, 'title', e.target.value)} className="bg-black/40 border-white/5 h-12 rounded-xl" placeholder="Episode Title" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] text-white/40 uppercase font-black">Season</Label>
+                                <Input type="number" value={ep.seasonNumber} onChange={(e) => handleUpdateEpisode(idx, 'seasonNumber', parseInt(e.target.value))} className="bg-black/40 border-white/5 h-12 rounded-xl" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] text-white/40 uppercase font-black">Duration</Label>
+                                <Input value={ep.duration} onChange={(e) => handleUpdateEpisode(idx, 'duration', e.target.value)} className="bg-black/40 border-white/5 h-12 rounded-xl" placeholder="45m" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                             <Label className="text-[10px] text-white/40 uppercase font-black">Sub-Topic Description</Label>
+                             <Textarea value={ep.description} onChange={(e) => handleUpdateEpisode(idx, 'description', e.target.value)} className="bg-black/40 border-white/5 min-h-[80px] rounded-2xl resize-none" placeholder="What happens in this node?" />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                             <div className="space-y-3">
+                               <Label className="text-[10px] text-white/40 uppercase font-black">Episode Thumbnail</Label>
+                               <Input type="file" onChange={(e) => handleEpisodeFileChange(idx, e, 'thumbnail')} className="hidden" id={`ep-thumb-${idx}`} />
+                               <label htmlFor={`ep-thumb-${idx}`} className="cursor-pointer flex items-center justify-center gap-3 h-12 border-2 border-dashed border-white/10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                 {ep.thumbnailUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-white/40" />}
+                                 <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{ep.thumbnailUrl ? 'Thumbnail Captured' : 'Upload Thumbnail'}</span>
+                               </label>
+                             </div>
+                             <div className="space-y-3">
+                               <Label className="text-[10px] text-white/40 uppercase font-black">Broadcast Stream</Label>
+                               <Input type="file" onChange={(e) => handleEpisodeFileChange(idx, e, 'video')} className="hidden" id={`ep-video-${idx}`} />
+                               <label htmlFor={`ep-video-${idx}`} className="cursor-pointer flex items-center justify-center gap-3 h-12 border-2 border-dashed border-white/10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                 {ep.videoUrl ? <Check className="w-4 h-4 text-emerald-500" /> : <LinkIcon className="w-4 h-4 text-white/40" />}
+                                 <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{ep.videoUrl ? 'Stream Synchronized' : 'Upload Episode'}</span>
+                               </label>
+                             </div>
+                          </div>
+                        </div>
+                      ))}
+                      {episodes.length === 0 && (
+                        <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
+                           <AlertTriangle className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                           <p className="text-white/20 uppercase tracking-[0.3em] font-black text-[10px]">No episodic nodes detected for this broadcast.</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               <div className="lg:col-span-5 space-y-8">
