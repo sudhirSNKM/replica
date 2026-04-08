@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { 
-  Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
+  Upload, Film, Database, Check, Loader2, Monitor, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
-  Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus,
-  BarChart3, Globe, Rocket, Archive, FileText, Settings2, Wand2
+  Sparkles, Clock, Edit3, Search, Rocket, Archive, FileText, Settings2, Wand2,
+  CheckCircle2, AlertCircle, BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export const AdminPanel = () => {
     defaultValues: {
       title: "",
       genres: "",
-      type: "movie",
+      type: "movie" as const,
       releaseYear: new Date().getFullYear().toString(),
       duration: "",
       publishDate: new Date().toISOString().slice(0, 16),
@@ -71,7 +71,6 @@ export const AdminPanel = () => {
   const selectedGenres = watch("genres");
   const selectedCast = watch("cast");
 
-  // Reactive Data Queries
   const contentQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "content"), orderBy("updatedAt", "desc"));
@@ -164,7 +163,10 @@ export const AdminPanel = () => {
         analyzeVideo(url);
       }
       
-      toast({ title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`, description: "Media added to storage cluster." });
+      toast({ 
+        title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`, 
+        description: "Media safely anchored to storage cluster." 
+      });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Sync Error", description: err.message });
     }
@@ -191,7 +193,7 @@ export const AdminPanel = () => {
     setVideoMode('link');
     setActiveTab('content');
 
-    toast({ title: "Metadata Loaded", description: `Editing ${movie.title}.` });
+    toast({ title: "Metadata Loaded", description: `Synchronizing edits for ${movie.title}.` });
   };
 
   const onDelete = async (id: string, title: string) => {
@@ -229,7 +231,7 @@ export const AdminPanel = () => {
 
   const onSubmit = async (data: any) => {
     if (!firestore || !isAdmin) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Authorization required." });
+      toast({ variant: "destructive", title: "Access Denied", description: "Identity authorization required." });
       return;
     }
 
@@ -256,12 +258,15 @@ export const AdminPanel = () => {
 
     try {
       await setDoc(contentRef, payload, { merge: true });
-      toast({ title: editingId ? "Protocol Updated" : "Broadcast Finalized", description: `${data.title} is now in the ${data.status} state.` });
+      toast({ 
+        title: editingId ? "Protocol Updated" : "Broadcast Established", 
+        description: `${data.title} is now in the ${data.status} state.` 
+      });
       reset();
       setEditingId(null);
       setActiveTab('library');
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Integration Failed", description: e.message });
+      toast({ variant: "destructive", title: "Broadcast Failed", description: e.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -341,9 +346,12 @@ export const AdminPanel = () => {
     { label: 'Stability Node', value: '99.9%', icon: ShieldAlert, color: 'text-emerald-400' }
   ];
 
+  const isUplinkActive = isPosterUploading || isVideoUploading || isAnalyzing;
+
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">
       <div className="max-w-6xl mx-auto space-y-16">
+        {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
@@ -356,7 +364,7 @@ export const AdminPanel = () => {
             
             <div className="flex flex-wrap gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit mt-6">
               {[
-                { id: 'content', icon: Upload, label: editingId ? 'Edit Protocol' : 'Broadcast' },
+                { id: 'content', icon: Upload, label: editingId ? 'Update' : 'Broadcast' },
                 { id: 'library', icon: Film, label: 'Library' },
                 { id: 'identities', icon: UsersIcon, label: 'Identities' },
                 { id: 'analytics', icon: BarChart3, label: 'Stats' }
@@ -387,6 +395,7 @@ export const AdminPanel = () => {
               onSubmit={handleSubmit(onSubmit)} 
               className="grid grid-cols-1 lg:grid-cols-12 gap-12"
             >
+              {/* Left Column: Metadata */}
               <div className="lg:col-span-7 space-y-8">
                 <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
                   <CardHeader className="p-10 pb-0">
@@ -404,7 +413,7 @@ export const AdminPanel = () => {
                       <div className="space-y-3">
                         <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center justify-between">
                           Genres
-                          <span className="text-[8px] text-white/20">Comma separated</span>
+                          <span className="text-[8px] text-white/20">Pulse to add</span>
                         </Label>
                         <div className="space-y-3">
                           <Input {...register("genres")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk, Sci-Fi" required />
@@ -509,11 +518,12 @@ export const AdminPanel = () => {
                 </Card>
               </div>
 
+              {/* Right Column: Upload Processing Pipeline */}
               <div className="lg:col-span-5 space-y-8">
                 <Card className="glass border-white/10 rounded-[3rem]">
                   <CardHeader className="p-10">
                     <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
-                      <Zap className="w-6 h-6 text-accent" /> Media Uplink
+                      <Settings2 className="w-6 h-6 text-accent" /> Uplink Pipeline
                     </CardTitle>
                     <CardDescription className="text-white/40">Sync visual and stream protocols to the storage nexus.</CardDescription>
                   </CardHeader>
@@ -532,6 +542,7 @@ export const AdminPanel = () => {
                       </Select>
                     </div>
 
+                    {/* Poster Uplink */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black">Thumbnail Protocol</Label>
@@ -544,23 +555,27 @@ export const AdminPanel = () => {
                       {posterMode === 'upload' ? (
                         <div className="relative">
                           <Input type="file" onChange={(e) => handleFileChange(e, 'poster')} className="hidden" id="poster-up" accept="image/*" />
-                          <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
+                          <label htmlFor="poster-up" className="flex flex-col items-center justify-center h-44 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-primary/50 transition-all bg-white/[0.02] overflow-hidden group">
                             {isPosterUploading ? (
                               <div className="w-full px-10 space-y-4 text-center">
                                 <Progress value={posterProgress} className="h-1.5 bg-white/5" />
-                                <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black animate-pulse">Syncing Visuals</span>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                                  <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black animate-pulse">Syncing Visuals {Math.round(posterProgress)}%</span>
+                                </div>
                               </div>
                             ) : thumbnailUrl ? (
                               <div className="relative w-full h-full">
                                 <img src={thumbnailUrl} className="w-full h-full object-cover opacity-60" alt="Thumbnail Preview" />
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                   <Check className="w-8 h-8 text-white" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 gap-2">
+                                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                                   <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Visual Anchor Ready</span>
                                 </div>
                               </div>
                             ) : (
                               <>
                                 <Upload className="w-8 h-8 text-white/20 mb-3 group-hover:text-primary transition-colors" />
-                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Upload Static Asset</span>
+                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Uplink Static Asset</span>
                               </>
                             )}
                           </label>
@@ -568,15 +583,16 @@ export const AdminPanel = () => {
                       ) : (
                         <div className="relative group">
                           <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary" />
-                          <Input {...register("thumbnailUrl")} className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" placeholder="Instant Link (https://...)" />
+                          <Input {...register("thumbnailUrl")} className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" placeholder="External Image (https://...)" />
                         </div>
                       )}
                     </div>
 
+                    {/* Video Uplink */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase tracking-widest text-white/60 font-black flex items-center gap-2">
-                          Stream Protocol <Badge variant="outline" className="text-[7px] py-0 px-1 border-accent/40 text-accent">FAST SYNC RECOMMENDED</Badge>
+                          Stream Protocol <Badge variant="outline" className="text-[7px] py-0 px-1 border-accent/40 text-accent">BROADCAST SYNC</Badge>
                         </Label>
                         <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
                           <button type="button" onClick={() => setVideoMode('upload')} className={cn("px-4 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all", videoMode === 'upload' ? 'bg-accent text-white' : 'text-white/30')}>Upload</button>
@@ -587,21 +603,29 @@ export const AdminPanel = () => {
                       {videoMode === 'upload' ? (
                         <div className="space-y-4">
                           <Input type="file" onChange={(e) => handleFileChange(e, 'video')} className="hidden" id="video-up" accept="video/*" />
-                          <label htmlFor="video-up" className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
+                          <label htmlFor="video-up" className="flex flex-col items-center justify-center h-44 border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:border-accent/50 transition-all bg-white/[0.02] group">
                             {isVideoUploading ? (
                               <div className="w-full px-10 space-y-4 text-center">
                                 <Progress value={videoProgress} className="h-1.5 bg-white/5" />
-                                <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-black animate-pulse">Syncing Stream</span>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Loader2 className="w-3 h-3 animate-spin text-accent" />
+                                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-black animate-pulse">Syncing Stream {Math.round(videoProgress)}%</span>
+                                </div>
+                              </div>
+                            ) : isAnalyzing ? (
+                              <div className="flex flex-col items-center gap-3">
+                                <Wand2 className="w-10 h-10 text-primary animate-pulse" />
+                                <span className="text-[10px] text-primary font-black uppercase tracking-widest">Extracting Neural Specs...</span>
                               </div>
                             ) : videoUrl ? (
                               <div className="flex flex-col items-center gap-2">
-                                <Check className="w-10 h-10 text-emerald-500" />
-                                <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Protocol Stored</span>
+                                <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                                <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Protocol Synchronized</span>
                               </div>
                             ) : (
                               <>
                                 <Film className="w-8 h-8 text-white/20 mb-3 group-hover:text-accent transition-colors" />
-                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Upload Dynamic Protocol</span>
+                                <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Uplink Dynamic Protocol</span>
                               </>
                             )}
                           </label>
@@ -613,28 +637,34 @@ export const AdminPanel = () => {
                             <Input 
                               {...register("videoUrl")} 
                               className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" 
-                              placeholder="Instant Link (https://...)" 
+                              placeholder="External Stream (https://...)" 
                               onBlur={(e) => analyzeVideo(e.target.value)}
                             />
                             <Button 
                               type="button"
                               onClick={() => analyzeVideo(watch("videoUrl"))}
+                              disabled={isAnalyzing}
                               className="h-16 w-16 glass border-white/10 rounded-2xl hover:text-primary transition-colors"
                             >
-                              <Wand2 className="w-6 h-6" />
+                              {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Wand2 className="w-6 h-6" />}
                             </Button>
                           </div>
                         </div>
                       )}
                     </div>
 
+                    {/* Final Action Hub */}
                     <div className="flex gap-4">
                       {editingId && (
                         <button type="button" onClick={() => { setEditingId(null); reset(); }} className="h-20 flex-1 text-white/40 uppercase font-black tracking-widest rounded-3xl hover:bg-white/5 transition-all">
                           Cancel
                         </button>
                       )}
-                      <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="flex-[2] h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting || isUplinkActive} 
+                        className="flex-[2] h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl disabled:opacity-50 disabled:grayscale"
+                      >
                         {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : editingId ? <Edit3 className="w-6 h-6 mr-3" /> : <Rocket className="w-6 h-6 mr-3" />}
                         {editingId ? "Update Meta" : "Establish Broadcast"}
                       </Button>
@@ -648,9 +678,9 @@ export const AdminPanel = () => {
           {activeTab === 'library' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <Card className="glass border-white/10 rounded-[3rem] p-10">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                   <CardTitle className="text-3xl font-headline font-bold text-white">Synchronized Library</CardTitle>
-                  <div className="relative w-72">
+                  <div className="relative w-full md:w-72">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                     <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-12 bg-white/5 border-white/10 text-white rounded-xl pl-10" placeholder="Filter protocols..." />
                   </div>
