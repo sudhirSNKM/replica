@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -93,11 +94,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             {/* Cinematic Title - Responsive Scaling to avoid cutting off */}
             <h1 
               onClick={handleDetailsClick}
-<<<<<<< HEAD
-              className="text-4xl md:text-[8rem] font-headline font-bold text-white leading-[0.9] md:leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] cursor-pointer hover:text-primary transition-colors"
-=======
               className="text-5xl md:text-7xl lg:text-8xl font-headline font-bold text-white leading-[0.9] md:leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] cursor-pointer hover:text-primary transition-all duration-500 break-words max-w-full"
->>>>>>> 2716ff06a8beb2715480679fc0b1700ba4a6b4ff
             >
               {movie.title}
             </h1>
@@ -114,11 +111,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               <span className="border border-white/20 px-2 py-0.5 md:px-3 md:py-1 rounded text-[7px] md:text-[10px] font-black tracking-widest uppercase">4K Stream</span>
             </div>
 
-<<<<<<< HEAD
-            <p className="text-[13px] md:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-2 md:line-clamp-3">
-=======
             <p className="text-sm md:text-xl lg:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-2 md:line-clamp-3">
->>>>>>> 2716ff06a8beb2715480679fc0b1700ba4a6b4ff
               {movie.description}
             </p>
 
