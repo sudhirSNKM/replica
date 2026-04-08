@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Check, Loader2 } from "lucide-react";
+import { Plus, Check, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 interface WatchlistButtonProps {
   movieId: string;
@@ -18,6 +19,7 @@ interface WatchlistButtonProps {
 export const WatchlistButton = ({ movieId, className, variant = "outline" }: WatchlistButtonProps) => {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -26,6 +28,20 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
     const savedProfile = localStorage.getItem('replica_active_profile');
     setActiveProfileId(savedProfile);
   }, []);
+
+  const accountRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "userAccounts", user.uid);
+  }, [firestore, user]);
+
+  const { data: accountData } = useDoc(accountRef);
+
+  const fullWatchlistQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !activeProfileId) return null;
+    return collection(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems");
+  }, [firestore, user, activeProfileId]);
+
+  const { data: fullWatchlist } = useCollection(fullWatchlistQuery);
 
   const watchlistQuery = useMemoFirebase(() => {
     if (!firestore || !user || !activeProfileId) return null;
@@ -42,13 +58,24 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
     e.preventDefault();
     e.stopPropagation();
 
-    if (!firestore || !user || !activeProfileId) return;
+    if (!firestore || !user || !activeProfileId || !accountData) return;
 
     if (isInWatchlist) {
       const itemToDelete = watchlistItem[0];
       const docRef = doc(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems", itemToDelete.id);
       deleteDocumentNonBlocking(docRef);
+      toast({ title: "Removed from Matrix", description: "Cinematic node de-synchronized." });
     } else {
+      const isFree = accountData.subscriptionTier === 'free';
+      if (isFree && (fullWatchlist?.length || 0) >= 2) {
+        toast({ 
+          title: "Matrix Slot Full", 
+          description: "Free nodes are limited to 2 syncs. Request a Pro Upgrade to expand.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const colRef = collection(firestore, "userAccounts", user.uid, "userProfiles", activeProfileId, "watchlistItems");
       addDocumentNonBlocking(colRef, {
         userAccountId: user.uid,
@@ -56,6 +83,7 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
         contentId: movieId,
         addedAt: new Date().toISOString()
       });
+      toast({ title: "Sync Established", description: "Added to your personal nexus." });
     }
   };
 
