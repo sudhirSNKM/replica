@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -31,10 +32,11 @@ export default function Home() {
 
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
+    // We remove the complex ordering for development to avoid index-creation requirements
+    // while keeping the published filter for regular nodes.
     return query(
       collection(firestore, "content"),
       where("status", "==", "published"),
-      orderBy("updatedAt", "desc"),
       limit(60)
     );
   }, [firestore]);
