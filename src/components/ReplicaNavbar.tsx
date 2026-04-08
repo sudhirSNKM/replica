@@ -44,7 +44,14 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     return doc(firestore, "userAccounts", user.uid, "userProfiles", profileId);
   }, [firestore, user, profileId]);
 
+  const adminRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "roles_admin", user.uid);
+  }, [firestore, user]);
+
   const { data: profile } = useDoc(profileRef);
+  const { data: adminData } = useDoc(adminRef);
+  const isAdmin = !!adminData;
 
   const handleLogout = async () => {
     if (auth) {
@@ -128,7 +135,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                       </DropdownMenuItem>
                     </Link>
 
-                    {user && (
+                    {user && isAdmin && (
                       <Link href="/admin">
                         <DropdownMenuItem className="hover:bg-primary/10 rounded-2xl py-4 px-5 transition-colors cursor-pointer group relative overflow-hidden border border-transparent hover:border-primary/20">
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
