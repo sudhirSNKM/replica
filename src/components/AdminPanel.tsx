@@ -17,17 +17,16 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const AdminPanel = () => {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'content' | 'library' | 'identities' | 'analytics'>('content');
   const [userList, setUserList] = useState<any[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
@@ -238,14 +237,6 @@ export const AdminPanel = () => {
       setIsSeeding(false);
     }
   };
-
-  if (isUserLoading) {
-    return (
-      <div className="min-h-screen pt-36 px-6 flex items-center justify-center bg-background text-white">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
-  }
 
   if (isAdmin === false) {
     return (
