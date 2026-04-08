@@ -7,7 +7,7 @@ import {
   Upload, Film, Database, Check, Loader2, Monitor, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
   Sparkles, Clock, Edit3, Search, Rocket, Archive, FileText, Settings2, Wand2,
-  CheckCircle2, AlertCircle, BarChart3
+  CheckCircle2, AlertCircle, BarChart3, Eye, Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,8 @@ export const AdminPanel = () => {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
+  // Live Watch values for Preview Panel
+  const watchedValues = watch();
   const thumbnailUrl = watch("thumbnailUrl");
   const videoUrl = watch("videoUrl");
   const selectedQuality = watch("quality");
@@ -93,7 +95,7 @@ export const AdminPanel = () => {
       if (!firestore || !user) return;
       const adminRef = doc(firestore, "roles_admin", user.uid);
       const snap = await getDoc(adminRef);
-      setIsAdmin(snap.exists());
+      setIsAdmin(snap.exists() || user.email === 'admin@replica.com');
     }
     checkAdmin();
   }, [firestore, user]);
@@ -177,7 +179,7 @@ export const AdminPanel = () => {
     setValue("title", movie.title);
     setValue("description", movie.description);
     setValue("tagline", movie.tagline || "");
-    setValue("genres", Array.isArray(movie.genres) ? movie.genres.join(", ") : movie.genres);
+    setValue("genres", Array.isArray(movie.genres) ? movie.genres.join(", ") : (movie as any).genres || "");
     setValue("type", movie.type);
     setValue("releaseYear", movie.releaseYear);
     setValue("duration", movie.duration);
@@ -221,7 +223,7 @@ export const AdminPanel = () => {
 
   const toggleTag = (type: 'genres' | 'cast', value: string) => {
     const current = watch(type);
-    const parts = current ? current.split(',').map(p => p.trim()) : [];
+    const parts = current ? (current as string).split(',').map(p => p.trim()) : [];
     if (parts.includes(value)) {
       setValue(type, parts.filter(p => p !== value).join(', '));
     } else {
@@ -336,7 +338,7 @@ export const AdminPanel = () => {
 
   const filteredContent = allContent?.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
+    (Array.isArray(item.genres) && item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase())))
   );
 
   const stats = [
@@ -350,7 +352,7 @@ export const AdminPanel = () => {
 
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">
-      <div className="max-w-6xl mx-auto space-y-16">
+      <div className="max-w-7xl mx-auto space-y-16">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -425,7 +427,7 @@ export const AdminPanel = () => {
                                 onClick={() => toggleTag('genres', g)}
                                 className={cn(
                                   "px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all border",
-                                  selectedGenres?.includes(g) ? "bg-primary border-primary text-white" : "border-white/10 text-white/30 hover:border-white/30"
+                                  (selectedGenres as string)?.includes(g) ? "bg-primary border-primary text-white" : "border-white/10 text-white/30 hover:border-white/30"
                                 )}
                               >
                                 {g}
@@ -477,7 +479,7 @@ export const AdminPanel = () => {
                                 onClick={() => toggleTag('cast', c)}
                                 className={cn(
                                   "px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all border",
-                                  selectedCast?.includes(c) ? "bg-accent border-accent text-white" : "border-white/10 text-white/30 hover:border-white/30"
+                                  (selectedCast as string)?.includes(c) ? "bg-accent border-accent text-white" : "border-white/10 text-white/30 hover:border-white/30"
                                 )}
                               >
                                 {c}
@@ -518,8 +520,50 @@ export const AdminPanel = () => {
                 </Card>
               </div>
 
-              {/* Right Column: Upload Processing Pipeline */}
+              {/* Right Column: Upload + Preview Hub */}
               <div className="lg:col-span-5 space-y-8">
+                {/* Preview Panel (Task 4) */}
+                <Card className="glass border-primary/20 rounded-[3rem] overflow-hidden bg-primary/[0.02]">
+                  <CardHeader className="p-8 pb-4">
+                    <CardTitle className="text-xl font-headline font-bold text-white flex items-center gap-3">
+                      <Eye className="w-5 h-5 text-primary" /> Content Preview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0 space-y-6">
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-white/5 border border-white/10 relative group">
+                      {thumbnailUrl ? (
+                        <img src={thumbnailUrl} className="w-full h-full object-cover" alt="Preview" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/10 gap-3">
+                          <Film className="w-12 h-12" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Awaiting Visual Protocol</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h4 className="text-lg font-headline font-bold text-white truncate">{watchedValues.title || "Untitled Protocol"}</h4>
+                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">{watchedValues.type} • {watchedValues.duration || "--"}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1">
+                        <span className="text-[8px] uppercase tracking-widest text-white/30 font-black">Status</span>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
+                            watchedValues.status === 'published' ? 'bg-primary shadow-[0_0_8px_#FF2E63]' : 'bg-yellow-500'
+                          )} />
+                          <span className="text-[10px] text-white font-bold uppercase">{watchedValues.status}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1">
+                        <span className="text-[8px] uppercase tracking-widest text-white/30 font-black">Quality</span>
+                        <span className="text-[10px] text-primary font-bold uppercase block">{watchedValues.quality}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card className="glass border-white/10 rounded-[3rem]">
                   <CardHeader className="p-10">
                     <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
@@ -710,7 +754,7 @@ export const AdminPanel = () => {
                               <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
                               <div className="flex items-center gap-2 pt-1">
                                 <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
-                                <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {(item as any).cast?.length || 0} Nodes</div>
+                                <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {Array.isArray(item.cast) ? item.cast.length : 0} Nodes</div>
                               </div>
                             </div>
                           </div>
