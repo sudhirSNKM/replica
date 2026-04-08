@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -58,13 +59,13 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-[150] py-4 md:py-6 pointer-events-none">
+      <div className="fixed top-0 left-0 right-0 z-[150] py-2 md:py-6 pointer-events-none px-4 md:px-0">
         <nav className={cn(
-          "max-w-[1600px] mx-auto flex items-center justify-between transition-all duration-700 px-6 md:px-12 lg:px-24 pointer-events-auto", 
-          isScrolled ? "py-3 md:py-4 rounded-[1.5rem] md:rounded-[2.5rem] bg-background/60 backdrop-blur-2xl border border-white/10" : "py-4 md:py-6 rounded-none bg-transparent"
+          "max-w-[1600px] mx-auto flex items-center justify-between transition-all duration-700 px-4 md:px-12 lg:px-24 pointer-events-auto", 
+          isScrolled ? "py-2 md:py-4 rounded-[1.5rem] md:rounded-[2.5rem] bg-background/60 backdrop-blur-2xl border border-white/10" : "py-4 md:py-6 rounded-none bg-transparent"
         )}>
-          <div className="flex items-center gap-6 md:gap-12">
-            <Link href="/" className="text-2xl md:text-3xl font-headline font-bold tracking-tighter text-white flex items-center gap-1 group">
+          <div className="flex items-center gap-4 md:gap-12">
+            <Link href="/" className="text-xl md:text-3xl font-headline font-bold tracking-tighter text-white flex items-center gap-1 group">
               <span className="text-primary group-hover:text-glow transition-all">RE</span><span>PLICA</span>
             </Link>
             
@@ -78,20 +79,20 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button onClick={() => setIsSearchOpen(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all"><Search className="w-5 h-5" /></button>
+          <div className="flex items-center gap-2 md:gap-6">
+            <button onClick={() => setIsSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all"><Search className="w-4 h-4 md:w-5 md:h-5" /></button>
             <div className="hidden md:block">
               <NotificationsDropdown />
             </div>
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger className="outline-none">
-                    <div className="flex items-center gap-3 group">
-                      <div className="w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5 shadow-xl">
+                    <div className="flex items-center gap-2 md:gap-3 group">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5 shadow-xl">
                         <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" alt="Profile" />
                       </div>
-                      <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white hidden md:block" />
+                      <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-white/40 group-hover:text-white hidden md:block" />
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-black/80 backdrop-blur-3xl border border-white/10 text-white w-72 mt-6 p-2 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),auto,0_0_20px_rgba(var(--primary),0.2)]" align="end">
@@ -130,9 +131,9 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                 
                 <button 
                   onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                  className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all bg-white/5 border border-white/10"
+                  className="lg:hidden w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all bg-white/5 border border-white/10"
                 >
-                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {isMenuOpen ? <X className="w-4 h-4 md:w-5 md:h-5" /> : <Menu className="w-4 h-4 md:w-5 md:h-5" />}
                 </button>
               </div>
             ) : (
