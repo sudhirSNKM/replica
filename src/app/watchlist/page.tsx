@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ReplicaNavbar } from "@/components/ReplicaNavbar";
 import { MovieCard } from "@/components/MovieCard";
 import { motion } from "framer-motion";
@@ -38,7 +38,14 @@ function WatchlistItem({ contentId }: { contentId: string }) {
 export default function WatchlistPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const activeProfileId = typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null;
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    const savedProfile = localStorage.getItem('replica_active_profile');
+    setActiveProfileId(savedProfile);
+  }, []);
 
   const accountRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -54,7 +61,7 @@ export default function WatchlistPage() {
 
   const { data: watchlist, isLoading } = useCollection(watchlistRef);
 
-  if (isUserLoading || isLoading) {
+  if (!hasMounted || isUserLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

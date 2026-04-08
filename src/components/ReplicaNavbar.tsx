@@ -20,12 +20,23 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  
   const pathname = usePathname();
   const router = useRouter();
   const { user, auth } = useFirebase();
   const firestore = useFirestore();
 
-  const profileId = activeProfileId || (typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null);
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    
+    // Resolve profile ID after hydration
+    const saved = activeProfileId || localStorage.getItem('replica_active_profile');
+    setProfileId(saved);
+    
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [activeProfileId]);
 
   const profileRef = useMemoFirebase(() => {
     if (!firestore || !user || !profileId) return null;
@@ -33,12 +44,6 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   }, [firestore, user, profileId]);
 
   const { data: profile } = useDoc(profileRef);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleLogout = async () => {
     if (auth) {
@@ -90,7 +95,13 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                   <DropdownMenuTrigger className="outline-none">
                     <div className="flex items-center gap-2 md:gap-3 group">
                       <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-primary transition-all bg-white/5 shadow-xl">
-                        <img src={profile?.avatarUrl || `https://picsum.photos/seed/${user.uid}/44/44`} className="w-full h-full object-cover" alt="Profile" />
+                        {profile?.avatarUrl ? (
+                          <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-white/10">
+                            <Zap className="w-4 h-4 text-white/20" />
+                          </div>
+                        )}
                       </div>
                       <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-white/40 group-hover:text-white hidden md:block" />
                     </div>
@@ -107,7 +118,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                     {user && (
                       <Link href="/admin">
                         <DropdownMenuItem className="hover:bg-primary/10 rounded-2xl py-4 px-5 transition-colors cursor-pointer group relative overflow-hidden border border-transparent hover:border-primary/20">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
                           <span className="font-bold text-sm text-[10px] uppercase tracking-[0.2em] text-primary flex items-center gap-3 relative z-10">
                             <div className="p-1.5 rounded-lg bg-primary/20">
                               <Zap className="w-3.5 h-3.5 fill-primary drop-shadow-[0_0_5px_rgba(var(--primary),0.8)]" />

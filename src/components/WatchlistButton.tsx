@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,14 @@ interface WatchlistButtonProps {
 export const WatchlistButton = ({ movieId, className, variant = "outline" }: WatchlistButtonProps) => {
   const firestore = useFirestore();
   const { user } = useUser();
-  const activeProfileId = typeof window !== 'undefined' ? localStorage.getItem('replica_active_profile') : null;
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    const savedProfile = localStorage.getItem('replica_active_profile');
+    setActiveProfileId(savedProfile);
+  }, []);
 
   const watchlistQuery = useMemoFirebase(() => {
     if (!firestore || !user || !activeProfileId) return null;
@@ -57,14 +64,14 @@ export const WatchlistButton = ({ movieId, className, variant = "outline" }: Wat
       variant={variant}
       size="lg"
       onClick={toggleWatchlist}
-      disabled={isLoading || !activeProfileId}
+      disabled={!hasMounted || isLoading || !activeProfileId}
       className={cn(
         "rounded-full transition-all duration-300 min-w-[140px]",
         isInWatchlist ? "bg-accent/20 border-accent text-accent" : "border-white/20 hover:bg-white/10",
         className
       )}
     >
-      {isLoading ? (
+      {!hasMounted || isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" />
       ) : isInWatchlist ? (
         <>
