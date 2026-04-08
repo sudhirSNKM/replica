@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
-  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon
+  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon, Edit3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser } from "@/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const AdminPanel = () => {
@@ -32,18 +31,22 @@ export const AdminPanel = () => {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   
-  const [posterMode, setPosterMode] = useState<'upload' | 'link'>('upload');
+  const [posterMode, setPosterMode] = useState<'upload' | 'link'>('link');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
       title: "",
-      genre: "",
+      genres: "",
       type: "movie",
       releaseYear: "2024",
       duration: "2h 15m",
       publishDate: new Date().toISOString().slice(0, 16),
       description: "",
+      tagline: "",
+      cast: "",
+      director: "",
       quality: "4K ULTRA HDR",
       thumbnailUrl: "",
       videoUrl: ""
@@ -126,35 +129,36 @@ export const AdminPanel = () => {
       return;
     }
 
-    if (!data.thumbnailUrl || !data.videoUrl) {
-      toast({ variant: "destructive", title: "Missing Protocols", description: "Visual and stream assets required." });
-      return;
-    }
-
     setIsSubmitting(true);
-    const id = "c-" + Math.random().toString(36).substring(2, 9);
+    const id = editingId || "c-" + Math.random().toString(36).substring(2, 9);
     const contentRef = doc(firestore, "content", id);
     
     const payload = {
       ...data,
       id,
       uploaderId: user?.uid,
-      rating: (Math.random() * 2 + 7.5).toFixed(1),
-      genres: [data.genre || "Action"],
-      isTrending: true,
-      isNew: true,
+      rating: data.rating || (Math.random() * 2 + 7.5).toFixed(1),
+      genres: typeof data.genres === 'string' ? data.genres.split(",").map((g: string) => g.trim()) : data.genres,
+      cast: typeof data.cast === 'string' ? data.cast.split(",").map((c: string) => c.trim()) : data.cast,
+      isTrending: data.isTrending ?? true,
+      isNew: data.isNew ?? true,
       publishDate: new Date(data.publishDate).toISOString(),
-      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
+    if (!editingId) {
+      (payload as any).createdAt = new Date().toISOString();
+    }
+
     try {
-      await setDoc(contentRef, payload);
+      await setDoc(contentRef, payload, { merge: true });
       toast({
-        title: "Broadcast Finalized",
-        description: `${data.title} scheduled for launch.`,
+        title: editingId ? "Protocol Updated" : "Broadcast Finalized",
+        description: `${data.title} is now synchronized.`,
       });
-      reset();
+      if (!editingId) reset();
+      setEditingId(null);
+      if (activeTab === 'library') fetchContent();
     } catch (e: any) {
       toast({
         variant: "destructive",
@@ -166,29 +170,20 @@ export const AdminPanel = () => {
     }
   };
 
-  const seedDatabase = async () => {
-    if (!firestore || !isAdmin) return;
-    setIsSeeding(true);
-
+  const fetchContent = async () => {
+    if (!firestore) return;
+    setIsContentLoading(true);
     try {
-      for (const movie of MOCK_MOVIES) {
-        const contentRef = doc(firestore, "content", movie.id);
-        await setDoc(contentRef, {
-          ...movie,
-          quality: "4K ULTRA HDR",
-          publishDate: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      }
-      toast({
-        title: "Neural Sync Complete",
-        description: `${MOCK_MOVIES.length} protocols synchronized.`,
-      });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Sync Error", description: e.message });
+      const querySnapshot = await getDocs(collection(firestore, "content"));
+      const contentData = querySnapshot.docs.map((doc: any) => ({
+        ...doc.data(),
+        id: doc.id
+      }));
+      setContentList(contentData);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Library Sync Failed", description: error.message });
     } finally {
-      setIsSeeding(false);
+      setIsContentLoading(false);
     }
   };
 
@@ -212,34 +207,65 @@ export const AdminPanel = () => {
       fetchUsers();
     }
 
-    if (activeTab === 'library' && firestore) {
-      const fetchContent = async () => {
-        setIsContentLoading(true);
-        try {
-          const querySnapshot = await getDocs(collection(firestore, "content"));
-          const contentData = querySnapshot.docs.map((doc: any) => ({
-            ...doc.data(),
-            id: doc.id
-          }));
-          setContentList(contentData);
-        } catch (error: any) {
-          toast({ variant: "destructive", title: "Library Sync Failed", description: error.message });
-        } finally {
-          setIsContentLoading(false);
-        }
-      };
+    if (activeTab === 'library') {
       fetchContent();
     }
-  }, [activeTab, firestore, toast]);
+  }, [activeTab, firestore]);
+
+  const handleEditContent = (item: any) => {
+    setEditingId(item.id);
+    setActiveTab('content');
+    setValue("title", item.title);
+    setValue("genres", Array.isArray(item.genres) ? item.genres.join(", ") : item.genres);
+    setValue("type", item.type);
+    setValue("releaseYear", item.releaseYear);
+    setValue("duration", item.duration);
+    setValue("publishDate", new Date(item.publishDate).toISOString().slice(0, 16));
+    setValue("description", item.description);
+    setValue("tagline", item.tagline || "");
+    setValue("cast", Array.isArray(item.cast) ? item.cast.join(", ") : item.cast || "");
+    setValue("director", item.director || "");
+    setValue("quality", item.quality || "4K ULTRA HDR");
+    setValue("thumbnailUrl", item.thumbnailUrl);
+    setValue("videoUrl", item.videoUrl);
+  };
 
   const handleDeleteContent = async (id: string) => {
     if (!firestore || !isAdmin) return;
+    if (!confirm("Terminate this cinematic protocol forever?")) return;
     try {
       await deleteDoc(doc(firestore, "content", id));
       setContentList((prev: any[]) => prev.filter((c: any) => c.id !== id));
       toast({ title: "Node Deinitialized", description: "Content removed from the matrix." });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+    }
+  };
+
+  const seedDatabase = async () => {
+    if (!firestore || !isAdmin) return;
+    setIsSeeding(true);
+
+    try {
+      for (const movie of MOCK_MOVIES) {
+        const contentRef = doc(firestore, "content", movie.id);
+        await setDoc(contentRef, {
+          ...movie,
+          quality: "4K ULTRA HDR",
+          publishDate: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      toast({
+        title: "Neural Sync Complete",
+        description: `${MOCK_MOVIES.length} protocols synchronized.`,
+      });
+      fetchContent();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Sync Error", description: e.message });
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -285,14 +311,14 @@ export const AdminPanel = () => {
             
             <div className="flex flex-wrap gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit mt-6">
               {[
-                { id: 'content', icon: Upload, label: 'Broadcast' },
+                { id: 'content', icon: Upload, label: editingId ? 'Edit Protocol' : 'Broadcast' },
                 { id: 'library', icon: Film, label: 'Library' },
                 { id: 'users', icon: UsersIcon, label: 'Identities' },
                 { id: 'analytics', icon: Zap, label: 'Stats' }
               ].map((tab) => (
                 <button 
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => { setActiveTab(tab.id as any); if (tab.id !== 'content') setEditingId(null); }}
                   className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 >
                   <tab.icon className="w-4 h-4" /> {tab.label}
@@ -338,10 +364,16 @@ export const AdminPanel = () => {
                         <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Enter Movie Title" required />
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Genre</Label>
-                        <Input {...register("genre")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="e.g. Cyberpunk" required />
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Genres</Label>
+                        <Input {...register("genres")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk, Sci-Fi" required />
                       </div>
                     </div>
+                    
+                    <div className="space-y-3">
+                      <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Tagline</Label>
+                      <Input {...register("tagline")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Reality is just a glitch..." />
+                    </div>
+
                     <div className="grid grid-cols-3 gap-8">
                       <div className="space-y-3">
                         <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Type</Label>
@@ -359,6 +391,18 @@ export const AdminPanel = () => {
                         <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2h 15m" />
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Cast</Label>
+                        <Input {...register("cast")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Actor 1, Actor 2" />
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Director</Label>
+                        <Input {...register("director")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Director Name" />
+                      </div>
+                    </div>
+
                     <div className="space-y-3">
                       <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center gap-2">
                         <Clock className="w-3 h-3" /> Scheduled Launch (Publish Date)
@@ -384,7 +428,7 @@ export const AdminPanel = () => {
                   <CardContent className="p-10 pt-0 space-y-12">
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
-                      <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue="4K ULTRA HDR">
+                      <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue={watch("quality")}>
                         <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl px-6">
                           <SelectValue />
                         </SelectTrigger>
@@ -471,7 +515,7 @@ export const AdminPanel = () => {
                           </label>
                           <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
                             <AlertTriangle className="w-5 h-5 flex-none" />
-                            <p className="text-[10px] font-bold leading-relaxed uppercase tracking-tight">Large media may take several minutes to synchronize. Use Link for instant results.</p>
+                            <p className="text-[10px] font-bold leading-relaxed uppercase tracking-tight">Large media may take several minutes to synchronize.</p>
                           </div>
                         </div>
                       ) : (
@@ -482,10 +526,17 @@ export const AdminPanel = () => {
                       )}
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="w-full h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
-                      {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6 mr-3" />}
-                      Establish Broadcast
-                    </Button>
+                    <div className="flex gap-4">
+                      {editingId && (
+                        <Button type="button" onClick={() => { setEditingId(null); reset(); }} variant="ghost" className="h-20 flex-1 text-white/40 uppercase font-black tracking-widest rounded-3xl">
+                          Cancel
+                        </Button>
+                      )}
+                      <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="flex-[2] h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
+                        {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : editingId ? <Edit3 className="w-6 h-6 mr-3" /> : <Sparkles className="w-6 h-6 mr-3" />}
+                        {editingId ? "Update Protocol" : "Establish Broadcast"}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -504,19 +555,24 @@ export const AdminPanel = () => {
                       <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
                         <div className="flex items-center gap-6">
                           <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                            <img src={item.thumbnailUrl} className="w-full h-full object-cover" />
+                            <img src={item.thumbnailUrl} className="w-full h-full object-cover" alt={item.title} />
                           </div>
                           <div className="space-y-1">
                             <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                            <p className="text-[10px] text-white/40 uppercase tracking-widest">{item.genre} • {item.type}</p>
+                            <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
                             <div className="pt-2">
                               <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
                             </div>
                           </div>
                         </div>
-                        <Button onClick={() => handleDeleteContent(item.id)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
-                          <Trash2 className="w-6 h-6" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleEditContent(item)} variant="ghost" className="w-12 h-12 rounded-full text-white/40 hover:text-primary hover:bg-primary/10">
+                            <Edit3 className="w-6 h-6" />
+                          </Button>
+                          <Button onClick={() => handleDeleteContent(item.id)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-6 h-6" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

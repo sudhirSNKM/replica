@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -12,7 +11,7 @@ import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, limit } from "firebase/firestore";
+import { collection, query, limit, orderBy } from "firebase/firestore";
 import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
@@ -33,14 +32,13 @@ export default function Home() {
   }, [user, isAuthLoading, router]);
 
   const contentRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    const now = new Date().toISOString();
+    if (!firestore) return null;
     return query(
       collection(firestore, "content"),
-      where("publishDate", "<=", now),
+      orderBy("publishDate", "desc"),
       limit(60)
     );
-  }, [firestore, user]);
+  }, [firestore]);
 
   const { data: firestoreContent, isLoading: isContentLoading } = useCollection<Movie>(contentRef);
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
