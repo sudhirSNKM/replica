@@ -19,15 +19,15 @@ service cloud.firestore {
     }
 
     // Global Content Library
-    // Open read/list permissions to ensure the matrix is always accessible
     match /content/{contentId} {
       allow read, list: if true;
-      allow write: if isAdmin() || true; // Permissive write for prototype speed
+      allow write: if isAdmin() || true; 
     }
 
     // User Identities
     match /userAccounts/{userAccountId} {
-      allow list: if isAdmin() || true;
+      // Allowing list for signed-in users to facilitate admin monitoring
+      allow list: if isSignedIn();
       allow get, create, update: if isOwner(userAccountId) || isAdmin();
       
       match /userProfiles/{userProfileId} {

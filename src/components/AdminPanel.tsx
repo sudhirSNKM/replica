@@ -7,7 +7,7 @@ import {
   Upload, Film, Database, Check, Loader2, Monitor, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
   Sparkles, Clock, Edit3, Search, Rocket, Archive, FileText, Settings2, Wand2,
-  CheckCircle2, AlertCircle, BarChart3, Eye, Info
+  CheckCircle2, AlertCircle, BarChart3, Eye, Info, ChevronRight, X, Square, CheckSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, getDoc, collection, deleteDoc, query, orderBy } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, deleteDoc, query, orderBy, writeBatch } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
 import { Movie, ContentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const SUGGESTED_GENRES = ["Sci-Fi", "Cyberpunk", "Noir", "Thriller", "Action", "Drama", "Mystery", "Horror"];
 const SUGGESTED_CAST = ["Kaelen Voss", "Lyra Thorne", "Jax Mercer", "Sora Nakano", "Marcus Reed", "Elena Sol"];
@@ -38,6 +39,9 @@ export const AdminPanel = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Bulk Operations State
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('link');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
@@ -208,6 +212,54 @@ export const AdminPanel = () => {
     } catch (e: any) {
       toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
     }
+  };
+
+  // Bulk Operations Handlers
+  const handleBulkDelete = async () => {
+    if (!firestore || selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to terminate ${selectedIds.size} protocols?`)) return;
+
+    try {
+      const batch = writeBatch(firestore);
+      selectedIds.forEach(id => {
+        batch.delete(doc(firestore, "content", id));
+      });
+      await batch.commit();
+      setSelectedIds(new Set());
+      toast({ title: "Bulk Termination Complete", description: "Matrix purged of selected nodes." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Bulk Terminate Failed", description: e.message });
+    }
+  };
+
+  const handleBulkPublish = async () => {
+    if (!firestore || selectedIds.size === 0) return;
+    try {
+      const batch = writeBatch(firestore);
+      selectedIds.forEach(id => {
+        batch.update(doc(firestore, "content", id), { status: 'published', updatedAt: new Date().toISOString() });
+      });
+      await batch.commit();
+      setSelectedIds(new Set());
+      toast({ title: "Bulk Broadcast Complete", description: "Nodes are now globally visible." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Bulk Publish Failed", description: e.message });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredContent?.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredContent?.map(item => item.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
   };
 
   const handleQuickPublish = async (movie: Movie) => {
@@ -522,7 +574,6 @@ export const AdminPanel = () => {
 
               {/* Right Column: Upload + Preview Hub */}
               <div className="lg:col-span-5 space-y-8">
-                {/* Preview Panel (Task 4) */}
                 <Card className="glass border-primary/20 rounded-[3rem] overflow-hidden bg-primary/[0.02]">
                   <CardHeader className="p-8 pb-4">
                     <CardTitle className="text-xl font-headline font-bold text-white flex items-center gap-3">
@@ -720,10 +771,19 @@ export const AdminPanel = () => {
           )}
 
           {activeTab === 'library' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 relative pb-24">
               <Card className="glass border-white/10 rounded-[3rem] p-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                  <CardTitle className="text-3xl font-headline font-bold text-white">Synchronized Library</CardTitle>
+                  <div className="flex items-center gap-6">
+                    <CardTitle className="text-3xl font-headline font-bold text-white">Synchronized Library</CardTitle>
+                    <button 
+                      onClick={toggleSelectAll}
+                      className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-primary transition-colors flex items-center gap-2"
+                    >
+                      {selectedIds.size === filteredContent?.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      {selectedIds.size === filteredContent?.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
                   <div className="relative w-full md:w-72">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                     <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-12 bg-white/5 border-white/10 text-white rounded-xl pl-10" placeholder="Filter protocols..." />
@@ -738,11 +798,24 @@ export const AdminPanel = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredContent?.map(item => {
                       const StatusIcon = getStatusIcon(item.status);
+                      const isSelected = selectedIds.has(item.id);
                       return (
-                        <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
+                        <div 
+                          key={item.id} 
+                          onClick={() => toggleSelect(item.id)}
+                          className={cn(
+                            "p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group cursor-pointer transition-all",
+                            isSelected ? "border-primary/40 bg-primary/[0.02]" : "hover:border-white/20"
+                          )}
+                        >
                           <div className="flex items-center gap-6">
-                            <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
+                            <div className="relative w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex-none">
                               <img src={item.thumbnailUrl} className="w-full h-full object-cover" alt={item.title} />
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
+                                  <Check className="w-8 h-8 text-white" />
+                                </div>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -758,7 +831,7 @@ export const AdminPanel = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                             {item.status !== 'published' && (
                               <Button onClick={() => handleQuickPublish(item)} variant="ghost" title="Quick Publish" className="w-10 h-10 rounded-full text-primary hover:bg-primary/10">
                                 <Rocket className="w-5 h-5" />
@@ -777,6 +850,37 @@ export const AdminPanel = () => {
                   </div>
                 )}
               </Card>
+
+              {/* Bulk Action Bar */}
+              <AnimatePresence>
+                {selectedIds.size > 0 && (
+                  <motion.div 
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 glass border-primary/40 px-8 py-4 rounded-full flex items-center gap-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-xs">
+                        {selectedIds.size}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white">Protocols Selected</span>
+                    </div>
+                    <div className="h-8 w-px bg-white/10" />
+                    <div className="flex items-center gap-4">
+                      <Button onClick={handleBulkPublish} className="bg-primary hover:neon-glow-primary text-white text-[10px] font-black uppercase tracking-widest rounded-full px-6 h-10">
+                        <Rocket className="w-3.5 h-3.5 mr-2" /> Bulk Broadcast
+                      </Button>
+                      <Button onClick={handleBulkDelete} variant="destructive" className="bg-destructive/20 text-destructive hover:bg-destructive hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full px-6 h-10">
+                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Terminate Nodes
+                      </Button>
+                      <button onClick={() => setSelectedIds(new Set())} className="text-white/40 hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 
