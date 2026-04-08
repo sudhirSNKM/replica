@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
   Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus,
-  BarChart3, Globe, Rocket, Archive, FileText, Settings2
+  BarChart3, Globe, Rocket, Archive, FileText, Settings2, Wand2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,9 @@ import { Progress } from "@/components/ui/progress";
 import { Movie, ContentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+const SUGGESTED_GENRES = ["Sci-Fi", "Cyberpunk", "Noir", "Thriller", "Action", "Drama", "Mystery", "Horror"];
+const SUGGESTED_CAST = ["Kaelen Voss", "Lyra Thorne", "Jax Mercer", "Sora Nakano", "Marcus Reed", "Elena Sol"];
+
 export const AdminPanel = () => {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'content' | 'library' | 'identities' | 'analytics'>('content');
@@ -34,6 +37,7 @@ export const AdminPanel = () => {
   const [isPromoting, setIsPromoting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('link');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
@@ -43,14 +47,14 @@ export const AdminPanel = () => {
       title: "",
       genres: "",
       type: "movie",
-      releaseYear: "2024",
-      duration: "2h 15m",
+      releaseYear: new Date().getFullYear().toString(),
+      duration: "",
       publishDate: new Date().toISOString().slice(0, 16),
       description: "",
       tagline: "",
       cast: "",
       director: "",
-      quality: "4K ULTRA HDR",
+      quality: "1080P FULL HD",
       status: "draft" as ContentStatus,
       thumbnailUrl: "",
       videoUrl: ""
@@ -64,7 +68,8 @@ export const AdminPanel = () => {
   const thumbnailUrl = watch("thumbnailUrl");
   const videoUrl = watch("videoUrl");
   const selectedQuality = watch("quality");
-  const selectedStatus = watch("status");
+  const selectedGenres = watch("genres");
+  const selectedCast = watch("cast");
 
   // Reactive Data Queries
   const contentQuery = useMemoFirebase(() => {
@@ -93,6 +98,35 @@ export const AdminPanel = () => {
     }
     checkAdmin();
   }, [firestore, user]);
+
+  const analyzeVideo = (url: string) => {
+    if (!url) return;
+    setIsAnalyzing(true);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = url;
+    
+    video.onloadedmetadata = () => {
+      const durationSeconds = Math.floor(video.duration);
+      const hours = Math.floor(durationSeconds / 3600);
+      const minutes = Math.floor((durationSeconds % 3600) / 60);
+      const durationStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+      
+      setValue("duration", durationStr);
+      
+      const height = video.videoHeight;
+      if (height >= 2160) setValue("quality", "4K ULTRA HDR");
+      else if (height >= 1080) setValue("quality", "1080P FULL HD");
+      else setValue("quality", "720P HD");
+      
+      toast({ title: "Neural Specs Synced", description: `Detected ${durationStr} at ${height}p resolution.` });
+      setIsAnalyzing(false);
+    };
+
+    video.onerror = () => {
+      setIsAnalyzing(false);
+    };
+  };
 
   const handlePromote = async () => {
     if (!firestore || !user) return;
@@ -125,6 +159,11 @@ export const AdminPanel = () => {
         : await uploadVideo(file, path);
       
       setValue(type === 'poster' ? 'thumbnailUrl' : 'videoUrl', url);
+      
+      if (type === 'video') {
+        analyzeVideo(url);
+      }
+      
       toast({ title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`, description: "Media added to storage cluster." });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Sync Error", description: err.message });
@@ -175,6 +214,16 @@ export const AdminPanel = () => {
       toast({ title: "Broadcast Live", description: `${movie.title} is now visible to all nodes.` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Quick Publish Failed", description: e.message });
+    }
+  };
+
+  const toggleTag = (type: 'genres' | 'cast', value: string) => {
+    const current = watch(type);
+    const parts = current ? current.split(',').map(p => p.trim()) : [];
+    if (parts.includes(value)) {
+      setValue(type, parts.filter(p => p !== value).join(', '));
+    } else {
+      setValue(type, [...parts.filter(p => p), value].join(', '));
     }
   };
 
@@ -353,8 +402,28 @@ export const AdminPanel = () => {
                         <Input {...register("title")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Enter Movie Title" required />
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Genres</Label>
-                        <Input {...register("genres")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk, Sci-Fi" required />
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black flex items-center justify-between">
+                          Genres
+                          <span className="text-[8px] text-white/20">Comma separated</span>
+                        </Label>
+                        <div className="space-y-3">
+                          <Input {...register("genres")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Cyberpunk, Sci-Fi" required />
+                          <div className="flex flex-wrap gap-2">
+                            {SUGGESTED_GENRES.map(g => (
+                              <button 
+                                key={g} 
+                                type="button" 
+                                onClick={() => toggleTag('genres', g)}
+                                className={cn(
+                                  "px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all border",
+                                  selectedGenres?.includes(g) ? "bg-primary border-primary text-white" : "border-white/10 text-white/30 hover:border-white/30"
+                                )}
+                              >
+                                {g}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
@@ -377,17 +446,39 @@ export const AdminPanel = () => {
                       </div>
                       <div className="space-y-3">
                         <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Duration</Label>
-                        <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="2h 15m" />
+                        <div className="relative">
+                          <Input {...register("duration")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6 pr-12" placeholder="2h 15m" />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Clock className="w-4 h-4 text-white/20" />}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Cast (Comma separated)</Label>
-                        <Input {...register("cast")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Actor 1, Actor 2" />
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Cast</Label>
+                        <div className="space-y-3">
+                          <Input {...register("cast")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Actor 1, Actor 2" />
+                          <div className="flex flex-wrap gap-2">
+                            {SUGGESTED_CAST.map(c => (
+                              <button 
+                                key={c} 
+                                type="button" 
+                                onClick={() => toggleTag('cast', c)}
+                                className={cn(
+                                  "px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all border",
+                                  selectedCast?.includes(c) ? "bg-accent border-accent text-white" : "border-white/10 text-white/30 hover:border-white/30"
+                                )}
+                              >
+                                {c}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Director</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Architecture (Director)</Label>
                         <Input {...register("director")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Director Name" />
                       </div>
                     </div>
@@ -518,7 +609,21 @@ export const AdminPanel = () => {
                       ) : (
                         <div className="relative group">
                           <Monitor className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-accent" />
-                          <Input {...register("videoUrl")} className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" placeholder="Instant Link (https://...)" />
+                          <div className="flex gap-2">
+                            <Input 
+                              {...register("videoUrl")} 
+                              className="h-16 bg-white/5 border-white/10 text-white rounded-2xl pl-14" 
+                              placeholder="Instant Link (https://...)" 
+                              onBlur={(e) => analyzeVideo(e.target.value)}
+                            />
+                            <Button 
+                              type="button"
+                              onClick={() => analyzeVideo(watch("videoUrl"))}
+                              className="h-16 w-16 glass border-white/10 rounded-2xl hover:text-primary transition-colors"
+                            >
+                              <Wand2 className="w-6 h-6" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
