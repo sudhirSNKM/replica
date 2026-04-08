@@ -41,7 +41,7 @@ export const MovieRow = ({ title, movies, onMovieHover, isAI }: MovieRowProps) =
 
   return (
     <div className="relative group/row py-4">
-      <div className="flex items-center justify-between px-6 md:px-12 mb-4">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 mb-4 flex items-center justify-between">
         <h2 className="text-xl md:text-2xl font-headline font-bold text-white flex items-center gap-3">
           {isAI && <Sparkles className="w-5 h-5 text-primary" />}
           {title}
@@ -68,7 +68,7 @@ export const MovieRow = ({ title, movies, onMovieHover, isAI }: MovieRowProps) =
         <div 
           ref={rowRef}
           onScroll={handleScroll}
-          className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 snap-x snap-mandatory pb-8 pt-4"
+          className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-24 snap-x snap-mandatory pb-8 pt-4"
         >
           {movies.map((movie) => (
             <div key={movie.id} className="snap-start">

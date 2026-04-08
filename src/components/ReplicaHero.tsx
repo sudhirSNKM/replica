@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Play, Info, Volume2, VolumeX, Star, Clock, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -16,8 +16,6 @@ interface ReplicaHeroProps {
 
 export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
   const [isMuted, setIsMuted] = useState(true);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const viewerData = useMemo(() => {
@@ -28,24 +26,12 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
     };
   }, [movie.id, movie.rating]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - left) / width - 0.5;
-    const y = (e.clientY - top) / height - 0.5;
-    setMousePosition({ x, y });
-  };
-
   const handleDetailsClick = () => {
     router.push(`/content/${movie.id}`);
   };
 
   return (
-    <div 
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      className="relative h-[75vh] w-full overflow-hidden bg-background"
-    >
+    <div className="relative h-[85vh] w-full overflow-hidden bg-background">
       {/* Visual Protocol Background */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -77,18 +63,18 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent hidden md:block" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent md:from-background md:via-transparent md:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent md:from-background md:via-transparent md:to-transparent" />
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
         </motion.div>
       </AnimatePresence>
 
       <div className="relative z-10 h-full flex items-end md:items-center px-6 md:px-12 lg:px-24 pb-12 md:pb-0 pt-32 md:pt-20">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-end md:items-center">
+        <div className="max-w-[1600px] mx-auto w-full">
           <motion.div
             initial={{ x: -80, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="lg:col-span-8 flex flex-col justify-end space-y-4 md:space-y-8"
+            className="max-w-4xl flex flex-col justify-end space-y-4 md:space-y-8"
           >
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 backdrop-blur-xl px-3 py-1 text-[10px] md:text-xs font-bold tracking-widest uppercase rounded-full flex items-center gap-2">
@@ -104,10 +90,10 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               </div>
             </div>
 
-            {/* Cinematic Title */}
+            {/* Cinematic Title - Responsive Scaling to avoid cutting off */}
             <h1 
               onClick={handleDetailsClick}
-              className="text-5xl md:text-[8rem] font-headline font-bold text-white leading-[0.9] md:leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] cursor-pointer hover:text-primary transition-colors"
+              className="text-5xl md:text-7xl lg:text-8xl font-headline font-bold text-white leading-[0.9] md:leading-[0.85] tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] cursor-pointer hover:text-primary transition-all duration-500 break-words max-w-full"
             >
               {movie.title}
             </h1>
@@ -124,7 +110,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
               <span className="border border-white/20 px-2 py-0.5 md:px-3 md:py-1 rounded text-[8px] md:text-[10px] font-black tracking-widest uppercase">4K Stream</span>
             </div>
 
-            <p className="text-sm md:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-2 md:line-clamp-3">
+            <p className="text-sm md:text-xl lg:text-2xl text-white/70 max-w-2xl font-medium leading-relaxed drop-shadow-md line-clamp-2 md:line-clamp-3">
               {movie.description}
             </p>
 
