@@ -137,7 +137,7 @@ export default function Home() {
         {/* Language Selection */}
         <section className="relative px-6 md:px-12 lg:px-24">
           <div className="max-w-[1600px] mx-auto space-y-12">
-            <h3 className="text-3xl md:text-5xl font-headline font-bold text-white tracking-tighter">Language <span className="text-primary text-glow">Protocols</span></h3>
+            <h3 className="text-2xl md:text-5xl font-headline font-bold text-white tracking-tighter">Language <span className="text-primary text-glow">Protocols</span></h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {['English', 'Hindi', 'Tamil', 'Telugu', 'Spanish', 'French'].map((lang) => (
                 <button 

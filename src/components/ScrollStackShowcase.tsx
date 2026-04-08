@@ -22,7 +22,7 @@ export const ScrollStackShowcase = () => {
           <Filter className="w-4 h-4" />
           Neural Classification
         </div>
-        <h2 className="text-5xl md:text-8xl font-headline font-bold text-white tracking-tighter">
+        <h2 className="text-3xl md:text-8xl font-headline font-bold text-white tracking-tighter">
           Explore the <span className="text-primary text-glow">Matrix</span>
         </h2>
       </div>
@@ -52,8 +52,8 @@ export const ScrollStackShowcase = () => {
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-3xl md:text-4xl font-headline font-bold text-white tracking-tight">
-                      {genre} <span className="text-primary font-black opacity-30 text-lg">PROT_0{index + 1}</span>
+                    <h2 className="text-2xl md:text-4xl font-headline font-bold text-white tracking-tight">
+                      {genre} <span className="text-primary font-black opacity-30 text-xs md:text-lg">PROT_0{index + 1}</span>
                     </h2>
                     <ChevronRight className={`w-8 h-8 text-white/20 transition-transform ${expandedGenre === genre ? 'rotate-90 text-primary' : ''}`} />
                   </div>

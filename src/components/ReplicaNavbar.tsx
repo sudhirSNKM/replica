@@ -160,7 +160,7 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
                     key={link.href} 
                     href={link.href} 
                     onClick={() => setIsMenuOpen(false)}
-                    className={cn("text-4xl font-headline font-bold tracking-tighter uppercase", pathname === link.href ? "text-primary text-glow" : "text-white/40")}
+                    className={cn("text-xl font-headline font-bold tracking-tighter uppercase", pathname === link.href ? "text-primary text-glow" : "text-white/40")}
                   >
                     {link.label}
                   </Link>

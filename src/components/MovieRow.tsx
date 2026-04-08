@@ -42,7 +42,7 @@ export const MovieRow = ({ title, movies, onMovieHover, isAI }: MovieRowProps) =
   return (
     <div className="relative group/row py-4">
       <div className="flex items-center justify-between px-6 md:px-12 mb-4">
-        <h2 className="text-xl md:text-2xl font-headline font-bold text-white flex items-center gap-3">
+        <h2 className="text-lg md:text-2xl font-headline font-bold text-white flex items-center gap-3">
           {isAI && <Sparkles className="w-5 h-5 text-primary" />}
           {title}
           <span className="w-16 h-[2px] bg-gradient-to-r from-primary/50 to-transparent" />

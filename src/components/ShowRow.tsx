@@ -26,7 +26,7 @@ export const ShowRow = ({ title, shows, onHover }: ShowRowProps) => {
   return (
     <div className="space-y-6 group/row relative">
       <div className="px-6 md:px-12 flex items-center justify-between">
-        <h2 className="text-2xl md:text-3xl font-headline font-bold text-white tracking-tight flex items-center gap-3">
+        <h2 className="text-lg md:text-3xl font-headline font-bold text-white tracking-tight flex items-center gap-3">
           <span className="w-1.5 h-6 bg-primary rounded-full" />
           {title}
         </h2>
