@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -35,7 +36,7 @@ export default function Home() {
     if (!firestore) return null;
     return query(
       collection(firestore, "content"),
-      orderBy("publishDate", "desc"),
+      orderBy("updatedAt", "desc"),
       limit(60)
     );
   }, [firestore]);

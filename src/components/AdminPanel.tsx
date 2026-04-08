@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { 
   Upload, Film, Database, Check, Loader2, Monitor, Calendar, Zap, 
   ShieldAlert, Activity, Trash2, Users as UsersIcon, Link as LinkIcon,
-  Sparkles, Info, Clock, AlertTriangle, Settings as SettingsIcon, Edit3
+  Sparkles, Clock, AlertTriangle, Edit3, Search, MessageSquare, Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -15,25 +16,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFirestore, useUser } from "@/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const AdminPanel = () => {
   const { user, isUserLoading } = useUser();
-  const [activeTab, setActiveTab] = useState<'content' | 'library' | 'analytics' | 'settings' | 'users'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'library' | 'identities' | 'analytics'>('content');
   const [userList, setUserList] = useState<any[]>([]);
-  const [contentList, setContentList] = useState<any[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
-  const [isContentLoading, setIsContentLoading] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [posterMode, setPosterMode] = useState<'upload' | 'link'>('link');
   const [videoMode, setVideoMode] = useState<'upload' | 'link'>('link');
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: {
@@ -55,14 +60,19 @@ export const AdminPanel = () => {
 
   const firestore = useFirestore();
   const { toast } = useToast();
-  
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
 
   const thumbnailUrl = watch("thumbnailUrl");
   const videoUrl = watch("videoUrl");
+  const selectedQuality = watch("quality");
+
+  // Fetch all existing content for the library explorer
+  const contentQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "content"), orderBy("updatedAt", "desc"));
+  }, [firestore]);
+
+  const { data: allContent, isLoading: isContentLoading } = useCollection<Movie>(contentQuery);
 
   const { uploadFile: uploadPoster, progress: posterProgress, isUploading: isPosterUploading } = useUpload();
   const { uploadFile: uploadVideo, progress: videoProgress, isUploading: isVideoUploading } = useUpload();
@@ -103,23 +113,49 @@ export const AdminPanel = () => {
     try {
       const timestamp = Date.now();
       const path = `broadcasts/${timestamp}_${file.name}`;
-      
       const url = type === 'poster' 
         ? await uploadPoster(file, path) 
         : await uploadVideo(file, path);
       
       setValue(type === 'poster' ? 'thumbnailUrl' : 'videoUrl', url);
-      
-      toast({
-        title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`,
-        description: "Media added to storage cluster.",
-      });
+      toast({ title: `${type === 'poster' ? 'Asset' : 'Protocol'} Synchronized`, description: "Media added to storage cluster." });
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Sync Error",
-        description: err.message,
-      });
+      toast({ variant: "destructive", title: "Sync Error", description: err.message });
+    }
+  };
+
+  const onEdit = (movie: Movie) => {
+    setEditingId(movie.id);
+    setValue("title", movie.title);
+    setValue("description", movie.description);
+    setValue("tagline", movie.tagline || "");
+    setValue("genres", Array.isArray(movie.genres) ? movie.genres.join(", ") : movie.genres);
+    setValue("type", movie.type);
+    setValue("releaseYear", movie.releaseYear);
+    setValue("duration", movie.duration);
+    setValue("thumbnailUrl", movie.thumbnailUrl);
+    setValue("videoUrl", movie.videoUrl);
+    setValue("quality", (movie as any).quality || "4K ULTRA HDR");
+    setValue("publishDate", (movie as any).publishDate?.substring(0, 16) || new Date().toISOString().substring(0, 16));
+    setValue("cast", Array.isArray(movie.cast) ? movie.cast.join(", ") : movie.cast || "");
+    setValue("director", movie.director || "");
+    
+    setPosterMode('link');
+    setVideoMode('link');
+    setActiveTab('content');
+
+    toast({ title: "Metadata Loaded", description: `Editing ${movie.title}.` });
+  };
+
+  const onDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to terminate the ${title} protocol? This cannot be undone.`)) return;
+    if (!firestore) return;
+
+    try {
+      await deleteDoc(doc(firestore, "content", id));
+      toast({ title: "Protocol Terminated", description: `${title} has been removed from the nexus.` });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
     }
   };
 
@@ -141,7 +177,7 @@ export const AdminPanel = () => {
       genres: typeof data.genres === 'string' ? data.genres.split(",").map((g: string) => g.trim()) : data.genres,
       cast: typeof data.cast === 'string' ? data.cast.split(",").map((c: string) => c.trim()) : data.cast,
       isTrending: data.isTrending ?? true,
-      isNew: data.isNew ?? true,
+      isNew: !editingId,
       publishDate: new Date(data.publishDate).toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -152,51 +188,24 @@ export const AdminPanel = () => {
 
     try {
       await setDoc(contentRef, payload, { merge: true });
-      toast({
-        title: editingId ? "Protocol Updated" : "Broadcast Finalized",
-        description: `${data.title} is now synchronized.`,
-      });
-      if (!editingId) reset();
+      toast({ title: editingId ? "Protocol Updated" : "Broadcast Finalized", description: `${data.title} is now synchronized.` });
+      reset();
       setEditingId(null);
-      if (activeTab === 'library') fetchContent();
+      setActiveTab('library');
     } catch (e: any) {
-      toast({
-        variant: "destructive",
-        title: "Integration Failed",
-        description: e.message,
-      });
+      toast({ variant: "destructive", title: "Integration Failed", description: e.message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const fetchContent = async () => {
-    if (!firestore) return;
-    setIsContentLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(firestore, "content"));
-      const contentData = querySnapshot.docs.map((doc: any) => ({
-        ...doc.data(),
-        id: doc.id
-      }));
-      setContentList(contentData);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Library Sync Failed", description: error.message });
-    } finally {
-      setIsContentLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (activeTab === 'users' && firestore) {
+    if (activeTab === 'identities' && firestore) {
       const fetchUsers = async () => {
         setIsUsersLoading(true);
         try {
           const querySnapshot = await getDocs(collection(firestore, "userAccounts"));
-          const usersData = querySnapshot.docs.map((doc: any) => ({
-            ...doc.data(),
-            id: doc.id
-          }));
+          const usersData = querySnapshot.docs.map((doc: any) => ({ ...doc.data(), id: doc.id }));
           setUserList(usersData);
         } catch (error: any) {
           toast({ variant: "destructive", title: "Retrieval Failed", description: error.message });
@@ -206,46 +215,11 @@ export const AdminPanel = () => {
       };
       fetchUsers();
     }
-
-    if (activeTab === 'library') {
-      fetchContent();
-    }
   }, [activeTab, firestore]);
-
-  const handleEditContent = (item: any) => {
-    setEditingId(item.id);
-    setActiveTab('content');
-    setValue("title", item.title);
-    setValue("genres", Array.isArray(item.genres) ? item.genres.join(", ") : item.genres);
-    setValue("type", item.type);
-    setValue("releaseYear", item.releaseYear);
-    setValue("duration", item.duration);
-    setValue("publishDate", new Date(item.publishDate).toISOString().slice(0, 16));
-    setValue("description", item.description);
-    setValue("tagline", item.tagline || "");
-    setValue("cast", Array.isArray(item.cast) ? item.cast.join(", ") : item.cast || "");
-    setValue("director", item.director || "");
-    setValue("quality", item.quality || "4K ULTRA HDR");
-    setValue("thumbnailUrl", item.thumbnailUrl);
-    setValue("videoUrl", item.videoUrl);
-  };
-
-  const handleDeleteContent = async (id: string) => {
-    if (!firestore || !isAdmin) return;
-    if (!confirm("Terminate this cinematic protocol forever?")) return;
-    try {
-      await deleteDoc(doc(firestore, "content", id));
-      setContentList((prev: any[]) => prev.filter((c: any) => c.id !== id));
-      toast({ title: "Node Deinitialized", description: "Content removed from the matrix." });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
-    }
-  };
 
   const seedDatabase = async () => {
     if (!firestore || !isAdmin) return;
     setIsSeeding(true);
-
     try {
       for (const movie of MOCK_MOVIES) {
         const contentRef = doc(firestore, "content", movie.id);
@@ -257,11 +231,7 @@ export const AdminPanel = () => {
           updatedAt: new Date().toISOString()
         });
       }
-      toast({
-        title: "Neural Sync Complete",
-        description: `${MOCK_MOVIES.length} protocols synchronized.`,
-      });
-      fetchContent();
+      toast({ title: "Neural Sync Complete", description: `${MOCK_MOVIES.length} protocols synchronized.` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Sync Error", description: e.message });
     } finally {
@@ -296,9 +266,14 @@ export const AdminPanel = () => {
     );
   }
 
+  const filteredContent = allContent?.filter(item => 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <div className="min-h-screen pt-36 px-6 md:px-12 pb-24 bg-background">
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
@@ -313,7 +288,7 @@ export const AdminPanel = () => {
               {[
                 { id: 'content', icon: Upload, label: editingId ? 'Edit Protocol' : 'Broadcast' },
                 { id: 'library', icon: Film, label: 'Library' },
-                { id: 'users', icon: UsersIcon, label: 'Identities' },
+                { id: 'identities', icon: UsersIcon, label: 'Identities' },
                 { id: 'analytics', icon: Zap, label: 'Stats' }
               ].map((tab) => (
                 <button 
@@ -327,17 +302,10 @@ export const AdminPanel = () => {
             </div>
           </div>
           
-          {activeTab === 'content' && (
-            <Button 
-              onClick={seedDatabase} 
-              disabled={isSeeding}
-              variant="outline" 
-              className="h-14 px-8 rounded-2xl border-white/5 glass hover:border-primary/50 text-white/60 hover:text-white transition-all font-bold"
-            >
-              {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <Database className="w-4 h-4 mr-3" />}
-              Seed Nexus Data
-            </Button>
-          )}
+          <Button onClick={seedDatabase} disabled={isSeeding} variant="outline" className="h-14 px-8 rounded-2xl glass border-white/5 text-white/60 hover:text-white transition-all font-bold">
+            {isSeeding ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <Database className="w-4 h-4 mr-3" />}
+            Seed Nexus Data
+          </Button>
         </div>
 
         <AnimatePresence mode="wait">
@@ -353,9 +321,9 @@ export const AdminPanel = () => {
                 <Card className="glass border-white/10 rounded-[3rem] overflow-hidden">
                   <CardHeader className="p-10 pb-0">
                     <CardTitle className="text-3xl font-headline font-bold text-white flex items-center gap-3">
-                      <Sparkles className="w-8 h-8 text-primary" /> Core Protocol
+                      <Sparkles className="w-8 h-8 text-primary" /> {editingId ? "Update Protocol" : "New Broadcast"}
                     </CardTitle>
-                    <CardDescription className="text-white/40">Define the metadata for the cinematic experience.</CardDescription>
+                    <CardDescription className="text-white/40">Define cinematic metadata for the global matrix.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-10 space-y-8">
                     <div className="grid grid-cols-2 gap-8">
@@ -394,7 +362,7 @@ export const AdminPanel = () => {
 
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Cast</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-black">Cast (Comma separated)</Label>
                         <Input {...register("cast")} className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" placeholder="Actor 1, Actor 2" />
                       </div>
                       <div className="space-y-3">
@@ -423,12 +391,12 @@ export const AdminPanel = () => {
                     <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
                       <Zap className="w-6 h-6 text-accent" /> Media Uplink
                     </CardTitle>
-                    <CardDescription className="text-white/40">Choose between Direct Upload or Instant Sync.</CardDescription>
+                    <CardDescription className="text-white/40">Sync visual and stream protocols to the storage nexus.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-10 pt-0 space-y-12">
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase tracking-widest text-white/30">Quality Tier</Label>
-                      <Select onValueChange={(v: string) => setValue("quality", v)} defaultValue={watch("quality")}>
+                      <Select onValueChange={(v: string) => setValue("quality", v)} value={selectedQuality}>
                         <SelectTrigger className="bg-white/5 border-white/10 h-14 rounded-2xl px-6">
                           <SelectValue />
                         </SelectTrigger>
@@ -534,7 +502,7 @@ export const AdminPanel = () => {
                       )}
                       <Button type="submit" disabled={isSubmitting || isPosterUploading || isVideoUploading} className="flex-[2] h-20 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl text-lg hover:neon-glow-primary transition-all shadow-2xl">
                         {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : editingId ? <Edit3 className="w-6 h-6 mr-3" /> : <Sparkles className="w-6 h-6 mr-3" />}
-                        {editingId ? "Update Protocol" : "Establish Broadcast"}
+                        {editingId ? "Update Metadata" : "Establish Broadcast"}
                       </Button>
                     </div>
                   </CardContent>
@@ -546,12 +514,19 @@ export const AdminPanel = () => {
           {activeTab === 'library' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <Card className="glass border-white/10 rounded-[3rem] p-10">
-                <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Synchronized Library</CardTitle>
+                <div className="flex items-center justify-between mb-8">
+                  <CardTitle className="text-3xl font-headline font-bold text-white">Synchronized Library</CardTitle>
+                  <div className="relative w-72">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-12 bg-white/5 border-white/10 text-white rounded-xl pl-10" placeholder="Filter protocols..." />
+                  </div>
+                </div>
+                
                 {isContentLoading ? (
                   <div className="flex justify-center p-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {contentList.map(item => (
+                    {filteredContent?.map(item => (
                       <div key={item.id} className="p-6 rounded-[2rem] glass border-white/5 flex items-center justify-between group">
                         <div className="flex items-center gap-6">
                           <div className="w-20 h-28 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
@@ -560,16 +535,17 @@ export const AdminPanel = () => {
                           <div className="space-y-1">
                             <h3 className="text-xl font-bold text-white">{item.title}</h3>
                             <p className="text-[10px] text-white/40 uppercase tracking-widest">{Array.isArray(item.genres) ? item.genres[0] : item.genres} • {item.type}</p>
-                            <div className="pt-2">
+                            <div className="flex items-center gap-2 pt-2">
                               <Badge variant="outline" className="text-[8px] border-primary/20 text-primary/60">{item.quality}</Badge>
+                              <div className="flex items-center gap-1 text-[9px] text-white/20"><UsersIcon className="w-2 h-2" /> {item.cast?.length || 0} Nodes</div>
                             </div>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button onClick={() => handleEditContent(item)} variant="ghost" className="w-12 h-12 rounded-full text-white/40 hover:text-primary hover:bg-primary/10">
+                          <Button onClick={() => onEdit(item)} variant="ghost" className="w-12 h-12 rounded-full text-white/40 hover:text-primary hover:bg-primary/10">
                             <Edit3 className="w-6 h-6" />
                           </Button>
-                          <Button onClick={() => handleDeleteContent(item.id)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
+                          <Button onClick={() => onDelete(item.id, item.title)} variant="ghost" className="w-12 h-12 rounded-full text-destructive hover:bg-destructive/10">
                             <Trash2 className="w-6 h-6" />
                           </Button>
                         </div>
@@ -581,7 +557,7 @@ export const AdminPanel = () => {
             </motion.div>
           )}
 
-          {activeTab === 'users' && (
+          {activeTab === 'identities' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="glass border-white/10 rounded-[3rem] p-10">
                 <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Active Identity Nodes</CardTitle>
@@ -623,60 +599,6 @@ export const AdminPanel = () => {
                   </div>
                 </Card>
               ))}
-            </motion.div>
-          )}
-
-          {activeTab === 'settings' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="p-8">
-                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
-                    <Monitor className="w-6 h-6 text-primary" /> General Config
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 pt-0 space-y-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Site Title</Label>
-                    <Input defaultValue="REPLICA | NEXUS" className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6" />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Maintenance Mode</Label>
-                    <Select defaultValue="OFF">
-                      <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass text-white">
-                        <SelectItem value="OFF">DEACTIVATED</SelectItem>
-                        <SelectItem value="ON">ACTIVATED</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass border-white/10 rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="p-8">
-                  <CardTitle className="text-2xl font-headline font-bold text-white flex items-center gap-3">
-                    <Database className="w-6 h-6 text-accent" /> Infrastructure
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 pt-0 space-y-6">
-                  <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60">Firestore Cluster</p>
-                      <p className="text-lg font-bold text-white">Operational</p>
-                    </div>
-                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_#10B981]" />
-                  </div>
-                  <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/60">Storage Nexus</p>
-                      <p className="text-lg font-bold text-white">Synchronized</p>
-                    </div>
-                    <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_15px_#3B82F6]" />
-                  </div>
-                </CardContent>
-              </Card>
             </motion.div>
           )}
         </AnimatePresence>
