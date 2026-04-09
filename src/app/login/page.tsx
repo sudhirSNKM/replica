@@ -33,6 +33,7 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (user && !isUserLoading && firestore) {
       async function checkPath() {
+        if (!user || !firestore) return;
         const isExplicitAdmin = user.email === 'admin@replica.com';
         if (isExplicitAdmin) {
           router.replace('/admin');
@@ -133,35 +134,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    if (!auth || !firestore) return;
-    setIsLoading(true);
-    try {
-      const userCredential = await signInAnonymously(auth);
-      const uid = userCredential.user.uid;
-      
-      await setDoc(doc(firestore, "roles_admin", uid), {
-        uid,
-        email: "demo@replica.nexus",
-        isDemo: true,
-        promotedAt: new Date().toISOString()
-      }, { merge: true });
 
-      await setDoc(doc(firestore, "userAccounts", uid), {
-        id: uid,
-        email: "demo@replica.nexus",
-        role: "admin",
-        subscriptionTier: 'pro',
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
-      toast({ title: "Admin Demo Active", description: "Redirecting to Management Nexus..." });
-      router.push('/admin');
-    } catch (e: any) {
-      toast({ title: "Demo Sync Failed", description: e.message, variant: "destructive" });
-      setIsLoading(false);
-    }
-  };
 
   if (isUserLoading) {
     return (
@@ -224,9 +197,7 @@ export default function LoginPage() {
                   {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Initialize Sync"}
                 </Button>
                 
-                <Button type="button" variant="outline" onClick={handleDemoLogin} disabled={isLoading} className="w-full h-14 rounded-2xl glass border-white/10 text-white/60 hover:text-white transition-all gap-2 font-bold uppercase tracking-widest text-[10px]">
-                  <Sparkles className="w-4 h-4 text-primary" /> Administrative Demo Protocol
-                </Button>
+
 
                 <div className="p-8 rounded-[2.5rem] bg-primary/[0.03] border border-primary/20 space-y-4 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">

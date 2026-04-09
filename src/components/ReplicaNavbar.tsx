@@ -60,6 +60,11 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
   
   const isAdmin = !!adminData || accountData?.role === 'admin' || user?.email === 'admin@replica.com';
 
+  async function checkPath() {
+    if (!user) return;
+    const isExplicitAdmin = user.email === 'admin@replica.com';
+  }
+
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
@@ -218,8 +223,15 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
             <div className="space-y-12">
               <div className="h-[1px] bg-gradient-to-r from-primary/40 via-transparent to-transparent" />
               <div className="grid grid-cols-2 gap-6">
-                <button onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }} className="flex flex-col gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 text-left">
-                  <Zap className="w-6 h-6 text-primary" />
+                {isAdmin && (
+                  <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex flex-col gap-3 p-6 rounded-3xl bg-primary/10 border border-primary/20 text-left relative overflow-hidden group col-span-2">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:animate-shimmer" />
+                    <Zap className="w-6 h-6 text-primary fill-primary/20" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">Admin Nexus</span>
+                  </Link>
+                )}
+                <button onClick={() => { setIsSettingsOpen(true); setIsMenuOpen(false); }} className={cn("flex flex-col gap-3 p-6 rounded-3xl bg-white/5 border border-white/10 text-left", isAdmin ? "col-span-1" : "col-span-1")}>
+                  <Settings className="w-6 h-6 text-white/40" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Settings</span>
                 </button>
                 <button onClick={handleLogout} className="flex flex-col gap-3 p-6 rounded-3xl bg-destructive/10 border border-destructive/20 text-left">

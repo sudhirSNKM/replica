@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { NexusGuard } from '@/components/NexusGuard';
 
 export const metadata: Metadata = {
   title: 'Replica | Futuristic Streaming',
@@ -22,7 +23,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background text-foreground">
         <FirebaseClientProvider>
-          {children}
+          <NexusGuard>
+            {children}
+          </NexusGuard>
         </FirebaseClientProvider>
       </body>
     </html>

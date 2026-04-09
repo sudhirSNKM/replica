@@ -26,11 +26,7 @@ export default function Home() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, isAuthLoading, router]);
+
 
   const contentRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -79,23 +75,18 @@ export default function Home() {
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 10);
 
-  if (isAuthLoading || (user && isLoading)) {
+  if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col items-center justify-center z-[500]">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-10">
           <div className="text-8xl md:text-[10rem] font-headline font-bold tracking-tighter text-white">
             <span className="text-primary text-glow">RE</span><span>PLICA</span>
           </div>
-          <div className="w-80 h-1 bg-white/5 rounded-full overflow-hidden relative">
-            <motion.div initial={{ x: "-100%" }} animate={{ x: "100%" }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent w-full h-full" />
-          </div>
-          <p className="text-white/20 font-bold uppercase tracking-[0.5em] text-[10px] animate-pulse">Initializing Identity Nexus</p>
+          <p className="text-white/20 font-bold uppercase tracking-[0.5em] text-[10px] animate-pulse">Synchronizing Library</p>
         </motion.div>
       </div>
     );
   }
-
-  if (!user) return null;
 
   if (!selectedProfileId) {
     return <ProfileSelector onSelect={handleProfileSelect} />;
