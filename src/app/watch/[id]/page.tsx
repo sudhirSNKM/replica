@@ -209,7 +209,13 @@ export default function VideoPlayer() {
       <video
         ref={videoRef}
         src={movie.videoUrl}
-        className="w-full h-full"
+        className="w-full h-full transition-all duration-700"
+        style={{
+          filter: quality === "720P HD" ? "brightness(0.9) contrast(1.1)" :
+                  quality === "480P SD" ? "blur(1.5px) brightness(0.8) contrast(1.2)" :
+                  quality === "360P MOBILE" ? "blur(4px) brightness(0.7) contrast(1.3) grayscale(0.2)" :
+                  "none"
+        }}
         onTimeUpdate={handleTimeUpdate}
         onClick={togglePlay}
         onError={handleVideoError}
@@ -242,7 +248,7 @@ export default function VideoPlayer() {
                       <Settings className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="glass border-white/10 text-white w-56" align="end">
+                  <DropdownMenuContent className="glass border-white/10 text-white w-56 z-[300]" align="end">
                     <DropdownMenuLabel>Playback Sync</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuItem className="hover:bg-white/10 cursor-pointer flex justify-between" onClick={() => {

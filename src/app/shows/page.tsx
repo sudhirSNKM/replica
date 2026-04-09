@@ -8,23 +8,49 @@ import { ShowRow } from "@/components/ShowRow";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { Movie } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
-import { Monitor, Tv, Layers } from "lucide-react";
+import { Monitor, Tv, Layers, Loader2 } from "lucide-react";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
 
 export default function TVShowsPage() {
-  const shows = MOCK_MOVIES.filter(m => m.type === 'show');
-  const [featuredShow, setFeaturedShow] = useState<Movie>(shows[0] || MOCK_MOVIES[0]);
+  const firestore = useFirestore();
+
+  const showsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "content"), where("type", "==", "show"));
+  }, [firestore]);
+
+  const { data: showsData, isLoading } = useCollection<Movie>(showsRef);
+  const shows = showsData || [];
+  
+  const [featuredShow, setFeaturedShow] = useState<Movie | null>(null);
+
+  React.useEffect(() => {
+    if (shows.length > 0 && !featuredShow) {
+      setFeaturedShow(shows[0]);
+    }
+  }, [shows, featuredShow]);
 
   const handleMovieHover = (movie: Movie) => {
-    if (featuredShow.id !== movie.id) {
+    if (featuredShow?.id !== movie.id) {
       setFeaturedShow(movie);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-[#050507] flex flex-col items-center justify-center gap-6">
+        <Loader2 className="w-16 h-16 text-primary animate-spin" />
+        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">Accessing Serialized Protocols</span>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <ReplicaNavbar />
-      <ReplicaHero movie={featuredShow} />
+      {featuredShow && <ReplicaHero movie={featuredShow} />}
 
       <div className="relative z-20 -mt-32 md:-mt-64 space-y-16 pb-32">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background -z-10 h-[500px]" />

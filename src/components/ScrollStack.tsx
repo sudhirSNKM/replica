@@ -315,7 +315,58 @@ const ScrollStack = ({
       card.style.perspective = '1000px';
     });
 
-    setupLenis();
+    const lenis = setupLenis();
+
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (useWindowScroll) return;
+      if (!scroller) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = scroller;
+      const touchCurrentY = e.touches[0].clientY;
+      const deltaY = touchStartY - touchCurrentY;
+      
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+      if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
+        // For touch, we don't necessarily need to scrollBy because native bubbling 
+        // usually works if we don't stopPropagation.
+        return;
+      }
+      
+      e.stopPropagation();
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (useWindowScroll) return;
+      if (!scroller) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = scroller;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+      // If at top and scrolling up, or at bottom and scrolling down
+      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+        // Manually relay the scroll to the window
+        window.scrollBy({
+          top: e.deltaY,
+          behavior: 'auto'
+        });
+        return;
+      }
+      
+      // Prevent page scroll while we are navigating inside the stack
+      e.stopPropagation();
+    };
+
+    scroller.addEventListener('wheel', handleWheel, { passive: false });
+    scroller.addEventListener('touchstart', handleTouchStart, { passive: true });
+    scroller.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     updateCardTransforms();
 
@@ -325,7 +376,11 @@ const ScrollStack = ({
       }
       if (lenisRef.current) {
         lenisRef.current.destroy();
+        lenisRef.current = null;
       }
+      scroller.removeEventListener('wheel', handleWheel);
+      scroller.removeEventListener('touchstart', handleTouchStart);
+      scroller.removeEventListener('touchmove', handleTouchMove);
       stackCompletedRef.current = false;
       cardsRef.current = [];
       transformsCache.clear();

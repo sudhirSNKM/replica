@@ -18,6 +18,8 @@ import { Switch } from "@/components/ui/switch";
 import { User, Shield, Video, BellRing, Check, Save, Globe, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useFirebase, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -26,18 +28,60 @@ interface SettingsDialogProps {
 
 export const SettingsDialog = ({ isOpen, onOpenChange }: SettingsDialogProps) => {
   const { toast } = useToast();
+  const { user } = useFirebase();
+  const firestore = useFirestore();
   const [isSaving, setIsSaving] = useState(false);
   
+  // Get active profile ID
+  const [profileId, setProfileId] = useState<string | null>(null);
+  
+  React.useEffect(() => {
+    if (isOpen) {
+      const savedId = localStorage.getItem('replica_active_profile');
+      setProfileId(savedId);
+    }
+  }, [isOpen]);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, "userAccounts", user.uid, "userProfiles", profileId);
+  }, [firestore, user, profileId]);
+
+  const { data: profile } = useDoc(profileRef);
+
   // Settings State
-  const [displayName, setDisplayName] = useState("Guest User");
+  const [displayName, setDisplayName] = useState("");
   const [autoPlay, setAutoPlay] = useState(true);
   const [highQuality, setHighQuality] = useState(true);
   const [immersiveAudio, setImmersiveAudio] = useState(true);
 
-  const handleSave = () => {
+  // Initialize state from profile data
+  React.useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.name || "");
+      if (profile.settings) {
+        setAutoPlay(profile.settings.autoPlay ?? true);
+        setHighQuality(profile.settings.highQuality ?? true);
+        setImmersiveAudio(profile.settings.immersiveAudio ?? true);
+      }
+    }
+  }, [profile]);
+
+  const handleSave = async () => {
+    if (!profileRef) return;
+    
     setIsSaving(true);
-    // Simulate a network delay for "updating protocols"
-    setTimeout(() => {
+    try {
+      await updateDoc(profileRef, {
+        name: displayName,
+        settings: {
+          autoPlay,
+          highQuality,
+          immersiveAudio,
+          updatedAt: new Date().toISOString()
+        }
+      });
+
       setIsSaving(false);
       onOpenChange(false);
       toast({
@@ -45,42 +89,50 @@ export const SettingsDialog = ({ isOpen, onOpenChange }: SettingsDialogProps) =>
         description: "Your neural bridge settings have been synchronized.",
         variant: "default",
       });
-    }, 1200);
+    } catch (error) {
+      console.error("Save failed:", error);
+      setIsSaving(false);
+      toast({
+        title: "Sync Failed",
+        description: "Communication with the neural nexus was interrupted.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-white/10 text-white max-w-2xl overflow-hidden rounded-[2.5rem] p-0 gap-0">
-        <div className="p-8 pb-4">
+      <DialogContent className="glass border-white/10 text-white w-[95vw] md:max-w-2xl overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] p-0 gap-0">
+        <div className="p-6 md:p-8 pb-4">
           <DialogHeader>
-            <DialogTitle className="text-4xl font-headline font-bold tracking-tighter flex items-center gap-3">
+            <DialogTitle className="text-2xl md:text-4xl font-headline font-bold tracking-tighter flex items-center gap-3">
               Nexus <span className="text-primary text-glow">Settings</span>
             </DialogTitle>
-            <DialogDescription className="text-white/40 text-base">
+            <DialogDescription className="text-white/40 text-sm md:text-base">
               Customize your immersive synchronization protocols and neural interface.
             </DialogDescription>
           </DialogHeader>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <div className="px-8 mb-6">
-            <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full justify-start gap-1">
-              <TabsTrigger value="profile" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl flex gap-2 py-2.5 px-6 transition-all">
-                <User className="w-4 h-4" /> Profile
+          <div className="px-6 md:px-8 mb-6 overflow-x-auto scrollbar-hide">
+            <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl md:rounded-2xl w-full md:w-auto flex justify-start gap-1 min-w-max">
+              <TabsTrigger value="profile" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm">
+                <User className="w-3.5 h-3.5 md:w-4 md:h-4" /> Profile
               </TabsTrigger>
-              <TabsTrigger value="playback" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl flex gap-2 py-2.5 px-6 transition-all">
-                <Video className="w-4 h-4" /> Playback
+              <TabsTrigger value="playback" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm">
+                <Video className="w-3.5 h-3.5 md:w-4 md:h-4" /> Playback
               </TabsTrigger>
-              <TabsTrigger value="privacy" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl flex gap-2 py-2.5 px-6 transition-all">
-                <Shield className="w-4 h-4" /> Security
+              <TabsTrigger value="privacy" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm">
+                <Shield className="w-3.5 h-3.5 md:w-4 md:h-4" /> Security
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-xl flex gap-2 py-2.5 px-6 transition-all">
-                <BellRing className="w-4 h-4" /> Alerts
+              <TabsTrigger value="notifications" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm">
+                <BellRing className="w-3.5 h-3.5 md:w-4 md:h-4" /> Alerts
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="px-8 pb-8">
+          <div className="px-6 md:px-8 pb-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
             <TabsContent value="profile" className="space-y-6 mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -188,19 +240,19 @@ export const SettingsDialog = ({ isOpen, onOpenChange }: SettingsDialogProps) =>
           </div>
         </Tabs>
 
-        <div className="px-8 py-6 bg-white/[0.02] border-t border-white/10">
-          <DialogFooter className="flex items-center justify-between w-full sm:justify-between">
+        <div className="px-6 md:px-8 py-4 md:py-6 bg-white/[0.02] border-t border-white/10">
+          <DialogFooter className="flex flex-col-reverse md:flex-row items-center justify-between w-full gap-4 md:gap-0">
             <Button 
               variant="ghost" 
               onClick={() => onOpenChange(false)} 
-              className="text-white/40 hover:text-white font-bold uppercase tracking-widest text-xs"
+              className="text-white/40 hover:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs w-full md:w-auto"
             >
               Discard Changes
             </Button>
             <Button 
               disabled={isSaving}
               onClick={handleSave}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-10 h-14 font-bold neon-glow-primary active:scale-95 transition-all"
+              className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 md:px-10 h-12 md:h-14 font-bold neon-glow-primary active:scale-95 transition-all w-full md:w-auto text-xs md:text-sm"
             >
               {isSaving ? (
                 <>

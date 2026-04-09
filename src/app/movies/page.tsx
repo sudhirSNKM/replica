@@ -11,6 +11,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { motion } from "framer-motion";
 import { Globe, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { ReplicaFooter } from "@/components/ReplicaFooter";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
 
 const LANGUAGES = [
   { id: 'en', code: 'US', name: 'English', native: 'ENGLISH' },
@@ -24,9 +26,24 @@ const LANGUAGES = [
 export default function MoviesPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const firestore = useFirestore();
+
+  const moviesRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "content"), where("type", "==", "movie"));
+  }, [firestore]);
+
+  const { data: moviesData, isLoading } = useCollection<Movie>(moviesRef);
+  const movies = moviesData || [];
   
-  const movies = MOCK_MOVIES.filter(m => m.type === 'movie');
-  const [featuredMovie, setFeaturedMovie] = useState<Movie>(movies[0] || MOCK_MOVIES[0]);
+  const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
+
+  // Set featured movie when data arrives
+  React.useEffect(() => {
+    if (movies.length > 0 && !featuredMovie) {
+      setFeaturedMovie(movies[0]);
+    }
+  }, [movies, featuredMovie]);
 
   const handleLanguageSelect = (langId: string) => {
     setIsTransitioning(true);
@@ -38,10 +55,19 @@ export default function MoviesPage() {
   };
 
   const handleMovieHover = (movie: Movie) => {
-    if (featuredMovie.id !== movie.id) {
+    if (featuredMovie?.id !== movie.id) {
       setFeaturedMovie(movie);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-[#050507] flex flex-col items-center justify-center gap-6">
+        <Loader2 className="w-16 h-16 text-primary animate-spin" />
+        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">Syncing Cinematic Nexus</span>
+      </div>
+    );
+  }
 
   if (!selectedLanguage) {
     return (
@@ -123,7 +149,7 @@ export default function MoviesPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <ReplicaNavbar />
-      <ReplicaHero movie={featuredMovie} />
+      {featuredMovie && <ReplicaHero movie={featuredMovie} />}
 
       <div className="relative z-20 -mt-32 md:-mt-64 space-y-24 pb-48">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/95 to-background -z-10 h-[800px] pointer-events-none" />
