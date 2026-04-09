@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser } from "@/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, orderBy, limit } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, orderBy, limit, updateDoc } from "firebase/firestore";
 import { MOCK_MOVIES } from "@/app/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/firebase/storage/use-upload";
