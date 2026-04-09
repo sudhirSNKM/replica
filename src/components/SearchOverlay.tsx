@@ -101,21 +101,29 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
           </button>
 
           <div className="max-w-4xl mx-auto w-full space-y-12">
-            <div className="relative">
+            <div className="relative group">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center">
+                {isSearching ? (
+                  <Loader2 className="w-8 h-8 md:w-10 md:h-10 text-primary animate-spin" />
+                ) : (
+                  <Search className="w-8 h-8 md:w-10 md:h-10 text-white/20 group-focus-within:text-primary transition-colors" />
+                )}
+              </div>
               <input
                 autoFocus
                 placeholder="Search for movies, genres, or moods..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-transparent border-b-2 border-white/10 py-6 text-4xl md:text-6xl font-headline font-bold text-white placeholder:text-white/10 focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-transparent border-b-2 border-white/10 py-6 pl-12 md:pl-16 pr-12 text-2xl md:text-6xl font-headline font-bold text-white placeholder:text-white/10 focus:outline-none focus:border-primary transition-all overflow-hidden text-ellipsis"
               />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-4">
-                {isSearching ? (
-                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                ) : (
-                  <Search className="w-8 h-8 text-white/20" />
-                )}
-              </div>
+              {query && (
+                <button 
+                  onClick={() => setQuery("")}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-white/20 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto scrollbar-hide pr-4">

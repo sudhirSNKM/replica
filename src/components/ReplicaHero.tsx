@@ -52,6 +52,7 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
                 loop
                 playsInline
                 className="w-full h-full object-cover scale-105"
+                crossOrigin="anonymous"
               />
             </div>
           ) : (

@@ -220,6 +220,7 @@ export default function VideoPlayer() {
         onClick={togglePlay}
         onError={handleVideoError}
         playsInline
+        crossOrigin="anonymous"
       />
 
       <AnimatePresence>

@@ -115,25 +115,25 @@ export const SettingsDialog = ({ isOpen, onOpenChange }: SettingsDialogProps) =>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <div className="relative group/tabs px-6 md:px-8 mb-6">
-            <div className="overflow-x-auto scrollbar-hide py-1">
-              <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl md:rounded-2xl flex flex-nowrap w-fit justify-start gap-1">
-                <TabsTrigger value="profile" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm whitespace-nowrap">
-                  <User className="w-3.5 h-3.5 md:w-4 md:h-4" /> Profile
-                </TabsTrigger>
-                <TabsTrigger value="playback" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm whitespace-nowrap">
-                  <Video className="w-3.5 h-3.5 md:w-4 md:h-4" /> Playback
-                </TabsTrigger>
-                <TabsTrigger value="privacy" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm whitespace-nowrap">
-                  <Shield className="w-3.5 h-3.5 md:w-4 md:h-4" /> Security
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex gap-2 py-2 md:py-2.5 px-4 md:px-6 transition-all text-xs md:text-sm whitespace-nowrap">
-                  <BellRing className="w-3.5 h-3.5 md:w-4 md:h-4" /> Alerts
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            {/* Visual Indicator for Scrolling */}
-            <div className="absolute right-6 top-1 bottom-1 w-12 bg-gradient-to-l from-black/60 to-transparent pointer-events-none md:hidden rounded-r-2xl" />
+          <div className="px-4 md:px-8 mb-6">
+            <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl md:rounded-2xl grid grid-cols-4 w-full h-auto">
+              <TabsTrigger value="profile" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex flex-col md:flex-row items-center gap-1 md:gap-2 py-2 md:py-2.5 px-1 md:px-6 transition-all">
+                <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary md:text-inherit" /> 
+                <span className="text-[9px] md:text-sm font-bold uppercase md:capitalize">User</span>
+              </TabsTrigger>
+              <TabsTrigger value="playback" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex flex-col md:flex-row items-center gap-1 md:gap-2 py-2 md:py-2.5 px-1 md:px-6 transition-all">
+                <Video className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary md:text-inherit" /> 
+                <span className="text-[9px] md:text-sm font-bold uppercase md:capitalize">Sync</span>
+              </TabsTrigger>
+              <TabsTrigger value="privacy" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex flex-col md:flex-row items-center gap-1 md:gap-2 py-2 md:py-2.5 px-1 md:px-6 transition-all">
+                <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary md:text-inherit" /> 
+                <span className="text-[9px] md:text-sm font-bold uppercase md:capitalize">Sec</span>
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg md:rounded-xl flex flex-col md:flex-row items-center gap-1 md:gap-2 py-2 md:py-2.5 px-1 md:px-6 transition-all">
+                <BellRing className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary md:text-inherit" /> 
+                <span className="text-[9px] md:text-sm font-bold uppercase md:capitalize">Alerts</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
 
           <div className="px-6 md:px-8 pb-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
