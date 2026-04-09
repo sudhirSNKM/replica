@@ -51,8 +51,8 @@ export const ReplicaHero = ({ movie }: ReplicaHeroProps) => {
                 muted={isMuted}
                 loop
                 playsInline
+                preload="metadata"
                 className="w-full h-full object-cover scale-105"
-                crossOrigin="anonymous"
               />
             </div>
           ) : (
