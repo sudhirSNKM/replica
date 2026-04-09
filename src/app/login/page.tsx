@@ -27,7 +27,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<'input' | 'otp'>('input');
   const [isLoading, setIsLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   // Redirection for already linked nodes
   React.useEffect(() => {
@@ -52,9 +55,28 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router, firestore]);
 
+  React.useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
+
+    if (authMode === 'phone' && step === 'input') {
+      setIsLoading(true);
+      // Simulate OTP Protocol Induction
+      setTimeout(() => {
+        setStep('otp');
+        setIsLoading(false);
+        setResendTimer(30);
+        toast({ title: "OTP Protocol Induced", description: "Verification sequence transmitted to your terminal." });
+      }, 1500);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -184,18 +206,52 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-6">
-                {authMode === 'email' ? (
+                {step === 'input' ? (
                   <>
-                    <Input type="email" placeholder="Email" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <Input type="password" placeholder="Password" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    {authMode === 'email' ? (
+                      <>
+                        <Input type="email" placeholder="Email" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        <Input type="password" placeholder="Password" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                      </>
+                    ) : (
+                      <Input type="tel" placeholder="+1 (555) 000-0000" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                    )}
+
+                    <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold text-lg">
+                      {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : authMode === 'phone' ? "Induce OTP" : "Initialize Sync"}
+                    </Button>
                   </>
                 ) : (
-                  <Input type="tel" placeholder="+1 (555) 000-0000" className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-                )}
+                  <>
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary text-center block">Neural Verification Required</Label>
+                      <Input 
+                        type="text" 
+                        maxLength={6} 
+                        placeholder="0 0 0 0 0 0" 
+                        className="h-20 bg-white/5 border-primary/30 text-white rounded-3xl px-6 text-center text-3xl font-headline tracking-[0.5em] focus:border-primary neon-glow-primary/20" 
+                        value={otp} 
+                        onChange={(e) => setOtp(e.target.value)} 
+                        required 
+                      />
+                      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/20">
+                        <span>Target: {phone}</span>
+                        {resendTimer > 0 ? (
+                           <span>Resend in {resendTimer}s</span>
+                        ) : (
+                           <button type="button" onClick={() => setResendTimer(30)} className="text-primary hover:text-white transition-colors">Resend Core</button>
+                        )}
+                      </div>
+                    </div>
 
-                <Button type="submit" disabled={isLoading} className="w-full h-16 rounded-2xl bg-primary hover:neon-glow-primary text-white font-bold text-lg">
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Initialize Sync"}
-                </Button>
+                    <div className="flex gap-4">
+                      <Button type="button" variant="outline" onClick={() => setStep('input')} className="flex-1 h-14 rounded-2xl glass border-white/10 text-white/40">Back</Button>
+                      <Button type="submit" disabled={isLoading || otp.length < 6} className="flex-[2] h-14 rounded-2xl bg-primary text-white font-bold">
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify Identity"}
+                      </Button>
+                    </div>
+                  </>
+                )}
                 
 
 
