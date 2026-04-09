@@ -89,8 +89,15 @@ export const AdminPanel = () => {
       }
       try {
         const adminRef = doc(firestore, "roles_admin", user.uid);
-        const snap = await getDoc(adminRef);
-        setIsAdmin(snap.exists());
+        const adminSnap = await getDoc(adminRef);
+        
+        const accountRef = doc(firestore, "userAccounts", user.uid);
+        const accountSnap = await getDoc(accountRef);
+        const accountData = accountSnap.data();
+
+        const isExplicitAdmin = user.email === 'admin@replica.com';
+        
+        setIsAdmin(adminSnap.exists() || accountData?.role === 'admin' || isExplicitAdmin);
       } catch (e) {
         console.error("Administrative Clearance Failure:", e);
         setIsAdmin(false);
@@ -327,7 +334,7 @@ export const AdminPanel = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'users' && firestore) {
+    if (activeTab === 'users' && firestore && isAdmin) {
       const fetchUsers = async () => {
         setIsUsersLoading(true);
         try {
@@ -365,7 +372,7 @@ export const AdminPanel = () => {
       fetchContent();
     }
 
-    if (activeTab === 'analytics' && firestore) {
+    if (activeTab === 'analytics' && firestore && isAdmin) {
       const fetchStats = async () => {
         setIsStatsLoading(true);
         try {
@@ -383,7 +390,7 @@ export const AdminPanel = () => {
       fetchStats();
     }
 
-    if (activeTab === 'activity' && firestore) {
+    if (activeTab === 'activity' && firestore && isAdmin) {
       const fetchLogs = async () => {
         setIsLogsLoading(true);
         try {
@@ -398,7 +405,7 @@ export const AdminPanel = () => {
       };
       fetchLogs();
     }
-  }, [activeTab, firestore, toast]);
+  }, [activeTab, firestore, toast, isAdmin]);
 
   const handleDeleteContent = async (id: string) => {
     if (!firestore || !isAdmin) return;

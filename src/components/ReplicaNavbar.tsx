@@ -49,9 +49,16 @@ export const ReplicaNavbar = ({ activeProfileId }: { activeProfileId?: string | 
     return doc(firestore, "roles_admin", user.uid);
   }, [firestore, user]);
 
+  const accountRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "userAccounts", user.uid);
+  }, [firestore, user]);
+
   const { data: profile } = useDoc(profileRef);
   const { data: adminData } = useDoc(adminRef);
-  const isAdmin = !!adminData;
+  const { data: accountData } = useDoc(accountRef);
+  
+  const isAdmin = !!adminData || accountData?.role === 'admin' || user?.email === 'admin@replica.com';
 
   const handleLogout = async () => {
     if (auth) {
