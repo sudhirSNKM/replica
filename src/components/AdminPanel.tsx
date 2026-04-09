@@ -1046,17 +1046,53 @@ export const AdminPanel = () => {
                 <CardTitle className="text-3xl font-headline font-bold text-white mb-8">Active Identity Nodes</CardTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {userList.map(u => (
-                    <div key={u.id} className="p-8 rounded-[2rem] glass border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                          <UsersIcon className="w-6 h-6 text-primary" />
+                    <div key={u.id} className="p-6 md:p-8 rounded-[2rem] glass border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                      <div className="flex items-center gap-4 md:gap-6 min-w-0">
+                        <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                          <UsersIcon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                         </div>
-                        <div>
-                          <p className="text-white font-bold text-xl">{u.email || u.phoneNumber || "Guest Node"}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">ID: {u.id.slice(0, 12)}...</p>
+                        <div className="min-w-0">
+                          <p className="text-white font-bold text-lg md:text-xl truncate">{u.email || u.phoneNumber || "Guest Node"}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[9px] text-white/40 uppercase tracking-widest font-black truncate">ID: {u.id.slice(0, 12)}...</p>
+                            {u.upgradeRequested && (
+                              <Badge variant="outline" className="text-[8px] border-primary/40 text-primary bg-primary/5 uppercase font-black px-1.5 py-0">Clearance Request</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">{u.role || 'user'}</Badge>
+                      <div className="flex items-center gap-4 shrink-0 justify-end">
+                        <Badge className="bg-white/5 text-white/40 border-white/10 uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full shrink-0 h-fit">{u.role || 'user'}</Badge>
+                        {u.upgradeRequested && (
+                          <Button 
+                            size="sm"
+                            onClick={async () => {
+                              if (!firestore) return;
+                              try {
+                                // 1. Set admin role in roles_admin
+                                await setDoc(doc(firestore, "roles_admin", u.id), {
+                                  uid: u.id,
+                                  email: u.email || "Unknown",
+                                  promotedAt: new Date().toISOString()
+                                });
+                                // 2. Update user document
+                                await updateDoc(doc(firestore, "userAccounts", u.id), {
+                                  role: "admin",
+                                  upgradeRequested: false
+                                });
+                                toast({ title: "Authorization Granted", description: "Node promoted to Network Admin." });
+                                // Refresh list
+                                setUserList(prev => prev.map(user => user.id === u.id ? { ...user, role: 'admin', upgradeRequested: false } : user));
+                              } catch (e: any) {
+                                toast({ variant: "destructive", title: "Auth Failed", description: e.message });
+                              }
+                            }}
+                            className="bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 rounded-xl h-10 px-4 text-[10px] font-black uppercase tracking-widest transition-all"
+                          >
+                            Authorize
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

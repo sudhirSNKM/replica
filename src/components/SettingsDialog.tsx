@@ -211,14 +211,23 @@ export const SettingsDialog = ({ isOpen, onOpenChange }: SettingsDialogProps) =>
                   </div>
                </div>
                
-               <div className="grid grid-cols-2 gap-4">
-                 <Button variant="outline" className="h-14 rounded-2xl border-white/10 glass hover:bg-white/10 text-white font-bold">
-                    View Access Logs
-                 </Button>
-                 <Button variant="outline" className="h-14 rounded-2xl border-white/10 glass hover:bg-white/10 text-white font-bold">
-                    Neural Backup
-                 </Button>
-               </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button variant="outline" className="h-14 rounded-2xl border-white/10 glass hover:bg-white/10 text-white font-bold">
+                     View Access Logs
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      if (!firestore || !user) return;
+                      const accountRef = doc(firestore, "userAccounts", user.uid);
+                      await updateDoc(accountRef, { upgradeRequested: true });
+                      toast({ title: "Request Sent", description: "Authorization request broadcasted to Nexus Admin." });
+                    }}
+                    className="h-14 rounded-2xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold"
+                  >
+                     Request Admin Clearance
+                  </Button>
+                </div>
             </TabsContent>
             
             <TabsContent value="notifications" className="space-y-2 mt-0">
